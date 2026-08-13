@@ -1,0 +1,6 @@
+{
+  "name": "Chepe IA",
+  "description": "Plataforma de Inteligencia Artificial avanzada para conversación, programación, asistencia en tareas, resolución de matemáticas, análisis de archivos e imágenes.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
