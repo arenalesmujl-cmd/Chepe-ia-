@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CustomServerConfig } from '../types';
-import { Settings, Key, Server, Volume2, Shield, Trash2, Check, RefreshCw, Sparkles, Moon, Sun } from 'lucide-react';
+import { Settings, Key, Server, Shield, Check, RefreshCw, Sparkles, ExternalLink, AlertCircle, Trash2 } from 'lucide-react';
 import { saveStoredApiKey, getStoredApiKey } from '../services/geminiClient';
 
 interface SettingsViewProps {
@@ -18,71 +18,101 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [hostIp, setHostIp] = useState(customConfig.hostIp || '');
   const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [savedToast, setSavedToast] = useState(false);
 
   const handleTestConnection = async () => {
+    const cleanKey = (apiKey || getStoredApiKey() || '').trim().replace(/^["']|["']$/g, '').trim();
+    if (!cleanKey) {
+      setTestResult({
+        success: false,
+        message: 'Por favor pega tu clave de API de Gemini (empieza con AIzaSy...).'
+      });
+      return;
+    }
+
     setIsTesting(true);
     setTestResult(null);
 
-    try {
-      const res = await fetch('/api/test-connection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, hostIp })
-      });
+    // Test directly against Gemini API first
+    const testModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    let directSuccess = false;
+    let directErrorMsg = '';
 
-      if (res.ok) {
-        const data = await res.json();
-        setTestResult({
-          success: data.success,
-          message: data.message || (data.success ? 'Conexión exitosa con el servidor' : 'Error de prueba')
-        });
-        return;
-      }
-      throw new Error(`HTTP ${res.status}`);
-    } catch (err: any) {
-      // Fallback: Test directly with Google Gemini REST API
+    for (const model of testModels) {
       try {
-        const keyToUse = apiKey || getStoredApiKey();
-        if (!keyToUse) {
-          throw new Error('Por favor ingresa una clave de API.');
-        }
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keyToUse}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
         const pingRes = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: 'ping' }] }]
+            contents: [{ role: 'user', parts: [{ text: 'ping' }] }]
           })
         });
 
         if (pingRes.ok) {
-          setTestResult({
-            success: true,
-            message: '¡Conexión directa con Google Gemini exitosa! Lista para responder en Vercel.'
-          });
+          directSuccess = true;
+          break;
         } else {
           const errData = await pingRes.json().catch(() => ({}));
-          throw new Error(errData.error?.message || 'Clave inválida');
+          directErrorMsg = errData.error?.message || `Error HTTP ${pingRes.status}`;
+          if (pingRes.status === 400 && directErrorMsg.includes('API key not valid')) {
+            break;
+          }
         }
-      } catch (directErr: any) {
-        setTestResult({
-          success: false,
-          message: directErr.message || 'No se pudo contactar el servicio de IA.'
-        });
+      } catch (err: any) {
+        directErrorMsg = err.message || 'Error de red';
       }
-    } finally {
-      setIsTesting(false);
     }
+
+    if (directSuccess) {
+      saveStoredApiKey(cleanKey);
+      setTestResult({
+        success: true,
+        message: '¡Clave de API verificada con éxito! Chepe IA está listo para responder.'
+      });
+      setIsTesting(false);
+      return;
+    }
+
+    // Try backend endpoint if direct failed
+    try {
+      const res = await fetch('/api/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: cleanKey, hostIp })
+      });
+
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        if (data.success) {
+          saveStoredApiKey(cleanKey);
+          setTestResult({
+            success: true,
+            message: data.message || '¡Conexión exitosa!'
+          });
+          setIsTesting(false);
+          return;
+        }
+      }
+    } catch {
+      // Backend not running (standard on static hosts)
+    }
+
+    setIsTesting(false);
+    setTestResult({
+      success: false,
+      message: directErrorMsg || 'La clave no es válida. Por favor verifica que la copiaste completa desde Google AI Studio.'
+    });
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (apiKey) {
-      saveStoredApiKey(apiKey);
+    const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '').trim();
+    if (cleanKey) {
+      saveStoredApiKey(cleanKey);
     }
-    onSaveCustomConfig({ apiKey, hostIp });
+    onSaveCustomConfig({ apiKey: cleanKey, hostIp });
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2500);
   };
@@ -96,59 +126,63 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Ajustes de Plataforma Chepe IA
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Configuración Personal y Servidor Personalizado
+          Configuración de Clave API y Motor de IA
         </h1>
       </div>
 
-      {/* Custom Host IP & API Key Form */}
+      {/* API Key Form */}
       <div className="p-6 sm:p-8 rounded-3xl bg-[#081021] border border-cyan-900/80 shadow-xl space-y-6">
         <div className="space-y-1">
           <h3 className="text-base font-extrabold text-white flex items-center gap-2">
             <Key className="w-5 h-5 text-[#00E5FF]" />
-            Conexión de Servidor e IP Personalizada
+            Clave API de Gemini (Requerida para Vercel)
           </h3>
           <p className="text-xs text-stone-400 leading-relaxed">
-            Si cuentas con una IP de servidor dedicada o tu propia clave API de Gemini, puedes vincularla aquí para acelerar tus respuestas.
+            Pega tu clave gratuita de Google AI Studio para activar las respuestas de Chepe IA al instante.
           </p>
         </div>
 
         <form onSubmit={handleSave} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-300 flex items-center gap-2">
-              <Server className="w-3.5 h-3.5 text-cyan-400" />
-              <span>IP de Host o Dominio del Servidor API (Opcional):</span>
-            </label>
-            <input
-              type="text"
-              value={hostIp}
-              onChange={(e) => setHostIp(e.target.value)}
-              placeholder="Ejemplo: https://generativelanguage.googleapis.com o https://192.168.1.10:3000"
-              className="w-full px-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900 text-white font-mono text-xs focus:outline-none focus:border-[#00E5FF]"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-300 flex items-center gap-2">
-              <Key className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Clave API Personal (Opcional):</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-cyan-300 flex items-center gap-2">
+                <Key className="w-3.5 h-3.5 text-[#00E5FF]" />
+                <span>Clave API de Google Gemini:</span>
+              </label>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-[#00E5FF] hover:underline flex items-center gap-1 font-semibold"
+              >
+                <span>Obtener clave gratis en Google</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Pega tu GEMINI_API_KEY personalizada aquí..."
+              placeholder="AIzaSy..."
               className="w-full px-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900 text-white font-mono text-xs focus:outline-none focus:border-[#00E5FF]"
             />
+            <p className="text-[11px] text-stone-400">
+              💡 <strong>Nota:</strong> No necesitas escribir ninguna URL de servidor. Solo pega tu clave de API arriba.
+            </p>
           </div>
 
           {/* Test connection alert */}
           {testResult && (
-            <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2 ${
+            <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-start gap-2 ${
               testResult.success
                 ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
                 : 'bg-red-950/80 border-red-500/50 text-red-300'
             }`}>
-              <Check className="w-4 h-4 shrink-0" />
+              {testResult.success ? (
+                <Check className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+              )}
               <span>{testResult.message}</span>
             </div>
           )}
@@ -158,10 +192,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               type="button"
               onClick={handleTestConnection}
               disabled={isTesting}
-              className="px-4 py-2.5 rounded-xl bg-[#0F1C36] hover:bg-[#162A50] text-cyan-300 border border-cyan-800 text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#0F1C36] hover:bg-[#162A50] text-cyan-300 border border-cyan-800 text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isTesting ? 'animate-spin' : ''}`} />
-              <span>Probar Conexión</span>
+              <span>{isTesting ? 'Verificando...' : 'Probar Conexión'}</span>
             </button>
 
             <button
@@ -174,7 +208,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span>¡Ajustes Guardados!</span>
                 </>
               ) : (
-                <span>Guardar Configuración</span>
+                <span>Guardar y Activar</span>
               )}
             </button>
           </div>
