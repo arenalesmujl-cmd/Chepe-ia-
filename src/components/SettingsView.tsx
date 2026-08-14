@@ -34,7 +34,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setTestResult(null);
 
     // Test directly against Gemini API first
-    const testModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const testModels = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
     let directSuccess = false;
     let directErrorMsg = '';
 

@@ -178,7 +178,7 @@ export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParam
   };
 
   // Try endpoints in priority order (v1beta)
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
   let lastError: any = null;
 
   for (const model of modelsToTry) {

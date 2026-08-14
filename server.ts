@@ -87,12 +87,12 @@ Responde a cualquier consulta del usuario con agilidad, cortesía y rigor concep
 // Helper function to call Gemini API with retry and model fallback handling
 async function callGeminiWithRetry(clientAi: GoogleGenAI, contents: any[], sysInstruction: string, preferredModel?: string) {
   // Only use valid models per Gemini API guidelines
-  const primaryModel = preferredModel && preferredModel.startsWith('gemini-') ? preferredModel : "gemini-2.5-flash";
+  const primaryModel = preferredModel && preferredModel.startsWith('gemini-') ? preferredModel : "gemini-3.7-flash";
   const modelsToTry = [
     primaryModel,
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-3.7-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest"
   ];
 
   // Remove duplicates while preserving priority order
@@ -191,7 +191,7 @@ app.post("/api/test-connection", async (req: Request, res: Response) => {
     });
 
     const response = await testAi.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.7-flash",
       contents: "Responde 'OK' si recibes este ping.",
     });
 
@@ -306,7 +306,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
     }
 
     // Determine target model
-    let targetModel = "gemini-2.5-flash";
+    let targetModel = "gemini-3.7-flash";
 
     // Format chat history
     const formattedContents: any[] = [];
@@ -620,7 +620,7 @@ Instrucciones:
       parts: [{ text: `Optimiza y enriquece este prompt:\n"${draftPrompt}"` }]
     }];
 
-    const result = await callGeminiWithRetry(ai, contents, enhanceInstruction, "gemini-2.5-flash");
+    const result = await callGeminiWithRetry(ai, contents, enhanceInstruction, "gemini-3.7-flash");
     const enhanced = result.responseText?.trim() || draftPrompt;
 
     res.json({

@@ -29,21 +29,32 @@ export default async function handler(req: any, res: any) {
     }
 
     const testAi = new GoogleGenAI({ apiKey: keyToUse });
-    const response = await testAi.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
-    });
+    const modelsToTry = ["gemini-3.7-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+    let verified = false;
+    let lastErr: any = null;
 
-    if (response && response.text) {
-      res.json({
-        success: true,
-        message: '¡Conexión exitosa! El motor de Gemini 2.5 Flash está activo y respondiendo.'
-      });
-    } else {
-      res.json({
-        success: false,
-        message: 'Respuesta inesperada al probar la clave.'
-      });
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await testAi.models.generateContent({
+          model: modelName,
+          contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+        });
+
+        if (response && response.text) {
+          verified = true;
+          res.json({
+            success: true,
+            message: `¡Conexión exitosa! El motor ${modelName} está activo y respondiendo.`
+          });
+          return;
+        }
+      } catch (e: any) {
+        lastErr = e;
+      }
+    }
+
+    if (!verified) {
+      throw lastErr || new Error('No se pudo verificar la clave API.');
     }
   } catch (err: any) {
     res.status(500).json({
