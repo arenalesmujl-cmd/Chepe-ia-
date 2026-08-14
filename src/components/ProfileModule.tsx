@@ -60,37 +60,37 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({ user, onUpdateUser
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-8 font-sans">
+    <div className="w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-5 sm:space-y-8 font-sans overflow-x-hidden">
       {/* Header Profile Card */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0B132B] via-[#081021] to-[#050A14] border border-cyan-500/40 shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="relative">
+      <div className="p-4 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0B132B] via-[#081021] to-[#050A14] border border-cyan-500/40 shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 relative z-10">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="relative shrink-0">
               <img
                 src={user.avatarUrl}
                 alt={user.name}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#00E5FF] shadow-lg shadow-cyan-500/30"
+                className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#00E5FF] shadow-lg shadow-cyan-500/30"
               />
-              <span className="w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#0B132B] absolute bottom-0 right-0 shadow-sm" />
+              <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-400 border-2 border-[#0B132B] absolute bottom-0 right-0 shadow-sm" />
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight truncate">
                   {user.name}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#00E5FF] text-stone-950 text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded-full bg-[#00E5FF] text-stone-950 text-[10px] font-black uppercase tracking-wider shrink-0">
                   Plan {user.planType}
                 </span>
               </div>
-              <p className="text-xs text-stone-400">{user.email}</p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-[11px] text-cyan-400 font-medium">
+              <p className="text-xs text-stone-400 truncate">{user.email}</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 text-[11px] text-cyan-400 font-medium">
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  Miembro desde: {user.memberSince}
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  Miembro: {user.memberSince}
                 </span>
                 {user.planExpiresAt && (
-                  <span className="text-amber-300 font-bold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800">
+                  <span className="text-amber-300 font-bold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800 shrink-0">
                     Vence: {user.planExpiresAt}
                   </span>
                 )}

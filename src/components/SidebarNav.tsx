@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Plus, MessageSquare, History, Bookmark, BookOpen, Code,
   Calculator, PenTool, Folder, CreditCard, User, Settings,
-  ShieldCheck, PanelLeftClose, PanelLeft, Bot, Sparkles, ChevronRight
+  ShieldCheck, PanelLeftClose, PanelLeft, Bot, Sparkles, ChevronRight, UserPlus
 } from 'lucide-react';
 
 interface SidebarNavProps {
@@ -15,6 +15,8 @@ interface SidebarNavProps {
   dailyLimit?: number;
   userName?: string;
   userRole?: string;
+  isGuest?: boolean;
+  onOpenAuthModal?: (mode: 'login' | 'register') => void;
   onLogout?: () => void;
 }
 
@@ -28,6 +30,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   dailyLimit = 1000,
   userName = 'Usuario Chepe IA',
   userRole = 'user',
+  isGuest = false,
+  onOpenAuthModal,
   onLogout
 }) => {
   const navItems = [
@@ -178,9 +182,29 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
         {/* Footer Usage & Account info */}
         <div className="p-3 border-t border-cyan-950 space-y-2 bg-[#060B17]">
+          {isGuest && onOpenAuthModal && (
+            <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-950/70 to-[#0F1C36] border border-amber-500/40 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-amber-300 text-[11px] font-black">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Modo Invitado Activo</span>
+              </div>
+              <p className="text-[10px] text-stone-300 leading-tight">
+                Crea tu cuenta gratis para sincronizar tus chats y desbloquear más funciones.
+              </p>
+              <button
+                type="button"
+                onClick={() => onOpenAuthModal('register')}
+                className="w-full py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-stone-950 text-[11px] font-black flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              >
+                <UserPlus className="w-3 h-3" />
+                <span>Crear Cuenta Gratis</span>
+              </button>
+            </div>
+          )}
+
           <div className="bg-[#091224] p-2.5 rounded-xl border border-cyan-900/60 space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-semibold">
-              <span className="text-cyan-300">Uso diario de IA</span>
+              <span className="text-cyan-300">{isGuest ? 'Límite Invitado' : 'Uso diario de IA'}</span>
               <span className="text-white font-bold">{dailyCount} / {dailyLimit}</span>
             </div>
             <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden">
@@ -196,7 +220,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               onClick={onLogout}
               className="w-full py-2 px-3 rounded-xl bg-red-950/40 hover:bg-red-950 text-red-400 border border-red-900/60 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Cerrar Sesión</span>
+              <span>{isGuest ? 'Salir de Modo Invitado' : 'Cerrar Sesión'}</span>
             </button>
           )}
         </div>

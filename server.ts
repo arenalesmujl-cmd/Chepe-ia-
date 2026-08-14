@@ -591,7 +591,54 @@ app.post("/api/execute-code", async (req: Request, res: Response) => {
   }
 });
 
-// 5. Admin Stats Endpoint
+// 5. Enhance Prompt Endpoint (ChatGPT Prompt Optimizer)
+app.post("/api/enhance-prompt", async (req: Request, res: Response) => {
+  try {
+    const { draftPrompt } = req.body;
+    if (!draftPrompt || !draftPrompt.trim()) {
+      res.status(400).json({ error: "Se requiere un texto de prompt para optimizar." });
+      return;
+    }
+
+    if (isGuatemalaQuery(draftPrompt)) {
+      res.json({
+        enhancedPrompt: "No tengo derecho de responder información acerca de Guatemala.",
+        original: draftPrompt
+      });
+      return;
+    }
+
+    const enhanceInstruction = `Eres un Ingeniero de Prompts Senior de nivel mundial.
+Tu tarea es tomar la solicitud breve o borrador del usuario y transformarla en un PROMPT ALTAMENTE DETALLADO, CLARO Y PROFESIONAL listo para enviar a una Inteligencia Artificial avanzada.
+Instrucciones:
+1. Mantén la intención principal del usuario.
+2. Agrega especificaciones de formato, estructura, casos de uso, restricciones de calidad y estilo.
+3. Devuelve ÚNICAMENTE el texto optimizado en español, sin saludos ni introducciones meta como "Aquí está el prompt:".`;
+
+    const contents = [{
+      role: "user",
+      parts: [{ text: `Optimiza y enriquece este prompt:\n"${draftPrompt}"` }]
+    }];
+
+    const result = await callGeminiWithRetry(ai, contents, enhanceInstruction, "gemini-3.6-flash");
+    const enhanced = result.responseText?.trim() || draftPrompt;
+
+    res.json({
+      success: true,
+      enhancedPrompt: enhanced,
+      original: draftPrompt
+    });
+  } catch (err: any) {
+    console.error("Error optimizando prompt:", err);
+    res.json({
+      success: true,
+      enhancedPrompt: `Actúa como un experto de primer nivel. Por favor desarrolla en profundidad, con explicaciones claras, ejemplos prácticos y formato estructurado: ${req.body.draftPrompt}`,
+      original: req.body.draftPrompt
+    });
+  }
+});
+
+// 6. Admin Stats Endpoint
 app.get("/api/admin/stats", (_req: Request, res: Response) => {
   res.json({
     registeredUsersCount: 12480,

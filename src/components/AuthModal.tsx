@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
-import { Bot, Key, Mail, User, ShieldCheck, Sparkles, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { Bot, Key, Mail, User, ShieldCheck, Sparkles, ArrowRight, Lock, CheckCircle2, UserCheck, X } from 'lucide-react';
 
 interface AuthModalProps {
   onLoginSuccess: (user: UserProfile) => void;
+  onClose?: () => void;
+  defaultMode?: 'login' | 'register' | 'guest';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
-  const [isRegister, setIsRegister] = useState(false);
+export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess, onClose, defaultMode = 'login' }) => {
+  const [isRegister, setIsRegister] = useState(defaultMode === 'register');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,9 +46,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
         planType: 'Gratis',
         memberSince: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
         dailyUsageCount: 0,
-        dailyLimit: 50,
+        dailyLimit: 100,
         status: 'active',
-        role: 'user'
+        role: 'user',
+        isGuest: false
       };
 
       onLoginSuccess(newUser);
@@ -56,8 +59,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      // Check if logging in as admin or default user
-      const isAdminLogin = email.toLowerCase().includes('admin') || password === 'ChepeAdmin#2026!';
+      // Check if logging in as admin with configured master password or admin email
+      const customMasterPass = localStorage.getItem('chepe_admin_master_password');
+      const isAdminLogin = email.toLowerCase().includes('admin') || (customMasterPass && password === customMasterPass);
       
       const loggedUser: UserProfile = {
         id: isAdminLogin ? 'usr-admin' : 'usr-' + Date.now(),
@@ -67,14 +71,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
         planType: isAdminLogin ? 'Premium' : 'Pro',
         planExpiresAt: isAdminLogin ? 'Sin Expiración (Ilimitado)' : '31/12/2026 23:59',
         memberSince: '12 de Enero de 2026',
-        dailyUsageCount: 12,
+        dailyUsageCount: 0,
         dailyLimit: isAdminLogin ? 10000 : 1000,
         status: 'active',
-        role: isAdminLogin ? 'admin' : 'user'
+        role: isAdminLogin ? 'admin' : 'user',
+        isGuest: false
       };
 
       onLoginSuccess(loggedUser);
     }
+  };
+
+  // 1-Click Instant Guest Account Generator
+  const handleAutomaticGuestLogin = () => {
+    const randomGuestNumber = Math.floor(1000 + Math.random() * 9000);
+    const guestUser: UserProfile = {
+      id: `usr-guest-${Date.now()}-${randomGuestNumber}`,
+      name: `Invitado Chepe #${randomGuestNumber}`,
+      email: `invitado_${randomGuestNumber}@chepeia.local`,
+      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=Guest${randomGuestNumber}`,
+      planType: 'Gratis',
+      memberSince: 'Hoy (Modo Invitado)',
+      dailyUsageCount: 0,
+      dailyLimit: 50,
+      status: 'active',
+      role: 'user',
+      isGuest: true
+    };
+    onLoginSuccess(guestUser);
   };
 
   const handleQuickDemoAccess = () => {
@@ -89,14 +113,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
       dailyUsageCount: 28,
       dailyLimit: 10000,
       status: 'active',
-      role: 'admin'
+      role: 'admin',
+      isGuest: false
     };
     onLoginSuccess(demoUser);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#03060E]/90 backdrop-blur-md font-sans">
-      <div className="w-full max-w-md bg-[#081021] border border-cyan-500/40 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+      <div className="w-full max-w-md bg-[#081021] border border-cyan-500/40 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 relative">
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-[#050A14] text-stone-400 hover:text-white border border-cyan-900/60 transition-colors cursor-pointer"
+            title="Cerrar ventana"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+
         {/* Top Header Banner */}
         <div className="p-6 bg-gradient-to-r from-[#0B132B] via-[#081021] to-[#050A14] border-b border-cyan-900/60 text-center space-y-2 relative">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00E5FF] to-blue-600 flex items-center justify-center text-stone-950 font-black shadow-lg shadow-cyan-500/30 mx-auto">
@@ -108,7 +143,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
               Acceso a <span className="text-[#00E5FF]">Chepe IA</span>
             </h2>
             <p className="text-xs text-stone-300">
-              Inicia sesión o crea tu cuenta para continuar
+              Inicia sesión, crea tu cuenta o ingresa en modo invitado automático
             </p>
           </div>
         </div>
@@ -147,6 +182,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {/* Quick Automatic Guest Mode Button - High Priority */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#07132B] to-[#0B1E40] border border-[#00E5FF]/50 shadow-md space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-white flex items-center gap-1.5">
+                <UserCheck className="w-4 h-4 text-[#00E5FF]" />
+                ¿Quieres probar sin registrarte?
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-[#00E5FF] font-bold border border-cyan-800">
+                1 Clic
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleAutomaticGuestLogin}
+              className="w-full py-2.5 px-3 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-stone-950" />
+              <span>Entrar en Modo Invitado Automático</span>
+            </button>
+            <p className="text-[10px] text-cyan-200/80 text-center">
+              Genera una cuenta de invitado instantánea para conversar de inmediato.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 py-1">
+            <div className="h-px bg-cyan-950 flex-1" />
+            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+              {isRegister ? 'O regístrate con tu email' : 'O entra con tu cuenta'}
+            </span>
+            <div className="h-px bg-cyan-950 flex-1" />
+          </div>
 
           <form onSubmit={handleAuthSubmit} className="space-y-3.5">
             {isRegister && (
@@ -211,29 +278,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer mt-2"
+              className="w-full py-3 rounded-xl bg-[#0E2042] hover:bg-[#152E5E] border border-cyan-600/70 text-cyan-200 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/50 transition-all cursor-pointer mt-2"
             >
-              <span>{isRegister ? 'Registrar Cuenta' : 'Entrar a Chepe IA'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>{isRegister ? 'Registrar Cuenta Permanente' : 'Iniciar Sesión'}</span>
+              <ArrowRight className="w-4 h-4 text-[#00E5FF]" />
             </button>
           </form>
 
           {/* Quick Demo Login Option */}
-          <div className="pt-2 border-t border-cyan-950/80 space-y-2">
+          <div className="pt-2 border-t border-cyan-950/80 flex justify-center">
             <button
               type="button"
               onClick={handleQuickDemoAccess}
-              className="w-full py-2.5 px-3 rounded-xl bg-[#0F1C36] hover:bg-[#162A50] text-cyan-300 border border-cyan-800 text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="text-[11px] text-cyan-400/80 hover:text-[#00E5FF] hover:underline font-semibold flex items-center gap-1 cursor-pointer transition-colors"
             >
-              <Sparkles className="w-4 h-4 text-[#00E5FF]" />
-              <span>Acceso Rápido Demo / Modo Invitado</span>
+              <span>Entrar como Administrador Demo</span>
             </button>
-            <p className="text-[10px] text-stone-300 text-center">
-              Permite probar todas las funciones, modelos e inteligencia artificial al instante.
-            </p>
           </div>
         </div>
       </div>
     </div>
   );
 };
+

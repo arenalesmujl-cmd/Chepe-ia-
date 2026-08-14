@@ -8,11 +8,19 @@ import {
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
-  // Password lock state
+  // Master Password state
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [authError, setAuthError] = useState('');
-  const MASTER_ADMIN_PASS = 'ChepeAdmin#2026!MasterKey';
+  const [hasConfiguredPassword, setHasConfiguredPassword] = useState<boolean>(true);
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+  // Password change modal in dashboard
+  const [isChangePassOpen, setIsChangePassOpen] = useState(false);
+  const [currentPassForChange, setCurrentPassForChange] = useState('');
+  const [newPassForChange, setNewPassForChange] = useState('');
+  const [changePassError, setChangePassError] = useState('');
+  const [changePassSuccess, setChangePassSuccess] = useState(false);
 
   const [users, setUsers] = useState<AdminUserItem[]>(MOCK_ADMIN_USERS);
   const [searchUser, setSearchUser] = useState('');
@@ -53,13 +61,15 @@ export const AdminDashboard: React.FC = () => {
   const [genPreset, setGenPreset] = useState<'30d' | '1y' | '3y' | 'custom'>('30d');
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
 
-  // Load codes on mount
+  // Load codes and check configured master password on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('chepe_license_codes');
-      if (stored) {
-        setLicenseCodes(JSON.parse(stored));
+      const storedCodes = localStorage.getItem('chepe_license_codes');
+      if (storedCodes) {
+        setLicenseCodes(JSON.parse(storedCodes));
       }
+      const storedPass = localStorage.getItem('chepe_admin_master_password');
+      setHasConfiguredPassword(Boolean(storedPass));
     } catch (e) {}
   }, []);
 
@@ -73,11 +83,65 @@ export const AdminDashboard: React.FC = () => {
   const handleAdminUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
-    if (adminPasswordInput === MASTER_ADMIN_PASS || adminPasswordInput === 'admin' || adminPasswordInput === '1234') {
+
+    const storedPass = localStorage.getItem('chepe_admin_master_password');
+
+    if (!storedPass) {
+      // First time configuration
+      if (!adminPasswordInput || adminPasswordInput.length < 6) {
+        setAuthError('La contraseña maestra debe tener al menos 6 caracteres.');
+        return;
+      }
+      if (adminPasswordInput !== confirmNewPassword) {
+        setAuthError('Las contraseñas no coinciden. Verifícalas.');
+        return;
+      }
+      try {
+        localStorage.setItem('chepe_admin_master_password', adminPasswordInput);
+        setHasConfiguredPassword(true);
+        setIsUnlocked(true);
+        setAdminPasswordInput('');
+        setConfirmNewPassword('');
+      } catch (e) {
+        setAuthError('Error guardando contraseña maestra.');
+      }
+      return;
+    }
+
+    if (adminPasswordInput === storedPass) {
       setIsUnlocked(true);
       setAdminPasswordInput('');
     } else {
-      setAuthError('Contraseña incorrecta. Revisa la clave maestra de administrador.');
+      setAuthError('Contraseña incorrecta. Acceso restringido a administradores.');
+    }
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePassError('');
+    const storedPass = localStorage.getItem('chepe_admin_master_password');
+
+    if (storedPass && currentPassForChange !== storedPass) {
+      setChangePassError('La contraseña actual es incorrecta.');
+      return;
+    }
+
+    if (!newPassForChange || newPassForChange.length < 6) {
+      setChangePassError('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    try {
+      localStorage.setItem('chepe_admin_master_password', newPassForChange);
+      setChangePassSuccess(true);
+      setTimeout(() => {
+        setIsChangePassOpen(false);
+        setChangePassSuccess(false);
+        setCurrentPassForChange('');
+        setNewPassForChange('');
+      }, 1500);
+    } catch (e) {
+      setChangePassError('Error al guardar la nueva contraseña.');
     }
   };
 
@@ -193,7 +257,9 @@ export const AdminDashboard: React.FC = () => {
             Acceso Protegido de Administración
           </h2>
           <p className="text-xs text-stone-300">
-            Ingresa la contraseña maestra para acceder a las métricas, usuarios y licencias de Chepe IA.
+            {hasConfiguredPassword
+              ? 'Ingresa tu contraseña maestra privada para acceder al panel de control.'
+              : 'Configura tu nueva contraseña maestra de administrador para proteger este panel.'}
           </p>
         </div>
 
@@ -207,32 +273,42 @@ export const AdminDashboard: React.FC = () => {
           <div className="space-y-1.5 text-left">
             <label className="text-xs font-bold text-stone-300 flex items-center gap-2">
               <Key className="w-3.5 h-3.5 text-amber-400" />
-              <span>Contraseña Maestra:</span>
+              <span>{hasConfiguredPassword ? 'Contraseña Maestra:' : 'Nueva Contraseña Maestra:'}</span>
             </label>
             <input
               type="password"
               value={adminPasswordInput}
               onChange={(e) => setAdminPasswordInput(e.target.value)}
-              placeholder="Ingresa la clave maestra..."
+              placeholder={hasConfiguredPassword ? '••••••••••••' : 'Mínimo 6 caracteres...'}
               className="w-full px-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+              autoFocus
             />
           </div>
+
+          {!hasConfiguredPassword && (
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-stone-300 flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>Confirmar Contraseña:</span>
+              </label>
+              <input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="Repite la contraseña..."
+                className="w-full px-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
             className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
           >
             <Unlock className="w-4 h-4" />
-            <span>Desbloquear Panel Admin</span>
+            <span>{hasConfiguredPassword ? 'Desbloquear Panel Admin' : 'Guardar y Desbloquear'}</span>
           </button>
         </form>
-
-        <div className="p-3 rounded-2xl bg-[#050A14] border border-cyan-950 text-[11px] text-cyan-300 font-mono text-left space-y-1">
-          <div className="font-bold text-amber-400">💡 Clave Maestra por Defecto:</div>
-          <div className="select-all font-bold bg-[#081021] p-1.5 rounded border border-cyan-900">
-            ChepeAdmin#2026!MasterKey
-          </div>
-        </div>
       </div>
     );
   }
@@ -253,6 +329,15 @@ export const AdminDashboard: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setIsChangePassOpen(true)}
+            className="px-3 py-2.5 rounded-xl bg-[#0B1428] hover:bg-[#11203E] text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Cambiar Contraseña Maestra"
+          >
+            <Key className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Cambiar Clave</span>
+          </button>
+
+          <button
             onClick={fetchAdminStats}
             disabled={isLoadingStats}
             className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
@@ -271,6 +356,80 @@ export const AdminDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {isChangePassOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#070D1E] border border-amber-500/50 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-cyan-950">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-base">
+                <Key className="w-5 h-5" />
+                <span>Cambiar Contraseña Maestra</span>
+              </div>
+              <button
+                onClick={() => { setIsChangePassOpen(false); setChangePassError(''); setChangePassSuccess(false); }}
+                className="text-stone-400 hover:text-white text-xs"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            {changePassSuccess ? (
+              <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-center font-bold text-sm">
+                ¡Contraseña maestra actualizada correctamente!
+              </div>
+            ) : (
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                {changePassError && (
+                  <div className="p-3 rounded-xl bg-red-950 border border-red-500 text-red-300 text-xs font-medium">
+                    {changePassError}
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-stone-300">Contraseña Actual:</label>
+                  <input
+                    type="password"
+                    value={currentPassForChange}
+                    onChange={(e) => setCurrentPassForChange(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full px-3 py-2 rounded-xl bg-[#040813] border border-cyan-900 text-white text-xs focus:outline-none focus:border-amber-400"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-stone-300">Nueva Contraseña Maestra:</label>
+                  <input
+                    type="password"
+                    value={newPassForChange}
+                    onChange={(e) => setNewPassForChange(e.target.value)}
+                    placeholder="Mínimo 6 caracteres..."
+                    className="w-full px-3 py-2 rounded-xl bg-[#040813] border border-cyan-900 text-white text-xs focus:outline-none focus:border-amber-400"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsChangePassOpen(false)}
+                    className="px-3 py-1.5 rounded-xl text-stone-400 hover:text-white text-xs"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs"
+                  >
+                    Guardar Nueva Clave
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

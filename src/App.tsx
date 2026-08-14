@@ -26,6 +26,8 @@ export default function App() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfile>(DEFAULT_USER_PROFILE);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | 'guest'>('login');
 
   // Saved Conversations & Folders
   const [conversations, setConversations] = useState<SavedConversation[]>([
@@ -109,9 +111,16 @@ export default function App() {
     }
   }, []);
 
+  const handleOpenAuthModal = (mode: 'login' | 'register' = 'register') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
   const handleLoginSuccess = (user: UserProfile) => {
     setUserProfile(user);
     setIsAuthenticated(true);
+    setIsAuthModalOpen(false);
+    setActiveTab('chat');
     try {
       localStorage.setItem('chepe_auth_user', JSON.stringify(user));
     } catch (e) {}
@@ -119,6 +128,7 @@ export default function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setIsAuthModalOpen(false);
     try {
       localStorage.removeItem('chepe_auth_user');
     } catch (e) {}
@@ -209,10 +219,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050A14] text-cyan-50 font-sans flex flex-col selection:bg-[#00E5FF] selection:text-stone-950">
-      {/* Authentication Modal if not logged in */}
-      {!isAuthenticated && (
-        <AuthModal onLoginSuccess={handleLoginSuccess} />
+    <div className="min-h-screen bg-[#050A14] text-cyan-50 font-sans flex flex-col selection:bg-[#00E5FF] selection:text-stone-950 w-full max-w-full overflow-x-hidden">
+      {/* Authentication Modal if not logged in or explicitly opened */}
+      {(!isAuthenticated || isAuthModalOpen) && (
+        <AuthModal
+          onLoginSuccess={handleLoginSuccess}
+          onClose={isAuthenticated ? () => setIsAuthModalOpen(false) : undefined}
+          defaultMode={authModalMode}
+        />
       )}
 
       {/* Top Main Navbar */}
@@ -224,11 +238,13 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={(tab) => setActiveTab(tab)}
         userRole={userProfile.role}
+        isGuest={userProfile.isGuest}
+        onOpenAuthModal={handleOpenAuthModal}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       {/* Full Workspace Wrapper */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative w-full max-w-full">
         {/* Left Drawer Navigation */}
         <SidebarNav
           activeTab={activeTab}
@@ -240,11 +256,13 @@ export default function App() {
           dailyLimit={userProfile.dailyLimit}
           userName={userProfile.name}
           userRole={userProfile.role}
+          isGuest={userProfile.isGuest}
+          onOpenAuthModal={handleOpenAuthModal}
           onLogout={handleLogout}
         />
 
         {/* Central View Content Canvas */}
-        <main className="flex-1 overflow-y-auto w-full relative">
+        <main className="flex-1 overflow-y-auto w-full max-w-full overflow-x-hidden relative">
           {activeTab === 'chat' && (
             <ChepeChat
               key={chatSessionKey}

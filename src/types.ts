@@ -1,4 +1,15 @@
-export type AIModelId = 'chepe-3.8' | 'chepe-reasoning-o1' | 'gemini-3.5-flash' | 'gemini-4.0-ultra' | 'claude-proxy';
+export type AIModelId = 
+  | 'gpt-4o' 
+  | 'gpt-4o-mini' 
+  | 'o1' 
+  | 'o3-mini' 
+  | 'deepseek-r1'
+  | 'dall-e-3'
+  | 'chepe-3.8' 
+  | 'chepe-reasoning-o1' 
+  | 'gemini-3.5-flash' 
+  | 'gemini-4.0-ultra' 
+  | 'claude-proxy';
 
 export interface AIModelOption {
   id: AIModelId;
@@ -149,6 +160,7 @@ export interface UserProfile {
   dailyLimit: number;
   status: 'active' | 'suspended';
   role: 'user' | 'admin';
+  isGuest?: boolean;
 }
 
 export interface PlanTier {

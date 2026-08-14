@@ -8,6 +8,8 @@ import { CustomGptsModal } from './CustomGptsModal';
 import { MemoryModal } from './MemoryModal';
 import { ShareChatModal } from './ShareChatModal';
 import { CustomInstructionsModal } from './CustomInstructionsModal';
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
+import { FeedbackModal } from './FeedbackModal';
 import { DataAnalystCard } from './DataAnalystCard';
 import {
   Bot, Send, Sparkles, User, Volume2, VolumeX, Plus, Image as ImageIcon,
@@ -15,7 +17,8 @@ import {
   PanelLeft, Lightbulb, Search, Trash2, Mic, MicOff, ThumbsUp, ThumbsDown,
   Paperclip, Terminal, Play, Globe, Cpu, Layout, RotateCcw, ExternalLink,
   ChevronRight, Share2, FileCode, CheckCircle2, Shield, BarChart3, Download,
-  Maximize2, Palette, Radio, Wand2, Brain, Edit3, Sliders
+  Maximize2, Palette, Radio, Wand2, Brain, Edit3, Sliders, Pin, PinOff,
+  Keyboard, Edit2, Loader2
 } from 'lucide-react';
 
 interface ChepeChatProps {
@@ -60,6 +63,21 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
   } | null>(null);
   const [expandedReasoningIds, setExpandedReasoningIds] = useState<Record<string, boolean>>({});
 
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [feedbackMessageId, setFeedbackMessageId] = useState<string | null>(null);
+  const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
+  const [pinnedChatIds, setPinnedChatIds] = useState<string[]>(['hist-1']);
+  const [editingChatHistoryId, setEditingChatHistoryId] = useState<string | null>(null);
+  const [editingChatHistoryTitle, setEditingChatHistoryTitle] = useState('');
+  const [speechRate, setSpeechRate] = useState<number>(1.0);
+  const [messageRatings, setMessageRatings] = useState<Record<string, 'up' | 'down'>>({});
+  const [toastNotification, setToastNotification] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastNotification(msg);
+    setTimeout(() => setToastNotification(null), 3000);
+  };
+
   const [chatHistory, setChatHistory] = useState([
     { id: 'hist-1', title: 'Función en Kotlin con Corrutinas', date: 'Hoy', specialty: 'programacion', firstPrompt: 'Escribe una función en Kotlin con StateFlow para Android' },
     { id: 'hist-2', title: 'Resolución de ecuación cuadrática', date: 'Ayer', specialty: 'matematicas', firstPrompt: 'Resuelve 2x² + 5x - 3 = 0 paso a paso' },
@@ -68,7 +86,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
   ]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [selectedModel, setSelectedModel] = useState<AIModelId>('chepe-3.8');
+  const [selectedModel, setSelectedModel] = useState<AIModelId>('gpt-4o');
   const [selectedCategory, setSelectedCategory] = useState<PromptSpecialty>('general');
 
   const [input, setInput] = useState('');
@@ -119,6 +137,112 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is actively writing in an input, unless modifier keys used
+      const isInputActive = ['INPUT', 'TEXTAREA'].includes((document.activeElement?.tagName || ''));
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        handleNewChat();
+        showToast('✨ Nuevo chat iniciado');
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsShortcutsModalOpen(prev => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setIsSidebarOpen(prev => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        setIsVoiceModeOpen(prev => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        setIsCustomInstructionsOpen(true);
+      } else if (!isInputActive && e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleTogglePin = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPinnedChatIds(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [id, ...prev]
+    );
+    showToast(pinnedChatIds.includes(id) ? 'Chat desfijado' : '📌 Chat fijado arriba');
+  };
+
+  const handleStartRenameChat = (id: string, currentTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingChatHistoryId(id);
+    setEditingChatHistoryTitle(currentTitle);
+  };
+
+  const handleSaveRenameChat = (id: string, e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!editingChatHistoryTitle.trim()) {
+      setEditingChatHistoryId(null);
+      return;
+    }
+    setChatHistory(prev => prev.map(h => h.id === id ? { ...h, title: editingChatHistoryTitle.trim() } : h));
+    setEditingChatHistoryId(null);
+    showToast('✏️ Título de conversación actualizado');
+  };
+
+  const handleExportChatHistoryItem = (item: { title: string; firstPrompt: string }, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const markdownContent = `# ${item.title}\n\n**Fecha:** ${new Date().toLocaleDateString()}\n**Plataforma:** Chepe IA\n\n## Consulta Inicial\n${item.firstPrompt}\n\n---\n*Exportado desde Chepe IA Platform*`;
+    const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${item.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 Conversación descargada en Markdown');
+  };
+
+  const handleEnhancePrompt = async () => {
+    if (!input.trim() || isEnhancingPrompt) return;
+    setIsEnhancingPrompt(true);
+    try {
+      const res = await fetch('/api/enhance-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draftPrompt: input })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.enhancedPrompt) {
+          setInput(data.enhancedPrompt);
+          showToast('✨ ¡Prompt optimizado con éxito!');
+        }
+      }
+    } catch (err) {
+      console.error('Error enhancing prompt:', err);
+    } finally {
+      setIsEnhancingPrompt(false);
+    }
+  };
+
+  const handleRateMessage = (msgId: string, rating: 'up' | 'down') => {
+    setMessageRatings(prev => ({ ...prev, [msgId]: rating }));
+    if (rating === 'down') {
+      setFeedbackMessageId(msgId);
+    } else {
+      showToast('👍 ¡Gracias por tu valoración positiva!');
+    }
+  };
+
+  const handleSubmitFeedback = (msgId: string, tags: string[], comment: string) => {
+    console.log('Feedback enviado para:', msgId, tags, comment);
+    showToast('✅ Comentarios enviados correctamente');
+  };
 
   const handleNewChat = () => {
     setMessages([]);
@@ -498,40 +622,149 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1 scrollbar-none">
-          <div className="px-2 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
-            Historial Reciente
-          </div>
-
-          {filteredHistory.length === 0 ? (
-            <div className="text-center py-6 text-xs text-stone-500 italic">
-              No hay chats guardados
-            </div>
-          ) : (
-            filteredHistory.map((item, idx) => (
-              <div
-                key={`${item.id}-${idx}`}
-                onClick={() => {
-                  handleSendMessage(item.firstPrompt);
-                  if (window.innerWidth < 768) setIsSidebarOpen(false);
-                }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#0F1C36] text-xs flex items-center justify-between text-cyan-100/90 transition-colors group cursor-pointer"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <MessageSquare className="w-3.5 h-3.5 text-cyan-400 shrink-0 group-hover:text-[#00E5FF] transition-colors" />
-                  <span className="truncate font-medium">{item.title}</span>
-                </div>
-
-                <button
-                  onClick={(e) => handleDeleteHistory(item.id, e)}
-                  className="p-1 text-stone-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Eliminar chat"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-3 scrollbar-none">
+          {/* Pinned Chats */}
+          {chatHistory.filter(h => pinnedChatIds.includes(h.id)).length > 0 && (
+            <div className="space-y-1">
+              <div className="px-2 py-0.5 text-[10px] font-bold text-[#00E5FF] uppercase tracking-wider flex items-center gap-1">
+                <Pin className="w-3 h-3 text-[#00E5FF]" />
+                <span>Chats Fijados</span>
               </div>
-            ))
+              {chatHistory.filter(h => pinnedChatIds.includes(h.id)).map((item) => (
+                <div
+                  key={`pinned-${item.id}`}
+                  onClick={() => {
+                    handleSendMessage(item.firstPrompt);
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-xl bg-[#09152E] border border-cyan-900/80 hover:border-[#00E5FF]/60 text-xs flex items-center justify-between text-cyan-100 transition-all group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Pin className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                    <span className="truncate font-semibold text-white">{item.title}</span>
+                  </div>
+
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => handleTogglePin(item.id, e)}
+                      className="p-1 text-stone-400 hover:text-yellow-400"
+                      title="Desfijar chat"
+                    >
+                      <PinOff className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => handleExportChatHistoryItem(item, e)}
+                      className="p-1 text-stone-400 hover:text-[#00E5FF]"
+                      title="Exportar Markdown"
+                    >
+                      <Download className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
+
+          {/* All / Filtered Chats */}
+          <div className="space-y-1">
+            <div className="px-2 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider flex items-center justify-between">
+              <span>Historial Reciente</span>
+              <span className="text-[9px] text-stone-500 font-mono">{filteredHistory.length} chats</span>
+            </div>
+
+            {filteredHistory.length === 0 ? (
+              <div className="text-center py-6 text-xs text-stone-500 italic">
+                No hay chats guardados
+              </div>
+            ) : (
+              filteredHistory.map((item, idx) => {
+                const isPinned = pinnedChatIds.includes(item.id);
+                const isEditingThis = editingChatHistoryId === item.id;
+
+                return (
+                  <div
+                    key={`${item.id}-${idx}`}
+                    onClick={() => {
+                      if (!isEditingThis) {
+                        handleSendMessage(item.firstPrompt);
+                        if (window.innerWidth < 768) setIsSidebarOpen(false);
+                      }
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#0F1C36] text-xs flex items-center justify-between text-cyan-100/90 transition-colors group cursor-pointer"
+                  >
+                    {isEditingThis ? (
+                      <form
+                        onSubmit={(e) => handleSaveRenameChat(item.id, e)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1 w-full"
+                      >
+                        <input
+                          type="text"
+                          value={editingChatHistoryTitle}
+                          onChange={(e) => setEditingChatHistoryTitle(e.target.value)}
+                          className="w-full bg-[#040813] border border-[#00E5FF] rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          type="submit"
+                          className="p-1 text-emerald-400 hover:text-emerald-300"
+                          title="Guardar"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setEditingChatHistoryId(null); }}
+                          className="p-1 text-stone-400 hover:text-stone-200"
+                          title="Cancelar"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 truncate">
+                          <MessageSquare className="w-3.5 h-3.5 text-cyan-400 shrink-0 group-hover:text-[#00E5FF] transition-colors" />
+                          <span className="truncate font-medium">{item.title}</span>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => handleTogglePin(item.id, e)}
+                            className={`p-1 ${isPinned ? 'text-[#00E5FF]' : 'text-stone-400 hover:text-[#00E5FF]'}`}
+                            title={isPinned ? "Desfijar" : "Fijar arriba"}
+                          >
+                            <Pin className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => handleStartRenameChat(item.id, item.title, e)}
+                            className="p-1 text-stone-400 hover:text-cyan-300"
+                            title="Renombrar título"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => handleExportChatHistoryItem(item, e)}
+                            className="p-1 text-stone-400 hover:text-[#00E5FF]"
+                            title="Exportar Markdown"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteHistory(item.id, e)}
+                            className="p-1 text-stone-400 hover:text-rose-400"
+                            title="Eliminar chat"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
         <div className="p-3 border-t border-cyan-950 space-y-1.5 bg-[#060B17]">
@@ -617,6 +850,15 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsShortcutsModalOpen(true)}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-[#081021] text-stone-300 border border-cyan-900/80 hover:border-cyan-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Atajos de Teclado (Ctrl+K o ?)"
+            >
+              <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden xl:inline">Atajos</span>
+            </button>
+
             <button
               onClick={() => setIsCustomInstructionsOpen(true)}
               className="px-2.5 py-1.5 rounded-xl bg-[#081021] text-indigo-300 border border-indigo-900/80 hover:border-indigo-500 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
@@ -967,7 +1209,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <div className="flex items-center gap-3 px-1 text-stone-400 text-xs">
+                          <div className="flex flex-wrap items-center gap-3 px-1 text-stone-400 text-xs">
                             <button
                               onClick={() => handleCopyText(msg.text, msg.id)}
                               className="flex items-center gap-1 hover:text-cyan-300 transition-colors cursor-pointer"
@@ -1002,6 +1244,27 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                                   <span className="text-[10px]">Voz</span>
                                 </>
                               )}
+                            </button>
+
+                            {/* Thumbs Up / Thumbs Down ChatGPT Feedback */}
+                            <button
+                              onClick={() => handleRateMessage(msg.id, 'up')}
+                              className={`p-1 rounded hover:text-emerald-400 transition-colors cursor-pointer ${
+                                messageRatings[msg.id] === 'up' ? 'text-emerald-400 bg-emerald-950/60' : 'hover:bg-[#081021]'
+                              }`}
+                              title="Buena respuesta"
+                            >
+                              <ThumbsUp className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => handleRateMessage(msg.id, 'down')}
+                              className={`p-1 rounded hover:text-rose-400 transition-colors cursor-pointer ${
+                                messageRatings[msg.id] === 'down' ? 'text-rose-400 bg-rose-950/60' : 'hover:bg-[#081021]'
+                              }`}
+                              title="Mala respuesta o inexacta (Dar Feedback)"
+                            >
+                              <ThumbsDown className="w-3.5 h-3.5" />
                             </button>
 
                             <button
@@ -1280,6 +1543,23 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                 disabled={isLoading}
               />
 
+              {/* Magic Prompt Optimizer Button (ChatGPT Plus feature) */}
+              {input.trim().length > 3 && (
+                <button
+                  type="button"
+                  onClick={handleEnhancePrompt}
+                  disabled={isEnhancingPrompt}
+                  className="p-1.5 rounded-full bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-300 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow"
+                  title="Optimizar y enriquecer este prompt con IA"
+                >
+                  {isEnhancingPrompt ? (
+                    <Loader2 className="w-3.5 h-3.5 text-indigo-300 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-3.5 h-3.5 text-indigo-300" />
+                  )}
+                </button>
+              )}
+
               <button
                 type="submit"
                 disabled={(!input.trim() && !attachedImage && !attachedFile) || isLoading}
@@ -1296,7 +1576,27 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
         </div>
       </div>
 
+      {/* Floating Toast Notification */}
+      {toastNotification && (
+        <div className="fixed bottom-20 right-6 z-50 px-4 py-2.5 rounded-2xl bg-[#08152E] border border-[#00E5FF]/70 text-[#00E5FF] font-semibold text-xs shadow-2xl shadow-cyan-950/90 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
+          <Sparkles className="w-4 h-4 text-[#00E5FF] animate-spin" />
+          <span>{toastNotification}</span>
+        </div>
+      )}
+
       {/* MODALS AND OVERLAYS */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      <FeedbackModal
+        isOpen={!!feedbackMessageId}
+        messageId={feedbackMessageId || ''}
+        onClose={() => setFeedbackMessageId(null)}
+        onSubmitFeedback={handleSubmitFeedback}
+      />
+
       <VoiceModeOverlay
         isOpen={isVoiceModeOpen}
         onClose={() => setIsVoiceModeOpen(false)}

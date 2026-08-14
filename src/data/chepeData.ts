@@ -2,44 +2,60 @@ import { AIModelOption, CategoryOption, PlanTier, UserProfile, AdminUserItem } f
 
 export const AI_MODEL_OPTIONS: AIModelOption[] = [
   {
-    id: 'chepe-3.8',
-    name: 'Chepe 3.8 Ultra',
-    badge: 'MÁS RÁPIDO',
-    icon: '⚡',
-    description: 'Motor principal optimizado para respuestas instantáneas y conversación fluida.',
-    speed: 'Ultra rápido (0.2s)'
+    id: 'gpt-4o',
+    name: 'GPT-4o Omni',
+    badge: 'FLAGSHIP CHATGPT',
+    icon: '✨',
+    description: 'Modelo insignia inteligente y multimodal para texto, código, análisis y visión.',
+    speed: 'Ultra rápido (0.3s)'
   },
   {
-    id: 'chepe-reasoning-o1',
-    name: 'Chepe Razonamiento O1',
-    badge: 'PENSAMIENTO O1',
+    id: 'o3-mini',
+    name: 'o3-mini / o1 Reasoning',
+    badge: 'RAZONAMIENTO STEM',
     icon: '🧠',
-    description: 'Genera cadenas de pensamiento paso a paso antes de responder (Matemáticas, Algoritmos complejos).',
-    speed: 'Razonamiento Profundo'
+    description: 'Cadena de pensamiento profunda antes de responder para matemáticas, algoritmos y lógica.',
+    speed: 'Pensamiento Profundo'
+  },
+  {
+    id: 'deepseek-r1',
+    name: 'DeepSeek-R1 Reasoning',
+    badge: 'CÓDIGO ABIERTO',
+    icon: '🐳',
+    description: 'Excelente para programación avanzada y deducción lógica sin restricciones.',
+    speed: 'Razonamiento paso a paso'
+  },
+  {
+    id: 'dall-e-3',
+    name: 'DALL-E 3 Image Studio',
+    badge: 'CREACIÓN VISUAL',
+    icon: '🎨',
+    description: 'Generador de imágenes artísticas, render 3D e ilustraciones hiperrealistas en HD.',
+    speed: 'Generación Visual HD'
   },
   {
     id: 'gemini-3.5-flash',
-    name: 'Gemini 3.5 Flash',
-    badge: 'MULTIMODAL',
+    name: 'Gemini 2.5 Flash',
+    badge: 'MULTIMODAL RÁPIDO',
     icon: '💎',
-    description: 'Excelente para análisis de visión, imágenes y documentos extensos.',
-    speed: 'Rápido (0.4s)'
+    description: 'Excelente para análisis de visión, imágenes, PDFs y documentos extensos.',
+    speed: 'Rápido (0.2s)'
   },
   {
-    id: 'gemini-4.0-ultra',
-    name: 'Gemini 4.0 Ultra',
-    badge: 'POTENCIA MÁXIMA',
-    icon: '🚀',
-    description: 'Poder de procesamiento superior para arquitectura de software y refactorización.',
-    speed: 'Rendimiento Máximo'
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o mini',
+    badge: 'LIGERO & EFICIENTE',
+    icon: '⚡',
+    description: 'Respuestas cotidianas instantáneas con bajo consumo de tokens.',
+    speed: 'Instantáneo (0.1s)'
   },
   {
-    id: 'claude-proxy',
-    name: 'Claude Proxy Engine',
-    badge: 'ESCRITURA CREATIVA',
-    icon: '🎭',
-    description: 'Especialista en redacción de ensayos, literatura y código limpio.',
-    speed: 'Alta precisión'
+    id: 'chepe-3.8',
+    name: 'Chepe 3.8 Ultra',
+    badge: 'MOTOR NATIVO',
+    icon: '🤖',
+    description: 'Motor principal optimizado para respuestas en español y asistencia técnica.',
+    speed: 'Ultra rápido (0.2s)'
   }
 ];
 

@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  background-color: #050A14;
+  color: #ECFEFF;
+}
+
+* {
+  box-sizing: border-box;
+}
