@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CustomServerConfig } from '../types';
 import { Settings, Key, Server, Volume2, Shield, Trash2, Check, RefreshCw, Sparkles, Moon, Sun } from 'lucide-react';
+import { saveStoredApiKey, getStoredApiKey } from '../services/geminiClient';
 
 interface SettingsViewProps {
   customConfig: CustomServerConfig;
@@ -13,7 +14,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSaveCustomConfig,
   onClearAllHistory
 }) => {
-  const [apiKey, setApiKey] = useState(customConfig.apiKey || '');
+  const [apiKey, setApiKey] = useState(customConfig.apiKey || getStoredApiKey() || '');
   const [hostIp, setHostIp] = useState(customConfig.hostIp || '');
   const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -31,16 +32,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         body: JSON.stringify({ apiKey, hostIp })
       });
 
-      const data = await res.json();
-      setTestResult({
-        success: data.success,
-        message: data.message || (data.success ? 'Conexión exitosa' : 'Error de prueba')
-      });
+      if (res.ok) {
+        const data = await res.json();
+        setTestResult({
+          success: data.success,
+          message: data.message || (data.success ? 'Conexión exitosa con el servidor' : 'Error de prueba')
+        });
+        return;
+      }
+      throw new Error(`HTTP ${res.status}`);
     } catch (err: any) {
-      setTestResult({
-        success: false,
-        message: 'No se pudo contactar al servidor: ' + err.message
-      });
+      // Fallback: Test directly with Google Gemini REST API
+      try {
+        const keyToUse = apiKey || getStoredApiKey();
+        if (!keyToUse) {
+          throw new Error('Por favor ingresa una clave de API.');
+        }
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keyToUse}`;
+        const pingRes = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: 'ping' }] }]
+          })
+        });
+
+        if (pingRes.ok) {
+          setTestResult({
+            success: true,
+            message: '¡Conexión directa con Google Gemini exitosa! Lista para responder en Vercel.'
+          });
+        } else {
+          const errData = await pingRes.json().catch(() => ({}));
+          throw new Error(errData.error?.message || 'Clave inválida');
+        }
+      } catch (directErr: any) {
+        setTestResult({
+          success: false,
+          message: directErr.message || 'No se pudo contactar el servicio de IA.'
+        });
+      }
     } finally {
       setIsTesting(false);
     }
@@ -48,6 +79,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (apiKey) {
+      saveStoredApiKey(apiKey);
+    }
     onSaveCustomConfig({ apiKey, hostIp });
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2500);

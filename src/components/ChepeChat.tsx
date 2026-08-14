@@ -11,6 +11,8 @@ import { CustomInstructionsModal } from './CustomInstructionsModal';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { FeedbackModal } from './FeedbackModal';
 import { DataAnalystCard } from './DataAnalystCard';
+import { ApiKeyModal } from './ApiKeyModal';
+import { callGeminiDirectlyFromClient, getStoredApiKey } from '../services/geminiClient';
 import {
   Bot, Send, Sparkles, User, Volume2, VolumeX, Plus, Image as ImageIcon,
   X, ChevronDown, Settings, Check, Copy, MessageSquare, PanelLeftClose,
@@ -18,7 +20,7 @@ import {
   Paperclip, Terminal, Play, Globe, Cpu, Layout, RotateCcw, ExternalLink,
   ChevronRight, Share2, FileCode, CheckCircle2, Shield, BarChart3, Download,
   Maximize2, Palette, Radio, Wand2, Brain, Edit3, Sliders, Pin, PinOff,
-  Keyboard, Edit2, Loader2
+  Keyboard, Edit2, Loader2, Key
 } from 'lucide-react';
 
 interface ChepeChatProps {
@@ -63,6 +65,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
   } | null>(null);
   const [expandedReasoningIds, setExpandedReasoningIds] = useState<Record<string, boolean>>({});
 
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
@@ -360,31 +363,62 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
     setDailyCount(prev => prev + 1);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let data: any = null;
+      let usedClientFallback = false;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [...messages, userMsg],
+            userPrompt: promptText,
+            modelId: selectedModel,
+            specialty: selectedCategory,
+            imageUrl: currentImage || undefined,
+            fileData: currentFile || undefined,
+            customConfig: customConfig,
+            isReasoningMode: isReasoningMode,
+            isWebSearchMode: isWebSearchMode,
+            isImageMode: isImageMode,
+            customGptSystemPrompt: selectedCustomGpt?.systemPrompt
+          })
+        });
+
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          const errorJson = await response.json().catch(() => ({}));
+          const detailedMsg = errorJson.text || errorJson.details || errorJson.error;
+          throw new Error(detailedMsg || `HTTP ${response.status}`);
+        }
+      } catch (serverErr: any) {
+        console.warn('Backend /api/chat no disponible o falló, intentando conexión directa con Gemini...', serverErr);
+        
+        // Automatic direct client fallback
+        const fallbackRes = await callGeminiDirectlyFromClient({
           messages: [...messages, userMsg],
           userPrompt: promptText,
           modelId: selectedModel,
           specialty: selectedCategory,
           imageUrl: currentImage || undefined,
           fileData: currentFile || undefined,
-          customConfig: customConfig,
           isReasoningMode: isReasoningMode,
           isWebSearchMode: isWebSearchMode,
           isImageMode: isImageMode,
           customGptSystemPrompt: selectedCustomGpt?.systemPrompt
-        })
-      });
+        }, customConfig?.apiKey);
 
-      if (!response.ok) {
-        const errorJson = await response.json().catch(() => ({}));
-        const detailedMsg = errorJson.text || errorJson.details || errorJson.error || `Error de conexión (${response.status})`;
-        throw new Error(detailedMsg);
+        data = {
+          text: fallbackRes.text,
+          modelUsed: fallbackRes.modelUsed,
+          reasoningChain: fallbackRes.reasoningChain,
+          thinkingTimeMs: fallbackRes.thinkingTimeMs,
+          canvasData: fallbackRes.canvasData,
+          suggestions: fallbackRes.suggestions
+        };
+        usedClientFallback = true;
       }
-
-      const data = await response.json();
 
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
@@ -410,14 +444,31 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
       }
     } catch (err: any) {
       console.error('Chat error:', err);
-      const errorMsg: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: 'chepe_ia',
-        text: 'Ocurrió una interrupción temporal en el motor. Intenta enviar de nuevo tu consulta.',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        modelUsed: selectedModel
-      };
-      setMessages(prev => [...prev, errorMsg]);
+      
+      if (err?.message === 'MISSING_API_KEY') {
+        setIsApiKeyModalOpen(true);
+        const promptMsg: ChatMessage = {
+          id: `err-key-${Date.now()}`,
+          sender: 'chepe_ia',
+          text: '🔑 **Para activar las respuestas de IA en Vercel:**\n\n1. Haz clic en el botón **"Configurar Clave API"** que se abrió en tu pantalla.\n2. Pega tu clave de API de Gemini gratuita (empieza por `AIzaSy...`).\n3. Haz clic en **Guardar y Activar** y tu mensaje se responderá al instante.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          modelUsed: 'Chepe IA'
+        };
+        setMessages(prev => [...prev, promptMsg]);
+      } else {
+        const errorMessage = err?.message && !err.message.includes('object') 
+          ? `⚠️ ${err.message}` 
+          : '⚠️ Ocurrió una interrupción al conectar con el motor de IA. Haz clic en "Clave API" arriba para configurar o verificar tu clave.';
+        
+        const errorMsg: ChatMessage = {
+          id: `err-${Date.now()}`,
+          sender: 'chepe_ia',
+          text: errorMessage,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          modelUsed: selectedModel
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -850,6 +901,15 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsApiKeyModalOpen(true)}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-amber-950/40 text-amber-300 border border-amber-500/50 hover:bg-amber-900/50 hover:text-amber-100 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Configurar Clave API de Gemini para Vercel o web"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Clave API</span>
+            </button>
+
             <button
               onClick={() => setIsShortcutsModalOpen(true)}
               className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-[#081021] text-stone-300 border border-cyan-900/80 hover:border-cyan-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1456,6 +1516,136 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
             }}
             className="max-w-3xl mx-auto w-full relative"
           >
+            {/* Active Custom GPT Banner */}
+            {selectedCustomGpt && (
+              <div className="mb-2 p-2 rounded-2xl bg-gradient-to-r from-cyan-950/90 via-[#0B1E3B] to-cyan-950/90 border border-cyan-500/50 flex items-center justify-between shadow-lg animate-fadeIn">
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <span className="text-xl p-1 rounded-xl bg-cyan-900/60 border border-cyan-700">{selectedCustomGpt.avatarEmoji}</span>
+                  <div className="overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white truncate">{selectedCustomGpt.name}</span>
+                      <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-[#00E5FF] text-[9px] font-mono font-bold">GPT ACTIVO</span>
+                    </div>
+                    <p className="text-[10px] text-stone-400 truncate">{selectedCustomGpt.description}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCustomGpt(null);
+                    showToast('Cambiado al modelo estándar GPT-4o');
+                  }}
+                  className="px-2 py-1 rounded-xl bg-[#081021] hover:bg-red-950/60 text-stone-400 hover:text-red-300 border border-cyan-900/60 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0 ml-2"
+                  title="Salir de este GPT personalizado"
+                >
+                  <X className="w-3 h-3" />
+                  <span className="hidden sm:inline">Desactivar GPT</span>
+                </button>
+              </div>
+            )}
+
+            {/* Attached Image or File Preview Chip */}
+            {(attachedImage || attachedFile) && (
+              <div className="mb-2 flex flex-wrap gap-2 animate-fadeIn">
+                {attachedImage && (
+                  <div className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl bg-[#0B152B] border border-[#00E5FF]/60 text-xs text-stone-200 shadow-md">
+                    <img src={attachedImage} alt="Adjunto" className="w-8 h-8 rounded-lg object-cover bg-black" />
+                    <span className="text-[11px] font-medium text-cyan-300 truncate max-w-[120px]">Imagen lista para análisis</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedImage(null)}
+                      className="p-1 rounded-full hover:bg-stone-800 text-stone-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                {attachedFile && (
+                  <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-2xl bg-[#0B152B] border border-[#00E5FF]/60 text-xs text-stone-200 shadow-md">
+                    <Paperclip className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                    <span className="text-[11px] font-mono text-cyan-300 truncate max-w-[150px]">{attachedFile.name}</span>
+                    <span className="text-[10px] text-stone-400 font-mono">({attachedFile.size})</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedFile(null)}
+                      className="p-1 rounded-full hover:bg-stone-800 text-stone-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ChatGPT Quick Feature Pills Toolbar */}
+            <div className="mb-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsWebSearchMode(!isWebSearchMode);
+                  showToast(isWebSearchMode ? 'Búsqueda web desactivada' : '🌐 Búsqueda web en vivo activada');
+                }}
+                className={`px-2.5 py-1 rounded-full border text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                  isWebSearchMode
+                    ? 'bg-[#002C3E] text-[#00E5FF] border-[#00E5FF] shadow-sm shadow-cyan-500/30'
+                    : 'bg-[#081021] text-stone-400 border-cyan-950 hover:border-cyan-800 hover:text-stone-200'
+                }`}
+              >
+                <Globe className={`w-3.5 h-3.5 ${isWebSearchMode ? 'text-[#00E5FF]' : 'text-stone-400'}`} />
+                <span>Buscar en la Web</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReasoningMode(!isReasoningMode);
+                  showToast(isReasoningMode ? 'Razonamiento desactivado' : '🧠 Razonamiento Profundo O1 activado');
+                }}
+                className={`px-2.5 py-1 rounded-full border text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                  isReasoningMode
+                    ? 'bg-purple-950/90 text-purple-300 border-purple-500 shadow-sm shadow-purple-500/30'
+                    : 'bg-[#081021] text-stone-400 border-cyan-950 hover:border-cyan-800 hover:text-stone-200'
+                }`}
+              >
+                <Cpu className={`w-3.5 h-3.5 ${isReasoningMode ? 'text-purple-400' : 'text-stone-400'}`} />
+                <span>Razonar (o1)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsImageMode(!isImageMode);
+                  showToast(isImageMode ? 'Modo texto activado' : '🎨 Modo DALL-E 3 para generación de imágenes');
+                }}
+                className={`px-2.5 py-1 rounded-full border text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                  isImageMode
+                    ? 'bg-pink-950/90 text-pink-300 border-pink-500 shadow-sm shadow-pink-500/30'
+                    : 'bg-[#081021] text-stone-400 border-cyan-950 hover:border-cyan-800 hover:text-stone-200'
+                }`}
+              >
+                <Palette className={`w-3.5 h-3.5 ${isImageMode ? 'text-pink-400' : 'text-stone-400'}`} />
+                <span>Crear Imagen DALL-E 3</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsGptsModalOpen(true)}
+                className="px-2.5 py-1 rounded-full bg-[#081021] text-stone-400 hover:text-cyan-300 border border-cyan-950 hover:border-cyan-800 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <Bot className="w-3.5 h-3.5 text-[#00E5FF]" />
+                <span>Explorar GPTs</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsMemoryModalOpen(true)}
+                className="px-2.5 py-1 rounded-full bg-[#081021] text-stone-400 hover:text-purple-300 border border-cyan-950 hover:border-purple-800 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <Brain className="w-3.5 h-3.5 text-purple-400" />
+                <span>Memoria IA</span>
+              </button>
+            </div>
+
             {/* Slash Commands Floating Autocomplete Menu */}
             {input.startsWith('/') && (
               <div className="absolute bottom-full mb-2 left-0 right-0 bg-[#060C1B] border border-cyan-500/50 rounded-2xl shadow-2xl p-2 z-30 max-h-64 overflow-y-auto divide-y divide-cyan-950/60 animate-fadeIn font-sans">
@@ -1638,6 +1828,12 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
       <CustomInstructionsModal
         isOpen={isCustomInstructionsOpen}
         onClose={() => setIsCustomInstructionsOpen(false)}
+      />
+
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        onKeySaved={() => showToast('¡Clave de API guardada y activada!')}
       />
 
       {/* Image Lightbox Modal */}
