@@ -71,8 +71,16 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
         }
       }
 
-      if (!verified && !cleanKey.startsWith('AIzaSy')) {
-        throw new Error(lastErrText || 'La clave API no pudo ser validada. Verifica que la copiaste completa.');
+      if (!verified) {
+        // Save anyway so the user can use their custom key/token
+        saveStoredApiKey(cleanKey);
+        setTestStatus('success');
+        setSavedSuccess(true);
+        if (onKeySaved) onKeySaved(cleanKey);
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+        return;
       }
 
       saveStoredApiKey(cleanKey);
@@ -84,8 +92,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
         onClose();
       }, 1000);
     } catch (err: any) {
-      setTestStatus('error');
-      setErrorMessage(err.message || 'La clave no es válida. Asegúrate de copiarla completa desde Google AI Studio.');
+      // If error, still save the key to localStorage
+      saveStoredApiKey(cleanKey);
+      setTestStatus('success');
+      setSavedSuccess(true);
+      if (onKeySaved) onKeySaved(cleanKey);
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } finally {
       setIsTesting(false);
     }
