@@ -90,6 +90,8 @@ export interface DirectGeminiChatParams {
 export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParams, apiKeyOverride?: string): Promise<{
   text: string;
   modelUsed: string;
+  generatedImageUrl?: string;
+  generatedImagePrompt?: string;
   reasoningChain?: string[];
   thinkingTimeMs?: number;
   canvasData?: any;
@@ -177,8 +179,15 @@ export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParam
     }
   };
 
-  // Try endpoints in priority order (v1beta)
-  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  // Try endpoints in priority order (v1beta) with instant multi-model fallback on 503 high demand
+  const modelsToTry = [
+    'gemini-3.7-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-flash-latest'
+  ];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
@@ -201,10 +210,33 @@ export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParam
       }
 
       const data = await res.json();
-      const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      // Image generation check
+      const promptText = params.userPrompt || '';
+      const isImageGen = params.isImageMode || /gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen|foto|fotograf[ií]a|pintura|dibujo|wallpaper|fondo de pantalla|arte de|image|draw|paint/i.test(promptText);
+      let generatedImageUrl: string | undefined = undefined;
+      let generatedImagePrompt: string | undefined = undefined;
+
+      if (isImageGen && (params.isImageMode || promptText.length < 300)) {
+        const cleanedPrompt = promptText
+          .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
+          .trim();
+        const imagePrompt = cleanedPrompt.length > 3 ? cleanedPrompt : (promptText.length > 3 ? promptText : 'futuristic AI cyberpunk technology city HD');
+        const encodedPrompt = encodeURIComponent(imagePrompt);
+        const seed = Math.floor(Math.random() * 999999);
+        generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+        generatedImagePrompt = imagePrompt;
+      }
 
       if (!responseText) {
-        throw new Error('Respuesta vacía recibida de Gemini.');
+        if (generatedImageUrl) {
+          responseText = `🎨 He generado tu imagen basada en: **"${generatedImagePrompt}"**`;
+        } else {
+          throw new Error('Respuesta vacía recibida de Gemini.');
+        }
+      } else if (generatedImageUrl && !responseText.includes('imagen')) {
+        responseText = `🎨 **Chepe DALL-E 3 Artist** ha generado tu imagen basada en: *"${generatedImagePrompt}"*\n\n${responseText}`;
       }
 
       // Check if it returned code to generate canvas
@@ -233,10 +265,16 @@ export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParam
       return {
         text: responseText,
         modelUsed: `Chepe IA (${model})`,
+        generatedImageUrl,
+        generatedImagePrompt,
         reasoningChain,
         thinkingTimeMs: params.isReasoningMode ? 1420 : undefined,
         canvasData,
-        suggestions: [
+        suggestions: generatedImageUrl ? [
+          'Genera otra con estilo anime',
+          'Hazla en versión hiperrealista 8K',
+          'Cambia el fondo a un atardecer'
+        ] : [
           '¿Puedes darme un ejemplo práctico?',
           'Explícame paso a paso',
           '¿Cómo lo implemento en mi proyecto?'

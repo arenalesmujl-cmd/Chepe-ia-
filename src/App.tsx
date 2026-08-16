@@ -128,6 +128,7 @@ export default function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setUserProfile(DEFAULT_USER_PROFILE);
     setIsAuthModalOpen(false);
     try {
       localStorage.removeItem('chepe_auth_user');
@@ -139,7 +140,7 @@ export default function App() {
       ...userProfile,
       planType: newPlan,
       planExpiresAt: expiresAt,
-      dailyLimit: newPlan === 'Pro' ? 1000 : newPlan === 'Premium' ? 10000 : 50
+      dailyLimit: newPlan === 'Gratis' ? 20 : newPlan === 'Pro' ? 1000 : 10000
     };
     setUserProfile(updatedUser);
     try {
@@ -154,6 +155,19 @@ export default function App() {
     } catch (e) {
       console.error('Error saving custom config:', e);
     }
+  };
+
+  const handleIncrementUsage = () => {
+    setUserProfile(prev => {
+      const updated = {
+        ...prev,
+        dailyUsageCount: (prev.dailyUsageCount || 0) + 1
+      };
+      try {
+        localStorage.setItem('chepe_auth_user', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
   };
 
   const handleAskAI = (prompt: string, category: string = 'general') => {
@@ -271,6 +285,9 @@ export default function App() {
               onOpenConfig={() => setActiveTab('settings')}
               onNavigateTab={(tab) => setActiveTab(tab)}
               attachedFileForChat={attachedFileForChat}
+              userProfile={userProfile}
+              onOpenAuthModal={handleOpenAuthModal}
+              onIncrementUsage={handleIncrementUsage}
             />
           )}
 

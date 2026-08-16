@@ -18,15 +18,21 @@ interface CanvasDrawerProps {
 }
 
 export const CanvasDrawer: React.FC<CanvasDrawerProps> = ({ artifact, onClose, onAskAIRefine }) => {
-  if (!artifact) return null;
-
   const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'console'>('preview');
-  const [editedCode, setEditedCode] = useState(artifact.content);
+  const [editedCode, setEditedCode] = useState(artifact?.content || '');
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  React.useEffect(() => {
+    if (artifact?.content) {
+      setEditedCode(artifact.content);
+    }
+  }, [artifact?.content]);
+
+  if (!artifact) return null;
 
   const isHtmlOrUI =
     artifact.language.toLowerCase() === 'html' ||

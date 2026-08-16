@@ -15,10 +15,10 @@ export const ShareChatModal: React.FC<ShareChatModalProps> = ({
   messages,
   chatTitle = 'Conversación con Chepe IA'
 }) => {
-  if (!isOpen) return null;
-
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMarkdown, setCopiedMarkdown] = useState(false);
+
+  if (!isOpen) return null;
 
   const shareUrl = `https://chepe.ai/share/${Math.random().toString(36).substring(2, 10)}`;
 

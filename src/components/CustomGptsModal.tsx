@@ -10,8 +10,6 @@ interface CustomGptsModalProps {
 }
 
 export const CustomGptsModal: React.FC<CustomGptsModalProps> = ({ isOpen, onClose, onSelectGpt }) => {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState<'explore' | 'create'>('explore');
   const [searchTerm, setSearchTerm] = useState('');
   const [userGpts, setUserGpts] = useState<CustomGpt[]>([]);
@@ -26,6 +24,8 @@ export const CustomGptsModal: React.FC<CustomGptsModalProps> = ({ isOpen, onClos
   const [enableWeb, setEnableWeb] = useState(true);
   const [enableCanvas, setEnableCanvas] = useState(true);
   const [enableImage, setEnableImage] = useState(false);
+
+  if (!isOpen) return null;
 
   const allGpts = [...OFFICIAL_CUSTOM_GPTS, ...userGpts];
   const filteredGpts = allGpts.filter(

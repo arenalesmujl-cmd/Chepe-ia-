@@ -131,7 +131,32 @@ export default async function handler(req: any, res: any) {
       parts: latestParts
     });
 
-    const modelsToTry = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    const isImageGenerationRequested =
+      req.body?.isImageMode ||
+      /gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen|foto|fotograf[ií]a|pintura|dibujo|wallpaper|fondo de pantalla|arte de|image|draw|paint/i.test(promptText);
+
+    let generatedImageUrl: string | undefined = undefined;
+    let generatedImagePrompt: string | undefined = undefined;
+
+    if (isImageGenerationRequested && (req.body?.isImageMode || promptText.length < 300)) {
+      const cleanedPrompt = promptText
+        .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
+        .trim();
+      const imagePrompt = cleanedPrompt.length > 3 ? cleanedPrompt : (promptText.length > 3 ? promptText : 'futuristic AI cyberpunk technology city HD');
+      const encodedPrompt = encodeURIComponent(imagePrompt);
+      const seed = Math.floor(Math.random() * 999999);
+      generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+      generatedImagePrompt = imagePrompt;
+    }
+
+    const modelsToTry = [
+      'gemini-3.7-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-flash-latest'
+    ];
     let lastError: any = null;
     let responseText = '';
     let usedModel = 'gemini-3.7-flash';
@@ -158,7 +183,13 @@ export default async function handler(req: any, res: any) {
     }
 
     if (!responseText) {
-      throw lastError || new Error('No se pudo generar una respuesta con los modelos disponibles.');
+      if (generatedImageUrl) {
+        responseText = `🎨 He generado tu imagen basada en: **"${generatedImagePrompt}"**`;
+      } else {
+        throw lastError || new Error('No se pudo generar una respuesta con los modelos disponibles.');
+      }
+    } else if (generatedImageUrl && !responseText.includes('imagen')) {
+      responseText = `🎨 **Chepe DALL-E 3 Artist** ha generado tu imagen basada en: *"${generatedImagePrompt}"*\n\n${responseText}`;
     }
 
     let canvasData: any = null;
@@ -176,6 +207,8 @@ export default async function handler(req: any, res: any) {
     res.json({
       text: responseText,
       modelUsed: `Chepe IA (${usedModel})`,
+      generatedImageUrl,
+      generatedImagePrompt,
       reasoningChain: isReasoningMode ? [
         'Analizando la consulta...',
         'Consultando base de conocimientos...',
@@ -183,7 +216,11 @@ export default async function handler(req: any, res: any) {
       ] : undefined,
       thinkingTimeMs: isReasoningMode ? 1200 : undefined,
       canvasData,
-      suggestions: [
+      suggestions: generatedImageUrl ? [
+        'Genera otra con estilo anime',
+        'Hazla en versión hiperrealista 8K',
+        'Cambia el fondo a un atardecer'
+      ] : [
         '¿Puedes darme un ejemplo práctico?',
         'Explícame paso a paso',
         '¿Cómo lo implemento?'

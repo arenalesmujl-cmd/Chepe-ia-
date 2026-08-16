@@ -14,8 +14,6 @@ interface MemoryModalProps {
 }
 
 export const MemoryModal: React.FC<MemoryModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
   const [memories, setMemories] = useState<MemoryItem[]>([
     {
       id: 'mem-1',
@@ -38,6 +36,8 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ isOpen, onClose }) => 
   ]);
 
   const [newFact, setNewFact] = useState('');
+
+  if (!isOpen) return null;
 
   const handleAddMemory = (e: React.FormEvent) => {
     e.preventDefault();

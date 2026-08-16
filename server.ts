@@ -86,72 +86,47 @@ Responde a cualquier consulta del usuario con agilidad, cortesía y rigor concep
 
 // Helper function to call Gemini API with retry and model fallback handling
 async function callGeminiWithRetry(clientAi: GoogleGenAI, contents: any[], sysInstruction: string, preferredModel?: string) {
-  // Only use valid models per Gemini API guidelines
+  // Broad resilient pool: standard and lightweight models
   const primaryModel = preferredModel && preferredModel.startsWith('gemini-') ? preferredModel : "gemini-3.7-flash";
   const modelsToTry = [
     primaryModel,
-    "gemini-3.7-flash",
     "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
     "gemini-flash-latest"
   ];
 
   // Remove duplicates while preserving priority order
-  const uniqueModels = Array.from(new Set(modelsToTry));
+  const uniqueModels = Array.from(new Set(modelsToTry.filter(Boolean)));
 
   let lastError: any = null;
 
   for (const modelName of uniqueModels) {
     if (!modelName) continue;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const response = await clientAi.models.generateContent({
-          model: modelName,
-          contents: contents,
-          config: {
-            systemInstruction: sysInstruction,
-            temperature: 0.7,
-          }
-        });
-
-        if (response && response.text) {
-          return { responseText: response.text, modelUsed: modelName };
+    try {
+      const response = await clientAi.models.generateContent({
+        model: modelName,
+        contents: contents,
+        config: {
+          systemInstruction: sysInstruction,
+          temperature: 0.7,
         }
-      } catch (err: any) {
-        lastError = err;
-        const errStr = String(err?.message || err);
-        console.warn(`[Chepe IA] Reintento ${attempt + 1} con modelo ${modelName} falló:`, errStr);
+      });
 
-        // If 404, deprecated OR 429 Rate Limit/Quota exhausted, do not retry same model, jump to next model
-        if (
-          errStr.includes("404") ||
-          errStr.includes("NOT_FOUND") ||
-          errStr.includes("no longer available") ||
-          errStr.includes("is not found") ||
-          errStr.includes("429") ||
-          errStr.includes("RESOURCE_EXHAUSTED") ||
-          errStr.includes("Quota") ||
-          errStr.includes("quota")
-        ) {
-          break;
-        }
-
-        // For temporary 503/UNAVAILABLE errors, wait briefly before retrying same model
-        if (
-          errStr.includes("503") ||
-          errStr.includes("UNAVAILABLE") ||
-          errStr.includes("high demand") ||
-          errStr.includes("temporary")
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
-        } else {
-          break;
-        }
+      if (response && response.text) {
+        return { responseText: response.text, modelUsed: modelName };
       }
+    } catch (err: any) {
+      lastError = err;
+      const errStr = String(err?.message || err);
+      console.warn(`[Chepe IA] Modelo ${modelName} no disponible (${errStr.slice(0, 80)}...), probando alternativa inmediata...`);
+      continue;
     }
   }
 
   const lastErrStr = String(lastError?.message || lastError || '');
-  let friendlyMessage = "El motor de Inteligencia Artificial está experimentando una alta demanda temporal. Por favor reintenta tu mensaje en un instante.";
+  let friendlyMessage = "El motor de Inteligencia Artificial está experimentando una alta demanda temporal en los servidores de Google. Por favor reintenta tu mensaje en un instante.";
   if (lastErrStr.includes("429") || lastErrStr.includes("Quota") || lastErrStr.includes("RESOURCE_EXHAUSTED")) {
     friendlyMessage = "Se ha alcanzado temporalmente el límite de cuota de solicitudes de la API de Gemini en el plan gratuito. Por favor espera unos segundos antes de enviar otra consulta o intenta nuevamente en un momento.";
   }
@@ -369,18 +344,19 @@ app.post("/api/chat", async (req: Request, res: Response) => {
     // Check if user is requesting Image Generation (DALL-E 3 style)
     const isImageGenerationRequested =
       req.body.isImageMode ||
-      /gener(a|ar|ame)|dibuja|crea|diseña|dalle|dall-e|imagen|foto|ilustrac/i.test(promptToUse);
+      /gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen|foto|fotograf[ií]a|pintura|dibujo|wallpaper|fondo de pantalla|arte de|image|draw|paint/i.test(promptToUse);
 
     let generatedImageUrl: string | undefined = undefined;
     let generatedImagePrompt: string | undefined = undefined;
 
-    if (isImageGenerationRequested && (req.body.isImageMode || promptToUse.length < 200)) {
+    if (isImageGenerationRequested && (req.body.isImageMode || promptToUse.length < 300)) {
       const cleanedPrompt = promptToUse
-        .replace(/gener(a|ar|ame)|dibuja|crea|diseña|dalle|dall-e|imagen de|una foto de|ilustraci[oó]n de/gi, '')
+        .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
         .trim();
       const imagePrompt = cleanedPrompt.length > 3 ? cleanedPrompt : 'futuristic AI cyberpunk technology space city ultra HD';
       const encodedPrompt = encodeURIComponent(imagePrompt);
-      generatedImageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 99999)}&nologo=true`;
+      const seed = Math.floor(Math.random() * 999999);
+      generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
       generatedImagePrompt = imagePrompt;
     }
 
@@ -638,7 +614,49 @@ Instrucciones:
   }
 });
 
-// 6. Admin Stats Endpoint
+// 6. Audio Transcription Endpoint (MediaRecorder voice-to-text)
+app.post("/api/transcribe", async (req: Request, res: Response) => {
+  try {
+    const { audioBase64, mimeType } = req.body || {};
+    if (!audioBase64) {
+      res.status(400).json({ error: "No se proporcionó audio para transcribir." });
+      return;
+    }
+
+    const cleanBase64 = audioBase64.replace(/^data:audio\/[a-zA-Z0-9_-]+;base64,/, '');
+    const clientAi = ai;
+
+    const contents = [
+      {
+        role: "user",
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType || 'audio/webm',
+              data: cleanBase64
+            }
+          },
+          {
+            text: "Transcribe con máxima fidelidad las palabras habladas en este audio en texto plano en español. Devuelve ÚNICAMENTE la transcripción exacta, sin formato adicional, sin comillas y sin introducciones."
+          }
+        ]
+      }
+    ];
+
+    const result = await callGeminiWithRetry(clientAi, contents, "Eres un transcriptor de audio de alta precisión. Devuelve únicamente el texto dictado.", "gemini-3.7-flash");
+    const transcript = result.responseText?.trim() || "";
+
+    res.json({
+      success: true,
+      transcript: transcript
+    });
+  } catch (err: any) {
+    console.error("Error en transcripción de audio:", err);
+    res.status(500).json({ error: err.message || "Error al transcribir audio" });
+  }
+});
+
+// 7. Admin Stats Endpoint
 app.get("/api/admin/stats", (_req: Request, res: Response) => {
   res.json({
     registeredUsersCount: 12480,

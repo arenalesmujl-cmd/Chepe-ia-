@@ -43,10 +43,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess, onClose, d
         name: name.trim(),
         email: email.trim().toLowerCase(),
         avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
-        planType: 'Gratis',
+        planType: 'Pro',
         memberSince: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
         dailyUsageCount: 0,
-        dailyLimit: 100,
+        dailyLimit: 1000,
         status: 'active',
         role: 'user',
         isGuest: false
@@ -93,7 +93,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess, onClose, d
       planType: 'Gratis',
       memberSince: 'Hoy (Modo Invitado)',
       dailyUsageCount: 0,
-      dailyLimit: 50,
+      dailyLimit: 20,
       status: 'active',
       role: 'user',
       isGuest: true
@@ -191,7 +191,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess, onClose, d
                 ¿Quieres probar sin registrarte?
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-[#00E5FF] font-bold border border-cyan-800">
-                1 Clic
+                Límite 20 mensajes
               </span>
             </div>
             <button
@@ -200,10 +200,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess, onClose, d
               className="w-full py-2.5 px-3 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-stone-950" />
-              <span>Entrar en Modo Invitado Automático</span>
+              <span>Entrar en Modo Invitado (20 consultas)</span>
             </button>
             <p className="text-[10px] text-cyan-200/80 text-center">
-              Genera una cuenta de invitado instantánea para conversar de inmediato.
+              Modo invitado: 20 mensajes diarios. ¡Crea tu propia cuenta para desbloquear <strong>1,000 mensajes diarios</strong>!
             </p>
           </div>
 

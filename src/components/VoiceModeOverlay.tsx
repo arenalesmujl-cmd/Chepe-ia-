@@ -8,8 +8,6 @@ interface VoiceModeOverlayProps {
 }
 
 export const VoiceModeOverlay: React.FC<VoiceModeOverlayProps> = ({ isOpen, onClose, onSendVoiceMessage }) => {
-  if (!isOpen) return null;
-
   const [isListening, setIsListening] = useState(false);
   const [status, setStatus] = useState<'idle' | 'listening' | 'thinking' | 'speaking'>('idle');
   const [transcript, setTranscript] = useState('');
@@ -21,6 +19,8 @@ export const VoiceModeOverlay: React.FC<VoiceModeOverlayProps> = ({ isOpen, onCl
 
   // Initialize Web Speech API if supported
   useEffect(() => {
+    if (!isOpen) return;
+
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
@@ -67,7 +67,9 @@ export const VoiceModeOverlay: React.FC<VoiceModeOverlayProps> = ({ isOpen, onCl
         setStatus('idle');
       };
     }
-  }, [transcript, onSendVoiceMessage, isMuted]);
+  }, [isOpen, transcript, onSendVoiceMessage, isMuted]);
+
+  if (!isOpen) return null;
 
   const toggleListening = () => {
     if (isListening) {

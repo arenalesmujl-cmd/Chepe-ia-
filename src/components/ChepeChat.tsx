@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage, AIModelId, PromptSpecialty, CustomServerConfig, UploadedFileItem, CustomGpt } from '../types';
+import { ChatMessage, AIModelId, PromptSpecialty, CustomServerConfig, UploadedFileItem, CustomGpt, UserProfile } from '../types';
 import { AI_MODEL_OPTIONS, CATEGORY_OPTIONS, QUICK_WELCOME_CARDS, SLASH_COMMANDS } from '../data/chepeData';
 import { CodeBlock } from './CodeBlock';
 import { CanvasDrawer } from './CanvasDrawer';
@@ -20,7 +20,7 @@ import {
   Paperclip, Terminal, Play, Globe, Cpu, Layout, RotateCcw, ExternalLink,
   ChevronRight, Share2, FileCode, CheckCircle2, Shield, BarChart3, Download,
   Maximize2, Palette, Radio, Wand2, Brain, Edit3, Sliders, Pin, PinOff,
-  Keyboard, Edit2, Loader2, Key
+  Keyboard, Edit2, Loader2, Key, Square, AlertTriangle, UserPlus
 } from 'lucide-react';
 
 interface ChepeChatProps {
@@ -29,6 +29,9 @@ interface ChepeChatProps {
   onOpenConfig?: () => void;
   onNavigateTab?: (tab: string) => void;
   attachedFileForChat?: UploadedFileItem | null;
+  userProfile?: UserProfile;
+  onOpenAuthModal?: (mode: 'login' | 'register') => void;
+  onIncrementUsage?: () => void;
 }
 
 export const ChepeChat: React.FC<ChepeChatProps> = ({
@@ -36,7 +39,10 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
   customConfig,
   onOpenConfig,
   onNavigateTab,
-  attachedFileForChat
+  attachedFileForChat,
+  userProfile,
+  onOpenAuthModal,
+  onIncrementUsage
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [historySearch, setHistorySearch] = useState('');
@@ -100,8 +106,23 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
   const [isSpeaking, setIsSpeaking] = useState<string | null>(null);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
 
-  const [dailyCount, setDailyCount] = useState<number>(28);
-  const maxDailyLimit = 1000;
+  // MediaRecorder Voice-to-Text states & refs
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false);
+  const [interimVoiceTranscript, setInterimVoiceTranscript] = useState('');
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<any>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const speechRecognitionRef = useRef<any>(null);
+
+  const [localDailyCount, setLocalDailyCount] = useState<number>(userProfile?.dailyUsageCount || 0);
+  const dailyCount = userProfile?.dailyUsageCount ?? localDailyCount;
+  const maxDailyLimit = userProfile?.dailyLimit ?? (userProfile?.isGuest ? 20 : 1000);
+  const isGuestUser = userProfile?.isGuest ?? true;
+  const hasReachedLimit = dailyCount >= maxDailyLimit;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -260,36 +281,213 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
     setChatHistory(prev => prev.filter(h => h.id !== id));
   };
 
-  const toggleRecording = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Tu navegador no soporta el reconocimiento de voz nativo.');
-      return;
-    }
-
-    if (isRecording) {
-      if (recognitionRef.current) recognitionRef.current.stop();
-      setIsRecording(false);
-      return;
-    }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-MX';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
-      setIsRecording(false);
+  // Clean up media recorder tracks & timers on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      if (speechRecognitionRef.current) {
+        try { speechRecognitionRef.current.stop(); } catch(e) {}
+      }
     };
+  }, []);
 
-    recognition.onerror = () => setIsRecording(false);
-    recognition.onend = () => setIsRecording(false);
+  // Process recorded audio blob from MediaRecorder
+  const processRecordedAudio = async (audioBlob: Blob, mimeType: string, capturedLiveText?: string) => {
+    if (audioBlob.size < 50 && !capturedLiveText) return;
 
-    recognitionRef.current = recognition;
-    recognition.start();
+    if (capturedLiveText && capturedLiveText.trim().length > 0) {
+      const transcribedText = capturedLiveText.trim();
+      setInput(prev => (prev ? `${prev} ${transcribedText}` : transcribedText));
+      setInterimVoiceTranscript('');
+      showToast('✍️ Voz convertida a texto con éxito');
+      return;
+    }
+
+    setIsTranscribingAudio(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result as string;
+        try {
+          const res = await fetch('/api/transcribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audioBase64: base64Audio,
+              mimeType: mimeType || 'audio/webm'
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.transcript && data.transcript.trim()) {
+              const transcribedText = data.transcript.trim();
+              setInput(prev => (prev ? `${prev} ${transcribedText}` : transcribedText));
+              showToast('✍️ Voz transcrita por IA con éxito');
+            } else {
+              showToast('⚠️ No se detectaron palabras claras');
+            }
+          } else {
+            showToast('⚠️ Error al procesar audio en servidor');
+          }
+        } catch (apiErr) {
+          console.error('Error en transcripción de audio:', apiErr);
+          showToast('⚠️ Error de conexión al transcribir');
+        } finally {
+          setIsTranscribingAudio(false);
+          setInterimVoiceTranscript('');
+        }
+      };
+    } catch (err) {
+      console.error('Error processing audio blob:', err);
+      setIsTranscribingAudio(false);
+      setInterimVoiceTranscript('');
+    }
+  };
+
+  // Start MediaRecorder voice recording
+  const startVoiceRecording = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Tu navegador no soporta la API de grabación de audio (MediaRecorder).');
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+
+      let mimeType = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+          mimeType = 'audio/ogg';
+        }
+      }
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      let liveSpeechCaptured = '';
+
+      recorder.onstop = async () => {
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: recorder.mimeType || mimeType });
+
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(t => t.stop());
+          mediaStreamRef.current = null;
+        }
+
+        await processRecordedAudio(audioBlob, recorder.mimeType || mimeType, liveSpeechCaptured || interimVoiceTranscript);
+      };
+
+      recorder.start(250);
+      setIsRecordingVoice(true);
+      setRecordingDuration(0);
+      setInterimVoiceTranscript('');
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+      // Start Web Speech recognition in parallel for live interim preview
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        try {
+          const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+          const recognition = new SpeechRecognition();
+          recognition.lang = 'es-MX';
+          recognition.continuous = true;
+          recognition.interimResults = true;
+
+          recognition.onresult = (event: any) => {
+            let fullTranscript = '';
+            for (let i = 0; i < event.results.length; i++) {
+              fullTranscript += event.results[i][0].transcript + ' ';
+            }
+            liveSpeechCaptured = fullTranscript.trim();
+            setInterimVoiceTranscript(fullTranscript.trim());
+          };
+
+          recognition.onerror = () => {};
+          recognition.start();
+          speechRecognitionRef.current = recognition;
+        } catch (e) {
+          console.warn('SpeechRecognition live preview skipped', e);
+        }
+      }
+
+      showToast('🎙️ Grabando audio con MediaRecorder... Di tu prompt');
+    } catch (err: any) {
+      console.error('Error al iniciar MediaRecorder:', err);
+      alert('No se pudo acceder al micrófono. Por favor verifica los permisos del navegador.');
+      setIsRecordingVoice(false);
+    }
+  };
+
+  // Stop MediaRecorder and transcribe
+  const stopVoiceRecording = () => {
+    if (speechRecognitionRef.current) {
+      try { speechRecognitionRef.current.stop(); } catch(e) {}
+      speechRecognitionRef.current = null;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecordingVoice(false);
+  };
+
+  // Cancel MediaRecorder without transcribing
+  const cancelVoiceRecording = () => {
+    if (speechRecognitionRef.current) {
+      try { speechRecognitionRef.current.stop(); } catch(e) {}
+      speechRecognitionRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.stop();
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      mediaStreamRef.current = null;
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    setIsRecordingVoice(false);
+    setInterimVoiceTranscript('');
+    showToast('❌ Grabación cancelada');
+  };
+
+  const toggleRecording = () => {
+    if (isRecordingVoice) {
+      stopVoiceRecording();
+    } else {
+      startVoiceRecording();
+    }
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -330,6 +528,18 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
     const promptText = textToSend || input;
     if ((!promptText.trim() && !attachedImage && !attachedFile) || isLoading) return;
 
+    if (hasReachedLimit) {
+      if (isGuestUser) {
+        showToast('⚠️ Has alcanzado tu límite de 20 mensajes de invitado. ¡Crea tu cuenta gratis para tener 1,000 mensajes diarios!');
+        if (onOpenAuthModal) {
+          onOpenAuthModal('register');
+        }
+      } else {
+        showToast(`⚠️ Has alcanzado tu límite diario de ${maxDailyLimit} mensajes.`);
+      }
+      return;
+    }
+
     const currentImage = attachedImage;
     const currentFile = attachedFile;
 
@@ -360,7 +570,10 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
     setAttachedFile(null);
     setIsImageMode(false);
     setIsLoading(true);
-    setDailyCount(prev => prev + 1);
+    setLocalDailyCount(prev => prev + 1);
+    if (onIncrementUsage) {
+      onIncrementUsage();
+    }
 
     try {
       let data: any = null;
@@ -412,6 +625,8 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
         data = {
           text: fallbackRes.text,
           modelUsed: fallbackRes.modelUsed,
+          generatedImageUrl: fallbackRes.generatedImageUrl,
+          generatedImagePrompt: fallbackRes.generatedImagePrompt,
           reasoningChain: fallbackRes.reasoningChain,
           thinkingTimeMs: fallbackRes.thinkingTimeMs,
           canvasData: fallbackRes.canvasData,
@@ -819,9 +1034,39 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
         </div>
 
         <div className="p-3 border-t border-cyan-950 space-y-1.5 bg-[#060B17]">
+          {isGuestUser && (
+            <div className="p-2 rounded-xl bg-gradient-to-r from-amber-950/60 to-[#120B04] border border-amber-500/40 space-y-1 mb-1">
+              <div className="flex items-center justify-between text-[10px] text-amber-300 font-bold">
+                <span>Modo Invitado</span>
+                <span className="bg-amber-400 text-stone-950 px-1.5 py-0.2 rounded text-[9px] font-black">20 máx</span>
+              </div>
+              <p className="text-[10px] text-stone-300 leading-tight">
+                Crea tu cuenta para obtener <strong>1,000 mensajes diarios</strong>.
+              </p>
+              {onOpenAuthModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenAuthModal('register')}
+                  className="w-full py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-[10px] transition-colors cursor-pointer"
+                >
+                  Desbloquear 1,000 mensajes
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-[11px] text-cyan-300 font-semibold px-2 py-1">
-            <span>Uso diario de IA</span>
+            <span>{isGuestUser ? 'Mensajes de Invitado' : 'Uso diario de IA'}</span>
             <span className="text-white font-bold">{dailyCount} / {maxDailyLimit}</span>
+          </div>
+
+          <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden px-0.5">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                hasReachedLimit ? 'bg-red-500' : 'bg-gradient-to-r from-cyan-500 to-[#00E5FF]'
+              }`}
+              style={{ width: `${Math.min(100, (dailyCount / maxDailyLimit) * 100)}%` }}
+            />
           </div>
 
           <button
@@ -1136,7 +1381,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
 
                         {msg.imageUrl && (
                           <div className="my-1.5 rounded-lg overflow-hidden border border-cyan-500/40 max-w-sm">
-                            <img src={msg.imageUrl} alt="Adjunto" className="w-full max-h-64 object-contain bg-[#050A14]" />
+                            <img src={msg.imageUrl} alt="Adjunto" referrerPolicy="no-referrer" className="w-full max-h-64 object-contain bg-[#050A14]" />
                           </div>
                         )}
 
@@ -1155,6 +1400,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                               <img
                                 src={msg.generatedImageUrl}
                                 alt={msg.generatedImagePrompt || 'Imagen generada'}
+                                referrerPolicy="no-referrer"
                                 className="w-full max-h-96 object-cover bg-black"
                               />
                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
@@ -1646,6 +1892,38 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
               </button>
             </div>
 
+            {/* Limit Reached Warning Banner */}
+            {hasReachedLimit && (
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-red-950/90 via-[#260B12] to-[#17060A] border border-red-500/60 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-2.5 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2 text-left">
+                  <div className="w-8 h-8 rounded-xl bg-red-900/60 border border-red-500 flex items-center justify-center text-red-300 shrink-0">
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-black text-white">
+                      {isGuestUser ? 'Límite de Invitado Alcanzado (20/20 mensajes)' : `Límite Diario Alcanzado (${dailyCount}/${maxDailyLimit} mensajes)`}
+                    </h5>
+                    <p className="text-[11px] text-red-200">
+                      {isGuestUser
+                        ? 'Crea tu propia cuenta gratuita ahora para desbloquear 1,000 mensajes diarios.'
+                        : 'Tu cuota diaria se renovará en 24 horas o puedes configurar tu clave API.'}
+                    </p>
+                  </div>
+                </div>
+
+                {isGuestUser && onOpenAuthModal && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuthModal('register')}
+                    className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 shrink-0 cursor-pointer transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Crear Cuenta (1,000 mensajes)</span>
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Slash Commands Floating Autocomplete Menu */}
             {input.startsWith('/') && (
               <div className="absolute bottom-full mb-2 left-0 right-0 bg-[#060C1B] border border-cyan-500/50 rounded-2xl shadow-2xl p-2 z-30 max-h-64 overflow-y-auto divide-y divide-cyan-950/60 animate-fadeIn font-sans">
@@ -1709,29 +1987,93 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                 <Paperclip className="w-4 h-4" />
               </button>
 
+              {/* Dictate Voice-to-Text Button (MediaRecorder API) */}
+              <button
+                type="button"
+                onClick={toggleRecording}
+                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                  isRecordingVoice
+                    ? 'bg-red-600 text-white animate-pulse shadow-md shadow-red-500/50'
+                    : 'bg-[#050A14] hover:bg-[#00E5FF] hover:text-stone-950 text-cyan-300'
+                }`}
+                title={isRecordingVoice ? "Detener y transcribir grabación" : "Dictar prompt por voz (MediaRecorder)"}
+              >
+                {isRecordingVoice ? (
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
+              </button>
+
+              {/* Advanced Voice Chat Mode Overlay Trigger */}
               <button
                 type="button"
                 onClick={() => setIsVoiceModeOpen(true)}
-                className="w-8 h-8 rounded-full bg-[#050A14] hover:bg-[#00E5FF] hover:text-stone-950 text-cyan-300 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                title="Modo Voz Avanzado"
+                className="w-8 h-8 rounded-full bg-[#050A14] hover:bg-purple-600 hover:text-white text-purple-300 flex items-center justify-center shrink-0 transition-colors cursor-pointer hidden sm:flex"
+                title="Modo Conversación de Voz en Vivo"
               >
-                <Mic className="w-4 h-4" />
+                <Radio className="w-4 h-4" />
               </button>
 
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={
-                  isImageMode
-                    ? "Describe la imagen que quieres que DALL-E 3 dibuje..."
-                    : selectedCustomGpt
-                    ? `Hablando con ${selectedCustomGpt.name}...`
-                    : "Escribe tu mensaje o usa / para atajos de comandos..."
-                }
-                className="flex-1 bg-transparent text-white placeholder-stone-500 text-xs sm:text-sm focus:outline-none px-2"
-                disabled={isLoading}
-              />
+              {isRecordingVoice ? (
+                <div className="flex-1 flex items-center justify-between gap-2 px-3 py-1 bg-red-950/40 border border-red-500/50 rounded-2xl animate-fadeIn">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                    <span className="text-xs font-mono font-bold text-red-400 shrink-0">
+                      {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
+                    </span>
+                    <div className="hidden sm:flex items-center gap-0.5 px-1 py-0.5 shrink-0">
+                      <span className="w-1 h-3 bg-red-400 rounded-full animate-bounce [animation-delay:0ms]"></span>
+                      <span className="w-1 h-5 bg-red-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
+                      <span className="w-1 h-2 bg-red-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
+                      <span className="w-1 h-4 bg-red-400 rounded-full animate-bounce [animation-delay:450ms]"></span>
+                    </div>
+                    <p className="text-xs text-stone-200 truncate italic">
+                      {interimVoiceTranscript || "Escuchando... di tu prompt"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={cancelVoiceRecording}
+                      className="p-1 rounded-full hover:bg-stone-800 text-stone-400 hover:text-white transition-colors cursor-pointer"
+                      title="Cancelar grabación"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopVoiceRecording}
+                      className="px-2.5 py-0.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold text-[11px] flex items-center gap-1 transition-all shadow cursor-pointer"
+                      title="Guardar y dictar texto en el prompt"
+                    >
+                      <Check className="w-3 h-3" />
+                      <span>Listo</span>
+                    </button>
+                  </div>
+                </div>
+              ) : isTranscribingAudio ? (
+                <div className="flex-1 flex items-center gap-2 px-3 py-1 bg-cyan-950/40 border border-cyan-500/40 rounded-2xl text-cyan-300 text-xs animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#00E5FF] shrink-0" />
+                  <span>Transcribiendo tu audio con Inteligencia Artificial...</span>
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={
+                    isImageMode
+                      ? "Describe la imagen que quieres que DALL-E 3 dibuje..."
+                      : selectedCustomGpt
+                      ? `Hablando con ${selectedCustomGpt.name}...`
+                      : "Escribe tu mensaje o usa el micrófono para dictar..."
+                  }
+                  className="flex-1 bg-transparent text-white placeholder-stone-500 text-xs sm:text-sm focus:outline-none px-2"
+                  disabled={isLoading}
+                />
+              )}
 
               {/* Magic Prompt Optimizer Button (ChatGPT Plus feature) */}
               {input.trim().length > 3 && (

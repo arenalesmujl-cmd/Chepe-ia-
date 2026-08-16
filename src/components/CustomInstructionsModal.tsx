@@ -12,8 +12,6 @@ export const CustomInstructionsModal: React.FC<CustomInstructionsModalProps> = (
   onClose,
   onSave
 }) => {
-  if (!isOpen) return null;
-
   const [aboutUser, setAboutUser] = useState(
     'Soy un profesional/estudiante en tecnología interesado en desarrollo web con React, Node.js y arquitectura de software. Me gustan los ejemplos prácticos.'
   );
@@ -24,6 +22,8 @@ export const CustomInstructionsModal: React.FC<CustomInstructionsModalProps> = (
 
   const [isEnabled, setIsEnabled] = useState(true);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
+
+  if (!isOpen) return null;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();

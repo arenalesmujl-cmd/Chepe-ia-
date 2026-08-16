@@ -143,23 +143,23 @@ export const PROGRAMMING_LANGUAGES = [
 export const PLAN_TIERS: PlanTier[] = [
   {
     id: 'gratis',
-    name: 'Plan Gratuito',
+    name: 'Plan Gratuito / Invitado',
     price: '$0',
     period: 'para siempre',
     badge: 'BÁSICO',
-    description: 'Ideal para probar las capacidades básicas de inteligencia artificial.',
-    maxDailyMessages: 50,
+    description: 'Ideal para probar las capacidades básicas de inteligencia artificial en modo invitado.',
+    maxDailyMessages: 20,
     features: [
-      '50 mensajes diarios',
+      '20 mensajes diarios para invitados',
       'Acceso al modelo Chepe 3.8 Ultra',
       'Asistencia general y búsqueda',
-      'Historial guardado de 7 días',
+      'Historial temporal de conversación',
       'Generación de código básico'
     ],
     limitations: [
+      'Límite de 20 mensajes al día (1,000 al crear cuenta)',
       'Sin análisis de archivos pesados',
-      'Sin soporte para Gemini 4.0 Ultra',
-      'Velocidad de respuesta estándar'
+      'Sin soporte para Gemini 4.0 Ultra'
     ]
   },
   {
@@ -201,16 +201,17 @@ export const PLAN_TIERS: PlanTier[] = [
 ];
 
 export const DEFAULT_USER_PROFILE: UserProfile = {
-  id: 'usr-1001',
-  name: 'Usuario Chepe IA',
-  email: 'usuario.pro@chepeia.com',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-  planType: 'Pro',
-  memberSince: '12 de Enero de 2026',
-  dailyUsageCount: 28,
-  dailyLimit: 1000,
+  id: 'usr-guest-default',
+  name: 'Invitado Chepe',
+  email: 'invitado@chepeia.local',
+  avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChepeGuest',
+  planType: 'Gratis',
+  memberSince: 'Hoy (Modo Invitado)',
+  dailyUsageCount: 0,
+  dailyLimit: 20,
   status: 'active',
-  role: 'admin'
+  role: 'user',
+  isGuest: true
 };
 
 export const MOCK_ADMIN_USERS: AdminUserItem[] = [
