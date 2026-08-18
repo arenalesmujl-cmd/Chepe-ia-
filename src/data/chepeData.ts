@@ -34,6 +34,22 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     speed: 'Generación Visual HD'
   },
   {
+    id: 'sora-video',
+    name: 'Sora & Veo Video Studio',
+    badge: 'VIDEO & CINE IA',
+    icon: '🎬',
+    description: 'Generación de videos cinemáticos 8K, animaciones 60FPS y storyboards visuales.',
+    speed: 'Renderizado Cinemático'
+  },
+  {
+    id: 'web-grounding',
+    name: 'Web Live Grounding',
+    badge: 'BÚSQUEDA EN VIVO',
+    icon: '🌐',
+    description: 'Navegación web en tiempo real, síntesis de noticias y extracción de enlaces con fuentes.',
+    speed: 'Tiempo Real (0.3s)'
+  },
+  {
     id: 'gemini-3.5-flash',
     name: 'Gemini 2.5 Flash',
     badge: 'MULTIMODAL RÁPIDO',
@@ -259,6 +275,18 @@ export const MOCK_ADMIN_USERS: AdminUserItem[] = [
 
 export const QUICK_WELCOME_CARDS = [
   {
+    icon: '🎬',
+    title: 'Estudio de Video Sora IA',
+    desc: 'Genera clips cinemáticos 8K, animaciones 60FPS con storyboard de director.',
+    prompt: '/video Crea un video cinemático 8K de un astronauta explorando una cueva de cristales bioluminiscentes en Marte, iluminación volumétrica y lentes anamórficos'
+  },
+  {
+    icon: '🌐',
+    title: 'Navegación & Búsqueda Web',
+    desc: 'Búsqueda en tiempo real con citas de fuentes verificadas y análisis web.',
+    prompt: 'Busca las últimas noticias y descubrimientos en computación cuántica y telescopios espaciales de este año'
+  },
+  {
     icon: '📉',
     title: 'Gráfica Métodos de Depreciación',
     desc: 'Comparativa interactiva de Línea Recta, Doble Saldo Decreciente y Suma de Dígitos.',
@@ -281,22 +309,24 @@ export const QUICK_WELCOME_CARDS = [
     title: 'Ayuda con tareas',
     desc: 'Resúmenes escolares, explicaciones didácticas y guías de estudio.',
     prompt: 'Hazme un resumen educativo de los 5 eventos clave de la Segunda Guerra Mundial'
-  },
-  {
-    icon: '🧮',
-    title: 'Resuelve matemáticas',
-    desc: 'Álgebra, cálculo, ecuaciones y problemas explicados paso a paso.',
-    prompt: 'Resuelve la ecuación cuadrática 2x² + 5x - 3 = 0 paso a paso'
-  },
-  {
-    icon: '✍️',
-    title: 'Escribe y mejora textos',
-    desc: 'Redacción de ensayos, cartas formales, correos y cuentos.',
-    prompt: 'Redacta un correo profesional solicitando una reunión de seguimiento'
   }
 ];
 
 export const SLASH_COMMANDS = [
+  {
+    cmd: '/video',
+    label: 'Generar Video Sora & Veo',
+    desc: 'Crea un video cinemático con guión visual y storyboard',
+    icon: '🎬',
+    prompt: '/video '
+  },
+  {
+    cmd: '/web',
+    label: 'Búsqueda Web en Vivo',
+    desc: 'Busca en internet en tiempo real y extrae fuentes verídicas',
+    icon: '🌐',
+    prompt: 'Busca en la web en tiempo real la siguiente información: '
+  },
   {
     cmd: '/code',
     label: 'Escribir Código Clean',

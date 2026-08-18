@@ -2,7 +2,8 @@ import React from 'react';
 import {
   Plus, MessageSquare, History, Bookmark, BookOpen, Code,
   Calculator, PenTool, Folder, CreditCard, User, Settings,
-  ShieldCheck, PanelLeftClose, PanelLeft, Bot, Sparkles, ChevronRight, UserPlus
+  ShieldCheck, PanelLeftClose, PanelLeft, Bot, Sparkles, ChevronRight, UserPlus,
+  Video, Globe, Clapperboard, Compass
 } from 'lucide-react';
 
 interface SidebarNavProps {
@@ -36,6 +37,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 }) => {
   const navItems = [
     { id: 'chat', label: 'Chat IA', icon: MessageSquare, badge: 'Principal' },
+    { id: 'video', label: 'Estudio Video IA', icon: Clapperboard, badge: 'Ultra Pro' },
+    { id: 'web', label: 'Herramientas Web', icon: Globe, badge: 'En Vivo' },
     { id: 'projects', label: 'Proyectos', icon: Folder, badge: 'Pro' },
     { id: 'history', label: 'Historial', icon: History },
     { id: 'favorites', label: 'Favoritos', icon: Bookmark },

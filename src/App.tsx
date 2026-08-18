@@ -15,6 +15,8 @@ import { ProjectsModule, ProjectWorkspace } from './components/ProjectsModule';
 import { AdminDashboard } from './components/AdminDashboard';
 import { SettingsView } from './components/SettingsView';
 import { AuthModal } from './components/AuthModal';
+import { VideoStudioModule } from './components/VideoStudioModule';
+import { WebToolsModule } from './components/WebToolsModule';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('chat');
@@ -288,6 +290,21 @@ export default function App() {
               userProfile={userProfile}
               onOpenAuthModal={handleOpenAuthModal}
               onIncrementUsage={handleIncrementUsage}
+            />
+          )}
+
+          {activeTab === 'video' && (
+            <VideoStudioModule
+              onAskAI={handleAskAI}
+              onSendVideoToChat={(video) => {
+                setActiveTab('chat');
+              }}
+            />
+          )}
+
+          {activeTab === 'web' && (
+            <WebToolsModule
+              onAskAI={handleAskAI}
             />
           )}
 

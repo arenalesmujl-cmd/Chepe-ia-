@@ -5,6 +5,8 @@ export type AIModelId =
   | 'o3-mini' 
   | 'deepseek-r1'
   | 'dall-e-3'
+  | 'sora-video'
+  | 'web-grounding'
   | 'chepe-3.8' 
   | 'chepe-reasoning-o1' 
   | 'gemini-3.5-flash' 
@@ -105,8 +107,14 @@ export interface ChatMessage {
   rating?: 'up' | 'down' | null;
   thinkingTimeMs?: number;
   reasoningChain?: string[];
+  isDeepResearch?: boolean;
+  deepResearchSteps?: { title: string; status: 'done' | 'running' | 'pending'; detail?: string }[];
   webCitations?: { title: string; url: string; domain: string }[];
+  versions?: string[];
+  activeVersionIndex?: number;
   chartData?: ChartDataPayload;
+  videoData?: VideoProject;
+  webScrapedData?: WebScrapedResult;
   canvasData?: {
     title: string;
     language: string;
@@ -196,3 +204,140 @@ export interface AdminStats {
   tokensUsedToday: number;
   serverHealth: string;
 }
+
+export interface VideoScene {
+  sceneNumber: number;
+  title: string;
+  description: string;
+  cameraAngle?: string;
+  lighting?: string;
+  audioEffect?: string;
+}
+
+export interface VideoProject {
+  id: string;
+  title: string;
+  prompt: string;
+  videoUrl: string;
+  posterUrl: string;
+  duration: number; // in seconds (5, 10, 15, 30)
+  aspectRatio: '16:9' | '9:16' | '1:1' | '4:3';
+  style: string;
+  cameraMotion: string;
+  fps: number;
+  tags: string[];
+  createdAt: string;
+  isFavorite?: boolean;
+  storyboard?: VideoScene[];
+}
+
+export interface WebScrapedResult {
+  url: string;
+  title: string;
+  description: string;
+  domain: string;
+  summary: string;
+  keyTakeaways: string[];
+  mainTopics: string[];
+  seoScore?: number;
+  wordCount?: number;
+  headings?: string[];
+  images?: string[];
+  ogImage?: string;
+  faviconUrl?: string;
+  techStack?: string[];
+  htmlSnippet?: string;
+  extractedAt: string;
+}
+
+export interface WebAuditResult {
+  url: string;
+  domain: string;
+  title: string;
+  scores: {
+    performance: number;
+    seo: number;
+    security: number;
+    accessibility: number;
+    bestPractices: number;
+  };
+  coreWebVitals: {
+    lcp: string; // Largest Contentful Paint
+    fid: string; // First Input Delay
+    cls: string; // Cumulative Layout Shift
+    ttfb: string; // Time to First Byte
+    speedIndex: string;
+  };
+  techStack: {
+    category: string;
+    name: string;
+    icon?: string;
+  }[];
+  seoDetails: {
+    titleLength: number;
+    hasMetaDescription: boolean;
+    hasOpenGraph: boolean;
+    hasTwitterCard: boolean;
+    hasCanonical: boolean;
+    hasRobotsTxt: boolean;
+    hasSitemap: boolean;
+    headingsCount: { h1: number; h2: number; h3: number };
+  };
+  securityDetails: {
+    httpsEnabled: boolean;
+    hstsEnabled: boolean;
+    tlsVersion: string;
+    xFrameOptions: string;
+    contentSecurityPolicy: boolean;
+    sslIssuer?: string;
+    sslDaysLeft?: number;
+  };
+  aiRecommendations: {
+    priority: 'alta' | 'media' | 'baja';
+    category: string;
+    title: string;
+    description: string;
+    suggestedFix: string;
+  }[];
+  auditedAt: string;
+}
+
+export interface GeneratedWebsite {
+  id: string;
+  prompt: string;
+  title: string;
+  description: string;
+  theme: string;
+  style: string;
+  html: string;
+  tags: string[];
+  createdAt: string;
+}
+
+export interface LiveDnsResult {
+  domain: string;
+  ip: string;
+  ipv6?: string;
+  nameservers: string[];
+  mxRecords: string[];
+  txtRecords: string[];
+  sslStatus: 'Válido & Seguro' | 'Expirado' | 'No Seguro';
+  sslIssuer: string;
+  sslValidUntil: string;
+  httpStatus: number;
+  responseTimeMs: number;
+  serverType: string;
+}
+
+export interface LiveWebSearchItem {
+  title: string;
+  url: string;
+  snippet: string;
+  domain: string;
+  source: string;
+  date?: string;
+  category?: string;
+  isVerified?: boolean;
+}
+
+

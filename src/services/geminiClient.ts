@@ -182,11 +182,7 @@ export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParam
   // Try endpoints in priority order (v1beta) with instant multi-model fallback on 503 high demand
   const modelsToTry = [
     'gemini-3.7-flash',
-    'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-flash-latest'
+    'gemini-3.1-flash-lite'
   ];
   let lastError: any = null;
 
