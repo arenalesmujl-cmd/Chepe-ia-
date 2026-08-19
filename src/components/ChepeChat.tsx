@@ -16,6 +16,7 @@ import { ProjectFoldersModal } from './ProjectFoldersModal';
 import { ExportChatModal } from './ExportChatModal';
 import { ReadAloudPlayer } from './ReadAloudPlayer';
 import { VideoPlayerCard } from './VideoPlayerCard';
+import { ModelAvatar } from './ModelAvatar';
 import { renderAndRecordVideo } from '../lib/videoGeneratorEngine';
 import { callGeminiDirectlyFromClient, getStoredApiKey } from '../services/geminiClient';
 import {
@@ -26,7 +27,7 @@ import {
   ChevronRight, Share2, FileCode, CheckCircle2, Shield, BarChart3, Download,
   Maximize2, Palette, Radio, Wand2, Brain, Edit3, Sliders, Pin, PinOff,
   Keyboard, Edit2, Loader2, Key, Square, AlertTriangle, UserPlus, Folder,
-  FolderPlus, Printer, EyeOff, Layers, FileSearch, Sparkle, Video, Clapperboard, Compass
+  FolderPlus, Printer, EyeOff, Layers, FileSearch, Sparkle, Video, Clapperboard, Compass, Zap
 } from 'lucide-react';
 
 interface ChepeChatProps {
@@ -116,6 +117,9 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedModel, setSelectedModel] = useState<AIModelId>('gpt-4o');
+  const [modelProviderFilter, setModelProviderFilter] = useState<string>('all');
+  const [welcomeModelFilter, setWelcomeModelFilter] = useState<string>('all');
+  const [modelSearchQuery, setModelSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<PromptSpecialty>('general');
 
   const [input, setInput] = useState('');
@@ -1296,44 +1300,134 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#081021] hover:bg-[#0F1C36] border border-cyan-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm cursor-pointer"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#081021] hover:bg-[#0F1C36] border border-cyan-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm cursor-pointer"
               >
-                <span className="text-[#00E5FF]">{currentModelData.icon}</span>
-                <span>{currentModelData.name}</span>
-                <ChevronDown className={`w-4 h-4 text-cyan-400 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
+                <ModelAvatar model={currentModelData} size="sm" showBadge />
+                <span className="truncate max-w-[130px] sm:max-w-[200px]">{currentModelData.name}</span>
+                <ChevronDown className={`w-4 h-4 text-cyan-400 transition-transform shrink-0 ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isModelDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 sm:w-72 rounded-2xl bg-[#081021] border border-cyan-500/40 shadow-2xl shadow-cyan-950/80 p-2 z-50 animate-in fade-in space-y-1">
-                  <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider px-2 py-1 border-b border-cyan-900/60">
-                    Seleccionar Motor de Inteligencia Artificial
+                <div className="absolute top-full left-0 mt-2 w-84 sm:w-[420px] rounded-2xl bg-[#081021] border border-cyan-500/50 shadow-2xl shadow-cyan-950/90 p-3 z-50 animate-in fade-in space-y-2.5 max-h-[82vh] flex flex-col">
+                  <div className="flex items-center justify-between border-b border-cyan-900/60 pb-2">
+                    <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      Modelos de IA con Fotos &amp; Logos
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 font-mono border border-cyan-800 font-bold">
+                      {AI_MODEL_OPTIONS.length} Modelos
+                    </span>
                   </div>
-                  {AI_MODEL_OPTIONS.map((m) => {
-                    const isSelected = selectedModel === m.id;
-                    return (
+
+                  {/* Search Bar for Models */}
+                  <div className="relative mb-2">
+                    <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-2.5 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Buscar entre 45+ modelos de IA (OpenAI, Claude, Gemini, DeepSeek, Grok...)"
+                      value={modelSearchQuery}
+                      onChange={(e) => setModelSearchQuery(e.target.value)}
+                      className="w-full bg-[#050A14] text-white text-xs pl-8 pr-7 py-2 rounded-xl border border-cyan-900 focus:border-[#00E5FF] focus:outline-none placeholder-stone-500"
+                    />
+                    {modelSearchQuery && (
                       <button
-                        key={m.id}
-                        onClick={() => {
-                          setSelectedModel(m.id as AIModelId);
-                          setIsModelDropdownOpen(false);
-                        }}
-                        className={`w-full text-left p-2.5 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#002C3E] text-[#00E5FF] font-bold border border-[#00E5FF]/40'
-                            : 'text-stone-200 hover:bg-[#0F1C36]'
+                        onClick={() => setModelSearchQuery('')}
+                        className="absolute right-2.5 top-2.5 text-stone-400 hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Provider Filter Tabs */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1.5 scrollbar-none text-[11px]">
+                    {[
+                      { id: 'all', label: 'Todos' },
+                      { id: 'OpenAI', label: 'ChatGPT' },
+                      { id: 'Anthropic', label: 'Claude' },
+                      { id: 'Google', label: 'Gemini' },
+                      { id: 'DeepSeek', label: 'DeepSeek' },
+                      { id: 'Meta', label: 'Meta Llama' },
+                      { id: 'xAI', label: 'xAI Grok' },
+                      { id: 'Mistral', label: 'Mistral' },
+                      { id: 'Qwen', label: 'Qwen' },
+                      { id: 'Perplexity', label: 'Perplexity' },
+                      { id: 'Microsoft', label: 'Microsoft' },
+                      { id: 'Nvidia', label: 'NVIDIA' },
+                      { id: 'Cohere', label: 'Cohere' },
+                      { id: 'Amazon', label: 'AWS' },
+                      { id: 'AI21', label: 'AI21' },
+                      { id: 'Baidu', label: 'Baidu' },
+                      { id: 'ChepeIA', label: 'Chepe Motors' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setModelProviderFilter(tab.id as any)}
+                        className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors cursor-pointer text-xs ${
+                          modelProviderFilter === tab.id
+                            ? 'bg-[#00E5FF] text-stone-950 font-bold shadow-sm'
+                            : 'bg-[#050A14] text-stone-400 hover:text-white border border-cyan-900/60'
                         }`}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{m.icon}</span>
-                          <div>
-                            <div className="font-semibold">{m.name}</div>
-                            <div className="text-[10px] text-stone-400 font-normal">{m.description}</div>
-                          </div>
-                        </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#00E5FF]" />}
+                        {tab.label}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
+
+                  <div className="space-y-2 overflow-y-auto pr-1 max-h-[340px]">
+                    {AI_MODEL_OPTIONS.filter((m) => {
+                      const matchesProvider = modelProviderFilter === 'all' || m.provider === modelProviderFilter;
+                      const q = modelSearchQuery.toLowerCase().trim();
+                      const matchesSearch = !q ||
+                        m.name.toLowerCase().includes(q) ||
+                        m.description.toLowerCase().includes(q) ||
+                        m.badge.toLowerCase().includes(q) ||
+                        (m.provider && m.provider.toLowerCase().includes(q)) ||
+                        (m.tags && m.tags.some(t => t.toLowerCase().includes(q)));
+                      return matchesProvider && matchesSearch;
+                    }).map((m) => {
+                      const isSelected = selectedModel === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setSelectedModel(m.id as AIModelId);
+                            setIsModelDropdownOpen(false);
+                            showToast(`Motor activo: ${m.name}`);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl text-xs flex gap-3 items-start transition-all cursor-pointer border ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-[#002C3E] to-[#0A3A52] text-[#00E5FF] font-bold border-[#00E5FF]/60 shadow-md ring-1 ring-[#00E5FF]/40'
+                              : 'bg-[#050A14] text-stone-200 hover:bg-[#0D182E] border-cyan-950 hover:border-cyan-800'
+                          }`}
+                        >
+                          <ModelAvatar model={m} size="md" showBadge />
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-bold text-white text-xs truncate">{m.name}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#0F2244] text-cyan-300 font-mono border border-cyan-800">
+                                  {m.badge}
+                                </span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />}
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-stone-400 font-normal leading-relaxed line-clamp-2">
+                              {m.description}
+                            </p>
+                            <div className="flex items-center justify-between text-[9px] text-stone-500 pt-0.5 font-mono">
+                              <span>Velocidad: <span className="text-cyan-400">{m.speed}</span></span>
+                              {m.provider && (
+                                <span className="px-1.5 py-0.2 rounded bg-[#0A162C] text-stone-300 font-semibold border border-cyan-900/60">
+                                  {m.provider}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -1514,11 +1608,181 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                   </button>
                 ))}
               </div>
+
+              {/* Visual AI Models Showcase Grid with Photos & Filters */}
+              <div className="w-full text-left bg-[#081021]/95 rounded-2xl border border-cyan-900/70 p-4 sm:p-5 space-y-4 shadow-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-900/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-stone-950 font-black shadow-md shadow-cyan-950">
+                      <Sparkles className="w-4 h-4 text-stone-950" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+                        Catálogo Completo de Modelos de Inteligencia Artificial
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-[#00E5FF] font-mono border border-cyan-800">
+                          {AI_MODEL_OPTIONS.length} Modelos
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-stone-400">
+                        Selecciona cualquier modelo con foto real para chatear de inmediato sin ingresar API Key
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-[11px] text-[#00E5FF] font-mono self-start sm:self-auto flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />
+                    100% Desbloqueado
+                  </span>
+                </div>
+
+                {/* Search Bar for Welcome Grid */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    placeholder="Buscar modelo por nombre, proveedor, especialidad o capacidad (ej. Sora, Claude, DeepSeek, Matemáticas, Programación...)"
+                    value={modelSearchQuery}
+                    onChange={(e) => setModelSearchQuery(e.target.value)}
+                    className="w-full bg-[#050A14] text-white text-xs pl-9 pr-8 py-2.5 rounded-xl border border-cyan-900 focus:border-[#00E5FF] focus:outline-none placeholder-stone-500 shadow-inner"
+                  />
+                  {modelSearchQuery && (
+                    <button
+                      onClick={() => setModelSearchQuery('')}
+                      className="absolute right-3 top-3 text-stone-400 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                  {[
+                    { id: 'all', label: `Todos (${AI_MODEL_OPTIONS.length})` },
+                    { id: 'OpenAI', label: 'ChatGPT / OpenAI' },
+                    { id: 'Anthropic', label: 'Claude Anthropic' },
+                    { id: 'Google', label: 'Google Gemini' },
+                    { id: 'DeepSeek', label: 'DeepSeek R1/V3' },
+                    { id: 'Meta', label: 'Meta Llama' },
+                    { id: 'xAI', label: 'xAI Grok' },
+                    { id: 'Mistral', label: 'Mistral AI' },
+                    { id: 'Qwen', label: 'Qwen Alibaba' },
+                    { id: 'Perplexity', label: 'Perplexity' },
+                    { id: 'Microsoft', label: 'Microsoft' },
+                    { id: 'Nvidia', label: 'NVIDIA' },
+                    { id: 'Cohere', label: 'Cohere' },
+                    { id: 'Amazon', label: 'AWS Nova' },
+                    { id: 'AI21', label: 'AI21' },
+                    { id: 'Baidu', label: 'Baidu' },
+                    { id: 'ChepeIA', label: 'Chepe Motors' }
+                  ].map((tab) => {
+                    const count = tab.id === 'all' 
+                      ? AI_MODEL_OPTIONS.length 
+                      : AI_MODEL_OPTIONS.filter(m => m.provider === tab.id).length;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setWelcomeModelFilter(tab.id)}
+                        className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all cursor-pointer text-xs flex items-center gap-1.5 ${
+                          welcomeModelFilter === tab.id
+                            ? 'bg-[#00E5FF] text-stone-950 font-bold shadow-md shadow-cyan-950/60 scale-[1.02]'
+                            : 'bg-[#050A14] text-stone-400 hover:text-white border border-cyan-900/60 hover:bg-[#0E1B33]'
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        {tab.id !== 'all' && (
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                            welcomeModelFilter === tab.id ? 'bg-cyan-900 text-cyan-200' : 'bg-cyan-950 text-cyan-400'
+                          }`}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Full Grid of Model Cards with Photos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[460px] overflow-y-auto pr-1">
+                  {AI_MODEL_OPTIONS.filter((m) => {
+                    const matchesProvider = welcomeModelFilter === 'all' || m.provider === welcomeModelFilter;
+                    const q = modelSearchQuery.toLowerCase().trim();
+                    const matchesSearch = !q ||
+                      m.name.toLowerCase().includes(q) ||
+                      m.description.toLowerCase().includes(q) ||
+                      m.badge.toLowerCase().includes(q) ||
+                      (m.provider && m.provider.toLowerCase().includes(q)) ||
+                      (m.tags && m.tags.some(t => t.toLowerCase().includes(q)));
+                    return matchesProvider && matchesSearch;
+                  }).map((m) => {
+                    const isSelected = selectedModel === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedModel(m.id as AIModelId);
+                          showToast(`Motor activo: ${m.name}`);
+                        }}
+                        className={`p-3 rounded-2xl border flex flex-col justify-between gap-2.5 transition-all text-left cursor-pointer group relative overflow-hidden ${
+                          isSelected
+                            ? 'bg-gradient-to-b from-[#002C3E] to-[#081829] border-[#00E5FF] shadow-lg shadow-cyan-950/80 ring-2 ring-[#00E5FF]/40'
+                            : 'bg-[#050A14] border-cyan-950 hover:border-cyan-800 hover:bg-[#0B172E]'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#00E5FF] text-stone-950 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                            <Check className="w-3 h-3" /> ACTIVO
+                          </div>
+                        )}
+
+                        <div className="flex items-start gap-2.5">
+                          <ModelAvatar model={m} size="md" showBadge />
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-white text-xs sm:text-sm truncate group-hover:text-[#00E5FF] transition-colors">
+                              {m.name}
+                            </h4>
+                            <span className="text-[10px] text-cyan-400 font-mono block">
+                              {m.provider || 'AI Engine'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-stone-400 leading-relaxed line-clamp-2">
+                          {m.description}
+                        </p>
+
+                        <div className="space-y-1.5 pt-1 border-t border-cyan-950/60">
+                          {m.tags && m.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {m.tags.slice(0, 3).map((tag, idx) => (
+                                <span key={idx} className="text-[9px] px-1.5 py-0.5 rounded bg-[#0D1E3A] text-cyan-300 font-medium">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between text-[10px] text-stone-500 font-mono">
+                            <span className="text-cyan-400/90 flex items-center gap-1">
+                              <Zap className="w-3 h-3 text-amber-400" />
+                              {m.speed}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-[#0A162C] text-stone-300 text-[9px] border border-cyan-900/50">
+                              {m.badge}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="max-w-3xl mx-auto space-y-6 w-full pb-4">
               {messages.map((msg) => {
                 const isAI = msg.sender === 'chepe_ia';
+                const msgModel = AI_MODEL_OPTIONS.find(m => m.id === (msg.modelUsed || selectedModel)) || currentModelData;
                 return (
                   <div
                     key={msg.id}
@@ -1526,13 +1790,15 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                       isAI ? 'items-start' : 'items-end flex-row-reverse'
                     }`}
                   >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold shadow-md ${
-                        isAI ? 'bg-[#00E5FF] text-stone-950' : 'bg-blue-600 text-white'
-                      }`}
-                    >
-                      {isAI ? <Bot className="w-4.5 h-4.5" /> : <User className="w-4 h-4" />}
-                    </div>
+                    {isAI ? (
+                      <div className="shrink-0 pt-0.5">
+                        <ModelAvatar model={msgModel} size="sm" showBadge />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold shadow-md bg-blue-600 text-white">
+                        <User className="w-4 h-4" />
+                      </div>
+                    )}
 
                     <div className={`space-y-2 max-w-[88%] ${isAI ? 'w-full' : ''}`}>
                       <div

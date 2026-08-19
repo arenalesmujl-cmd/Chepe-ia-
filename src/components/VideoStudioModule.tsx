@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { VideoProject, VideoScene } from '../types';
 import { renderAndRecordVideo } from '../lib/videoGeneratorEngine';
+import { CinematicCanvasPlayer } from './CinematicCanvasPlayer';
 
 interface VideoStudioModuleProps {
   onAskAI?: (prompt: string, category?: string) => void;
@@ -38,7 +39,7 @@ const SAMPLE_PROJECTS: VideoProject[] = [
     id: 'sample-1',
     title: 'Metrópolis Futurista en Lluvia Neón',
     prompt: 'Vehículos voladores atravesando rascacielos iluminados por neones holográficos bajo una lluvia suave, reflejos cinematográficos en charcos de asfalto, 8K ultra realista.',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    videoUrl: 'https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4',
     posterUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1200&auto=format&fit=crop&q=80',
     duration: 10,
     aspectRatio: '16:9',
@@ -79,7 +80,7 @@ const SAMPLE_PROJECTS: VideoProject[] = [
     id: 'sample-2',
     title: 'Túnel Cuántico Digital en Bucle',
     prompt: 'Viaje a velocidad luz por un túnel cuántico de filamentos ópticos y datos holográficos brillantes.',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     posterUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&auto=format&fit=crop&q=80',
     duration: 5,
     aspectRatio: '16:9',
@@ -103,7 +104,7 @@ const SAMPLE_PROJECTS: VideoProject[] = [
     id: 'sample-3',
     title: 'Atardecer Dorado sobre las Olas del Mar',
     prompt: 'Olas suaves del océano rompiendo contra la orilla con destellos dorados durante la puesta de sol, cámara lenta cinematográfica.',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
+    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
     posterUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80',
     duration: 10,
     aspectRatio: '16:9',
@@ -120,6 +121,54 @@ const SAMPLE_PROJECTS: VideoProject[] = [
         cameraAngle: 'Plano bajo a ras del agua',
         lighting: 'Luz dorada cálida natural',
         audioEffect: 'Sonido suave de olas y brisa marina'
+      }
+    ]
+  },
+  {
+    id: 'sample-4',
+    title: 'Explorador Espacial en los Anillos de Saturno',
+    prompt: 'Nave de exploración interestelar maniobrando suavemente entre partículas de hielo y asteroides dorados reflejando la atmósfera de Saturno, 8K ultra realista.',
+    videoUrl: 'https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4',
+    posterUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+    duration: 10,
+    aspectRatio: '16:9',
+    style: 'Cinemático 8K',
+    cameraMotion: 'Giro Orbital 360°',
+    fps: 60,
+    tags: ['Espacio', 'Saturno', 'Nave', 'Sci-Fi'],
+    createdAt: 'Hace 5 horas',
+    storyboard: [
+      {
+        sceneNumber: 1,
+        title: 'Aproximación Orbital',
+        description: 'La nave cruza el plano de los anillos revelando la inmensidad del planeta.',
+        cameraAngle: 'Plano general épico',
+        lighting: 'Luz solar indirecta con destellos especulares en el hielo',
+        audioEffect: 'Sintetizador ambiental espacial y propulsores de iones'
+      }
+    ]
+  },
+  {
+    id: 'sample-5',
+    title: 'Bosque Místico de Luciérnagas Anime',
+    prompt: 'Sendero de musgo iluminado por cientos de esferas de luz flotantes bajo árboles gigantes milenarios, estilo Studio Ghibli, 4K.',
+    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    posterUrl: 'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&auto=format&fit=crop&q=80',
+    duration: 8,
+    aspectRatio: '16:9',
+    style: 'Anime Studio Ghibli',
+    cameraMotion: 'Vuelo FPV / Drone',
+    fps: 60,
+    tags: ['Anime', 'Fantasía', 'Bosque', 'Ghibli'],
+    createdAt: 'Hace 8 horas',
+    storyboard: [
+      {
+        sceneNumber: 1,
+        title: 'Despertar del Bosque',
+        description: 'Las luciérnagas se elevan en espiral entre la niebla esmeralda.',
+        cameraAngle: 'Paneo ascendente suave',
+        lighting: 'Resplandor bioluminiscente turquesa y dorado',
+        audioEffect: 'Arpa de cristal y brisa mística'
       }
     ]
   }
@@ -252,7 +301,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
 
   // Generate Video with Cloud Sora / Veo AI
   const handleGenerateVideo = async () => {
-    if (!prompt.trim() && !uploadedImage) return;
+    const effectivePrompt = prompt.trim() || activeProject.prompt || 'Metrópolis Cyberpunk en lluvia neón con autos voladores 8K';
 
     setIsGenerating(true);
     setGenerationProgress(10);
@@ -273,7 +322,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: prompt.trim() || 'Escena cinemática de alta definición',
+          prompt: effectivePrompt,
           imageUrl: uploadedImage,
           style: selectedStyle,
           duration: duration,
@@ -292,15 +341,11 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
           setGenerationStep('¡Renderizado completado con éxito!');
           const newProj: VideoProject = data.video;
           setActiveProject(newProj);
+          setActiveTab('player');
           setProjectsList(prev => [newProj, ...prev]);
           setTimeout(() => {
             setIsGenerating(false);
-            if (videoRef.current) {
-              videoRef.current.load();
-              videoRef.current.play().catch(() => {});
-              setIsPlaying(true);
-            }
-          }, 600);
+          }, 400);
           return;
         }
       }
@@ -315,20 +360,22 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
 
   // Direct In-Browser Canvas Video Producer & MediaRecorder (100% Offline & Instant)
   const handleProduceLocalCanvasVideo = async () => {
+    const effectivePrompt = prompt.trim() || activeProject.prompt || 'Metrópolis Cyberpunk en lluvia neón con autos voladores 8K';
+
     setIsGenerating(true);
     setGenerationProgress(5);
     setGenerationStep('Iniciando motor de renderizado Canvas 60 FPS...');
 
     try {
       const videoResult = await renderAndRecordVideo({
-        prompt: prompt.trim() || 'Composición Cinemática en Movimiento',
+        prompt: effectivePrompt,
         style: selectedStyle,
         durationSeconds: duration || 8,
         fps: fps || 30,
         width: aspectRatio === '9:16' ? 720 : 1280,
         height: aspectRatio === '9:16' ? 1280 : (aspectRatio === '1:1' ? 720 : 720),
-        backgroundImageUrl: uploadedImage || undefined,
-        title: prompt.slice(0, 35) || 'Video Cinemático IA',
+        backgroundImageUrl: uploadedImage || activeProject.posterUrl || undefined,
+        title: effectivePrompt.slice(0, 35) || 'Video Cinemático IA',
         cameraMotion: selectedCamera,
         onProgress: (pct, step) => {
           setGenerationProgress(pct);
@@ -338,8 +385,8 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
 
       const newProj: VideoProject = {
         id: 'vid-local-' + Date.now(),
-        title: prompt.slice(0, 40) || 'Video Animado IA',
-        prompt: prompt || 'Video generado en vivo',
+        title: effectivePrompt.slice(0, 40) || 'Video Animado IA',
+        prompt: effectivePrompt,
         videoUrl: videoResult.blobUrl,
         posterUrl: videoResult.thumbnailUrl,
         duration: duration,
@@ -365,11 +412,6 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
 
       setTimeout(() => {
         setIsGenerating(false);
-        if (videoRef.current) {
-          videoRef.current.load();
-          videoRef.current.play().catch(() => {});
-          setIsPlaying(true);
-        }
       }, 500);
     } catch (localErr: any) {
       console.error('Error during local canvas video production:', localErr);
@@ -538,8 +580,8 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               </div>
             )}
 
-            {/* Prompt Textarea */}
-            <div className="space-y-2">
+            {/* Prompt Textarea & Fast Suggestion Pills */}
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
                   <Wand2 className="w-3.5 h-3.5 text-[#00E5FF]" />
@@ -562,12 +604,35 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder={
                     studioMode === 'image'
-                      ? 'Describe cómo quieres que se mueva la imagen (e.g. "Haz que las nubes se muevan suavemente hacia la derecha y la cámara haga un zoom lento hacia el centro con partículas doradas flotando")...'
-                      : 'Describe la escena cinemática (e.g. "Un robot futurista caminando bajo la lluvia neón en Tokio, vista de dron en 4K, luces volumétricas y reflejos en el asfalto")...'
+                      ? 'Describe el movimiento: "Zoom suave con partículas doradas y reflejos cinemáticos..."'
+                      : 'Describe la escena: "Un coche volador atravesando rascacielos neón bajo la lluvia en Tokio 8K..."'
                   }
-                  rows={4}
+                  rows={3}
                   className="w-full rounded-2xl bg-[#050A14] border border-cyan-900/50 p-3.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00E5FF] transition-all resize-none shadow-inner"
                 />
+              </div>
+
+              {/* Quick Idea Presets */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-stone-400">⚡ Ideas Rápidas para Crear:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'Metrópolis Cyberpunk en lluvia neón con autos voladores',
+                    'Viaje por un túnel cuántico de datos a velocidad luz',
+                    'Atardecer dorado en el océano con olas en cámara lenta',
+                    'Bosque místico de Studio Ghibli con luciérnagas mágicas',
+                    'Nave espacial cruzando los anillos de Saturno en 8K'
+                  ].map((idea, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setPrompt(idea)}
+                      className="px-2 py-1 rounded-lg bg-[#061226] hover:bg-[#0B2248] text-cyan-300 hover:text-white border border-cyan-900/40 text-[10px] truncate max-w-[210px] transition-all cursor-pointer text-left"
+                    >
+                      ✨ {idea}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -764,7 +829,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                     activeTab === 'player' ? 'bg-[#00E5FF] text-stone-950' : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  Video
+                  Reproductor 60 FPS
                 </button>
                 <button
                   onClick={() => setActiveTab('storyboard')}
@@ -787,47 +852,14 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
 
             {/* Video Canvas / Screen Area */}
             {activeTab === 'player' && (
-              <div className="relative bg-black aspect-video flex items-center justify-center overflow-hidden group">
-                <video
-                  ref={videoRef}
-                  key={activeProject.id + '-' + activeProject.videoUrl}
-                  src={activeProject.videoUrl}
-                  poster={activeProject.posterUrl}
-                  loop={isLooping}
-                  muted={isMuted}
-                  playsInline
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={() => setIsPlaying(false)}
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.dataset.hasFailed) {
-                      target.dataset.hasFailed = 'true';
-                      target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4';
-                      target.load();
-                    }
+              <div className="p-2 bg-[#040814]">
+                <CinematicCanvasPlayer
+                  project={activeProject}
+                  onProduceNew={(updated) => {
+                    setActiveProject(updated);
+                    setProjectsList((prev) => [updated, ...prev.filter(x => x.id !== updated.id)]);
                   }}
-                  className="w-full h-full object-contain cursor-pointer"
-                  onClick={handleTogglePlay}
                 />
-
-                {/* Big Center Play Overlay Button if paused */}
-                {!isPlaying && (
-                  <button
-                    onClick={handleTogglePlay}
-                    className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-[#00E5FF]/90 text-stone-950 flex items-center justify-center shadow-2xl shadow-cyan-500/50 hover:scale-110 transition-transform cursor-pointer"
-                  >
-                    <Play className="w-7 h-7 fill-current ml-1" />
-                  </button>
-                )}
-
-                {/* Video Info Tag Overlay */}
-                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] font-mono text-cyan-300 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <span>{activeProject.aspectRatio}</span>
-                  <span>•</span>
-                  <span>{activeProject.fps} FPS</span>
-                  <span>•</span>
-                  <span>{activeProject.cameraMotion}</span>
-                </div>
               </div>
             )}
 
@@ -906,119 +938,6 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                 </div>
               </div>
             )}
-
-            {/* Video Controls Bar */}
-            <div className="p-3.5 bg-[#080E1C] border-t border-cyan-950 space-y-2.5">
-              {/* Seekbar */}
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-mono text-stone-400 w-9">
-                  {Math.floor(currentTime)}s
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={videoDuration || 10}
-                  step={0.1}
-                  value={currentTime}
-                  onChange={handleSeek}
-                  className="w-full h-1.5 bg-cyan-950 rounded-lg appearance-none cursor-pointer accent-[#00E5FF]"
-                />
-                <span className="text-[10px] font-mono text-stone-400 w-9 text-right">
-                  {Math.floor(videoDuration || activeProject.duration)}s
-                </span>
-              </div>
-
-              {/* Action Buttons Row */}
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                {/* Left Playback Buttons */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={handleTogglePlay}
-                    className="p-2 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 font-bold transition-transform active:scale-95 cursor-pointer shadow-md shadow-cyan-500/20"
-                    title={isPlaying ? 'Pausar' : 'Reproducir'}
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = 0;
-                        videoRef.current.play();
-                        setIsPlaying(true);
-                      }
-                    }}
-                    className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                    title="Reiniciar video"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    onClick={handleToggleMute}
-                    className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                    title={isMuted ? 'Activar audio' : 'Silenciar'}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-
-                  {/* Speed Selector */}
-                  <div className="flex items-center bg-[#050A14] rounded-xl border border-cyan-950 p-0.5">
-                    {[0.5, 1, 1.5, 2].map(speed => (
-                      <button
-                        key={speed}
-                        onClick={() => handleChangeSpeed(speed)}
-                        className={`px-1.5 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                          playbackRate === speed ? 'bg-[#00E5FF] text-stone-950' : 'text-stone-400 hover:text-white'
-                        }`}
-                      >
-                        {speed}x
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right Export & Share Buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDownloadVideo(activeProject)}
-                    disabled={isDownloading}
-                    className="px-3 py-1.5 rounded-xl bg-cyan-950 hover:bg-cyan-900/80 text-[#00E5FF] font-bold text-xs flex items-center gap-1.5 border border-cyan-800/50 transition-all cursor-pointer shadow-md shadow-cyan-500/10 active:scale-95 disabled:opacity-50"
-                    title="Descargar archivo MP4 a tu dispositivo"
-                  >
-                    {isDownloading ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#00E5FF]" />
-                        <span>Descargando MP4...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Descargar MP4</span>
-                      </>
-                    )}
-                  </button>
-
-                  {onAskAI && (
-                    <button
-                      onClick={() => onAskAI(`Ayúdame a editar o crear una secuela para el video: "${activeProject.title}". Prompt actual: ${activeProject.prompt}`, 'ideas')}
-                      className="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold text-xs flex items-center gap-1.5 border border-blue-500/40 transition-all cursor-pointer"
-                    >
-                      <Wand2 className="w-3.5 h-3.5" />
-                      <span>Remixar con IA</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={handleToggleFullscreen}
-                    className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                    title="Pantalla completa"
-                  >
-                    <Maximize2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Quick Gallery of AI Videos */}
@@ -1046,11 +965,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                   <div
                     onClick={() => {
                       setActiveProject(item);
-                      if (videoRef.current) {
-                        videoRef.current.load();
-                        videoRef.current.play().catch(() => {});
-                        setIsPlaying(true);
-                      }
+                      setActiveTab('player');
                     }}
                     className="relative rounded-xl overflow-hidden aspect-video bg-black cursor-pointer group"
                   >

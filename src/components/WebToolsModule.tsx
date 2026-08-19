@@ -21,6 +21,7 @@ interface WebToolsModuleProps {
 }
 
 const SAMPLE_SCRAPED_PRESETS = [
+  { name: '🔍 Google (Buscador Real)', url: 'https://www.google.com/?hl=es' },
   { name: 'Wikipedia: Inteligencia Artificial', url: 'https://es.wikipedia.org/wiki/Inteligencia_artificial' },
   { name: 'Documentación Oficial React', url: 'https://react.dev' },
   { name: 'GitHub Developer Blog', url: 'https://github.blog' },
@@ -1224,39 +1225,64 @@ export const WebToolsModule: React.FC<WebToolsModuleProps> = ({ onAskAI }) => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Escribe tu consulta (e.g. 'Últimos avances de computación cuántica y telescopios 2026')..."
+                  placeholder="Escribe cualquier búsqueda o URL (ej. 'Últimas noticias de tecnología 2026' o 'https://www.google.com/?hl=es')..."
                   className="flex-1 pl-4 pr-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900/60 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00E5FF] transition-all shadow-inner"
                 />
-                <button
-                  type="submit"
-                  disabled={!searchQuery.trim() || isSearching}
-                  className="py-3 px-6 rounded-2xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all cursor-pointer shrink-0"
-                >
-                  {isSearching ? <RefreshCw className="w-4 h-4 animate-spin text-stone-950" /> : <Search className="w-4 h-4 text-stone-950" />}
-                  <span>Buscar en la Web</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={!searchQuery.trim() || isSearching}
+                    className="py-3 px-5 rounded-2xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all cursor-pointer shrink-0"
+                  >
+                    {isSearching ? <RefreshCw className="w-4 h-4 animate-spin text-stone-950" /> : <Search className="w-4 h-4 text-stone-950" />}
+                    <span>Buscar en la Web</span>
+                  </button>
+
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(searchQuery.trim() || 'noticias tecnologia')}&hl=es`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-3 px-4 rounded-2xl bg-[#0B1A3A] hover:bg-[#10244F] border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                    title="Abrir esta búsqueda directamente en Google Oficial"
+                  >
+                    <span>Google Real</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
               </div>
             </form>
           </div>
 
           {searchAnswer && (
             <div className="p-5 rounded-3xl bg-[#080E1C] border border-cyan-500/40 shadow-xl space-y-3 animate-in fade-in">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#00E5FF]" />
-                  <h3 className="text-xs font-bold text-cyan-300 uppercase tracking-wide">
-                    Síntesis Web en Tiempo Real
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                  <h3 className="text-xs font-bold text-cyan-300 uppercase tracking-wide flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#00E5FF]" />
+                    Síntesis Web en Tiempo Real (Google Grounded)
                   </h3>
                 </div>
-                {onAskAI && (
-                  <button
-                    onClick={() => onAskAI(`Respecto a la búsqueda: "${searchQuery}"\n\nSíntesis: ${searchAnswer}\n\nPor favor continúa analizando este tema en detalle.`, 'asistente_web')}
-                    className="text-[11px] text-[#00E5FF] hover:underline flex items-center gap-1 cursor-pointer"
+                <div className="flex items-center gap-3">
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&hl=es`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-cyan-300 hover:text-white flex items-center gap-1 font-bold bg-cyan-950/60 px-2.5 py-1 rounded-xl border border-cyan-900/50"
                   >
-                    <span>Continuar en Chat</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                )}
+                    <span>Ver en Google.com</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  {onAskAI && (
+                    <button
+                      onClick={() => onAskAI(`Respecto a la búsqueda: "${searchQuery}"\n\nSíntesis: ${searchAnswer}\n\nPor favor continúa analizando este tema en detalle.`, 'asistente_web')}
+                      className="text-[11px] text-[#00E5FF] hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                    >
+                      <span>Continuar en Chat</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-xs sm:text-sm text-stone-200 leading-relaxed bg-[#050A14] p-4 rounded-2xl border border-cyan-950 whitespace-pre-line">
                 {searchAnswer}

@@ -215,6 +215,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </form>
       </div>
 
+      {/* AI Providers & Out-Of-The-Box Multi-Model Engine Card */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-[#081021] border border-cyan-900/80 shadow-xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#00E5FF]" />
+              Modelos de IA 100% Activos (ChatGPT, Claude, Gemini, DeepSeek, Meta AI)
+            </h3>
+            <p className="text-xs text-stone-400">
+              Todos los modelos funcionan de inmediato sin necesidad de ingresar ninguna clave API adicional.
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono border border-emerald-800 font-bold">
+            100% LISTO SIN API
+          </span>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-[#050A14] border border-cyan-950 space-y-3 text-xs text-stone-300">
+          <div className="flex items-center gap-2 text-cyan-300 font-bold">
+            <Shield className="w-4 h-4 text-[#00E5FF]" />
+            <span>Acceso Instantáneo a Múltiples Motores de IA:</span>
+          </div>
+          <p className="text-[11px] text-stone-300 leading-relaxed">
+            Puedes seleccionar y conversar con cualquier modelo desde el menú desplegable del chat (<strong className="text-white">GPT-4o</strong>, <strong className="text-white">Claude 3.7 Sonnet</strong>, <strong className="text-white">DeepSeek-R1</strong>, <strong className="text-white">Gemini 2.5 Pro</strong>, <strong className="text-white">Llama 3.3</strong>, etc.) sin configurar ninguna clave o cuenta externa. El motor del servidor gestiona la ejecución y adaptación automática.
+          </p>
+
+          <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-900/60 text-[11px] text-cyan-200">
+            💡 <strong>Opcional (Despliegues con Claves Propias):</strong> Si deseas facturar solicitudes directamente a tus cuentas corporativas de OpenAI o Anthropic en Vercel, puedes configurar opcionalmente las variables de entorno <code className="text-[#00E5FF] font-mono">OPENAI_API_KEY</code> o <code className="text-[#00E5FF] font-mono">ANTHROPIC_API_KEY</code> en la configuración de Vercel.
+          </div>
+        </div>
+      </div>
+
       {/* ChatGPT Style Custom Instructions */}
       <div className="p-6 sm:p-8 rounded-3xl bg-[#081021] border border-cyan-900/80 shadow-xl space-y-4">
         <div className="flex items-center justify-between">

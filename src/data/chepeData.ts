@@ -1,79 +1,7 @@
 import { AIModelOption, CategoryOption, PlanTier, UserProfile, AdminUserItem } from '../types';
+import { AI_MODEL_OPTIONS } from './modelsData';
 
-export const AI_MODEL_OPTIONS: AIModelOption[] = [
-  {
-    id: 'gpt-4o',
-    name: 'GPT-4o Omni',
-    badge: 'FLAGSHIP CHATGPT',
-    icon: '✨',
-    description: 'Modelo insignia inteligente y multimodal para texto, código, análisis y visión.',
-    speed: 'Ultra rápido (0.3s)'
-  },
-  {
-    id: 'o3-mini',
-    name: 'o3-mini / o1 Reasoning',
-    badge: 'RAZONAMIENTO STEM',
-    icon: '🧠',
-    description: 'Cadena de pensamiento profunda antes de responder para matemáticas, algoritmos y lógica.',
-    speed: 'Pensamiento Profundo'
-  },
-  {
-    id: 'deepseek-r1',
-    name: 'DeepSeek-R1 Reasoning',
-    badge: 'CÓDIGO ABIERTO',
-    icon: '🐳',
-    description: 'Excelente para programación avanzada y deducción lógica sin restricciones.',
-    speed: 'Razonamiento paso a paso'
-  },
-  {
-    id: 'dall-e-3',
-    name: 'DALL-E 3 Image Studio',
-    badge: 'CREACIÓN VISUAL',
-    icon: '🎨',
-    description: 'Generador de imágenes artísticas, render 3D e ilustraciones hiperrealistas en HD.',
-    speed: 'Generación Visual HD'
-  },
-  {
-    id: 'sora-video',
-    name: 'Sora & Veo Video Studio',
-    badge: 'VIDEO & CINE IA',
-    icon: '🎬',
-    description: 'Generación de videos cinemáticos 8K, animaciones 60FPS y storyboards visuales.',
-    speed: 'Renderizado Cinemático'
-  },
-  {
-    id: 'web-grounding',
-    name: 'Web Live Grounding',
-    badge: 'BÚSQUEDA EN VIVO',
-    icon: '🌐',
-    description: 'Navegación web en tiempo real, síntesis de noticias y extracción de enlaces con fuentes.',
-    speed: 'Tiempo Real (0.3s)'
-  },
-  {
-    id: 'gemini-3.5-flash',
-    name: 'Gemini 2.5 Flash',
-    badge: 'MULTIMODAL RÁPIDO',
-    icon: '💎',
-    description: 'Excelente para análisis de visión, imágenes, PDFs y documentos extensos.',
-    speed: 'Rápido (0.2s)'
-  },
-  {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o mini',
-    badge: 'LIGERO & EFICIENTE',
-    icon: '⚡',
-    description: 'Respuestas cotidianas instantáneas con bajo consumo de tokens.',
-    speed: 'Instantáneo (0.1s)'
-  },
-  {
-    id: 'chepe-3.8',
-    name: 'Chepe 3.8 Ultra',
-    badge: 'MOTOR NATIVO',
-    icon: '🤖',
-    description: 'Motor principal optimizado para respuestas en español y asistencia técnica.',
-    speed: 'Ultra rápido (0.2s)'
-  }
-];
+export { AI_MODEL_OPTIONS };
 
 export const CATEGORY_OPTIONS: CategoryOption[] = [
   {
@@ -483,4 +411,3 @@ export const OFFICIAL_CUSTOM_GPTS = [
     ]
   }
 ];
-

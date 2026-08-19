@@ -74,6 +74,60 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Action Buttons Header */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Quick Hub Navigation Pills (Desktop / Tablet) */}
+          <div className="hidden md:flex items-center gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
+            <button
+              onClick={() => onSelectTab('chat')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'chat'
+                  ? 'bg-[#00E5FF] text-stone-950 shadow-sm'
+                  : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              💬 Chat
+            </button>
+            <button
+              onClick={() => onSelectTab('video')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'video'
+                  ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-stone-950 shadow-sm'
+                  : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              🎬 Video IA
+            </button>
+            <button
+              onClick={() => onSelectTab('web')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'web'
+                  ? 'bg-[#00E5FF] text-stone-950 shadow-sm'
+                  : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              🌐 Web Tools
+            </button>
+            <button
+              onClick={() => onSelectTab('programming')}
+              className={`hidden xl:block px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'programming'
+                  ? 'bg-[#00E5FF] text-stone-950 shadow-sm'
+                  : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              💻 Dev
+            </button>
+            <button
+              onClick={() => onSelectTab('math')}
+              className={`hidden xl:block px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'math'
+                  ? 'bg-[#00E5FF] text-stone-950 shadow-sm'
+                  : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              📐 Matemáticas
+            </button>
+          </div>
+
           {/* If Guest: Prominent Create Account / Register button */}
           {isGuest && onOpenAuthModal && (
             <button

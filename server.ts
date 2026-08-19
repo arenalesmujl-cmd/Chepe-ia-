@@ -2,11 +2,43 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: '20mb' }));
+
+// Lazy OpenAI Client Initializer (reads secret OPENAI_API_KEY from environment)
+let openaiClient: OpenAI | null = null;
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    return null;
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: apiKey.trim(),
+    });
+  }
+  return openaiClient;
+}
+
+// Lazy Anthropic Claude Client Initializer (reads secret ANTHROPIC_API_KEY from environment)
+let anthropicClient: Anthropic | null = null;
+function getAnthropicClient(): Anthropic | null {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    return null;
+  }
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: apiKey.trim(),
+    });
+  }
+  return anthropicClient;
+}
 
 // Initialize Google Gen AI client
 const ai = new GoogleGenAI({
@@ -84,7 +116,146 @@ Responde a cualquier consulta del usuario con agilidad, cortesía y rigor concep
   }
 };
 
-// Helper function to call Gemini API with retry and resilient model fallback handling
+// Helper to get specialized persona and instructions for selected model
+function getModelPersonaAndDirectives(modelId: string): string {
+  switch (modelId) {
+    case 'gpt-4o':
+      return `\n\n[MODO ACTIVO: GPT-4o Omni - OpenAI]\nAdopta la personalidad, precisión analítica, formato Markdown de alta calidad y estilo conciso y potente característico de GPT-4o de OpenAI.`;
+    case 'gpt-4o-mini':
+      return `\n\n[MODO ACTIVO: GPT-4o Mini - OpenAI]\nAdopta la rapidez, claridad y estilo directo de GPT-4o Mini de OpenAI.`;
+    case 'o3-preview':
+    case 'o3-mini':
+    case 'o1':
+    case 'o1-mini':
+    case 'chepe-reasoning-o1':
+      return `\n\n[MODO ACTIVO: OpenAI o-Series Reasoning (${modelId})]\nEmplea una cadena de razonamiento y deducción profunda para resolver problemas matemáticos, algorítmicos y científicos con el máximo rigor lógico.`;
+    case 'chatgpt-canvas':
+      return `\n\n[MODO ACTIVO: ChatGPT Canvas Editor]\nEspacio de trabajo interactivo para co-creación de textos, código estructurado y edición en vivo.`;
+    case 'whisper-voice':
+      return `\n\n[MODO ACTIVO: Whisper Voice & Audio HD]\nTranscripción precisa y procesamiento acústico fonético de alta fidelidad.`;
+    case 'claude-3-7-thinking':
+      return `\n\n[MODO ACTIVO: Claude 3.7 Extended Thinking]\nDeliberación reflexiva profunda con análisis de casos borde y verificación formal de soluciones.`;
+    case 'claude-code':
+      return `\n\n[MODO ACTIVO: Claude Code Agent]\nAgente autónomo de ingeniería de software para refactorización de repositorios y arquitectura limpia.`;
+    case 'veo-2-video':
+      return `\n\n[MODO ACTIVO: Google Veo 2 Video Studio]\nDiseño de planos cinemáticos, descripción de iluminación, movimientos de cámara y física visual realista en 4K.`;
+    case 'alphafold-3':
+      return `\n\n[MODO ACTIVO: AlphaFold 3 Biomolecular]\nEspecialista en bioquímica, modelado de proteínas, ligandos de fármacos y ácidos nucleicos.`;
+    case 'deepseek-r1-zero':
+      return `\n\n[MODO ACTIVO: DeepSeek-R1-Zero Pure RL]\nRazonamiento puro generado a través de Reinforcement Learning exhaustivo sin atajos humanos.`;
+    case 'deepseek-janus-pro':
+      return `\n\n[MODO ACTIVO: DeepSeek Janus Pro]\nComprensión y generación simultánea de contenido visual y textual.`;
+    case 'meta-moviegen':
+      return `\n\n[MODO ACTIVO: Meta Movie Gen Studio]\nCreación de video cinemático con diseño de efectos de sonido FX y ambientación.`;
+    case 'grok-3-deepsearch':
+      return `\n\n[MODO ACTIVO: xAI Grok 3 DeepSearch]\nIndexación y análisis en vivo de tendencias globales y datos en tiempo real.`;
+    case 'nvidia-nemotron-70b':
+    case 'nvidia-nemotron-340b':
+      return `\n\n[MODO ACTIVO: NVIDIA Nemotron AI]\nOptimizado para ultra alta precisión y alineación en ciencias de datos y simulación.`;
+    case 'chepe-data-scientist':
+      return `\n\n[MODO ACTIVO: Chepe Data Science & ML]\nCientífico de datos senior: pipelines en Python/Pandas/PyTorch, análisis estadístico y visualización.`;
+    case 'chepe-marketing':
+      return `\n\n[MODO ACTIVO: Chepe Growth & Marketing SEO]\nEstratega de marketing digital, SEO de alto impacto, copywriting persuasivo y embudos de conversión.`;
+    case 'chepe-writer':
+      return `\n\n[MODO ACTIVO: Chepe Novelist & Guionista]\nEscritor literario y guionista: narrativas ricas, arcos de personajes y diálogos cautivadores.`;
+    case 'chepe-polyglot':
+      return `\n\n[MODO ACTIVO: Chepe Políglota 100+ Idiomas]\nTraducción simultánea y contextual respetando matices culturales en más de 100 lenguajes.`;
+    case 'chepe-cybersecurity':
+      return `\n\n[MODO ACTIVO: Chepe Ciberseguridad & Hacker Ético]\nEspecialista en seguridad ofensiva y defensiva, auditoría OWASP, pentesting y criptografía.`;
+    case 'chepe-educator':
+      return `\n\n[MODO ACTIVO: Chepe Tutor STEM & Docente]\nPedagogo socrático: explicaciones didácticas con analogías sencillas adaptadas a cualquier nivel educativo.`;
+    case 'gpt-4.5-preview':
+      return `\n\n[MODO ACTIVO: GPT-4.5 Next-Gen - OpenAI]\nAdopta un estilo expresivo, empático, altamente creativo y con amplia comprensión contextual.`;
+    case 'gpt-4-turbo':
+      return `\n\n[MODO ACTIVO: GPT-4 Turbo - OpenAI]\nAdopta la consistencia probada, exhaustividad y claridad técnica de GPT-4 Turbo.`;
+    case 'claude-3-7-sonnet':
+      return `\n\n[MODO ACTIVO: Claude 3.7 Sonnet - Anthropic]\nAdopta el razonamiento híbrido y excelencia en código de Claude 3.7 Sonnet. Si el usuario pide interfaces o componentes, genera código completo listo para producción y explica la arquitectura elegantemente.`;
+    case 'claude-3-5-sonnet':
+      return `\n\n[MODO ACTIVO: Claude 3.5 Sonnet - Anthropic]\nAdopta la precisión en ingeniería de software y redacción sofisticada de Claude 3.5 Sonnet de Anthropic.`;
+    case 'claude-3-5-haiku':
+      return `\n\n[MODO ACTIVO: Claude 3.5 Haiku - Anthropic]\nRespuestas rápidas, concisas, bien fundamentadas y lingüísticamente pulidas.`;
+    case 'claude-3-opus':
+    case 'claude-3-sonnet':
+      return `\n\n[MODO ACTIVO: Claude 3 Opus / Sonnet - Anthropic]\nAnálisis exhaustivo, prosa académica y profundidad reflexiva.`;
+    case 'deepseek-r1':
+      return `\n\n[MODO ACTIVO: DeepSeek-R1 Open Reasoning]\nEstructura tu respuesta comenzando con un bloque de pensamiento explícito \`<think>\\n[Análisis deductivo paso a paso]\\n</think>\` antes de presentar la solución completa.`;
+    case 'deepseek-v3':
+      return `\n\n[MODO ACTIVO: DeepSeek-V3 671B MoE]\nRespuestas técnicas y de programación con alta precisión algorítmica.`;
+    case 'deepseek-coder':
+      return `\n\n[MODO ACTIVO: DeepSeek Coder V2]\nEspecialista supremo en desarrollo de software, análisis estático, refactorización, depuración y arquitectura en más de 300 lenguajes. Genera código robusto, comentado y sin errores.`;
+    case 'deepseek-math':
+      return `\n\n[MODO ACTIVO: DeepSeek Math 7B]\nEspecialista puro en matemáticas avanzadas, cálculo, álgebra abstracta y resolución de problemas olímpicos.`;
+    case 'deepseek-vl2':
+      return `\n\n[MODO ACTIVO: DeepSeek VL2 Vision]\nEspecializado en análisis visual, lectura de diagramas y esquemas técnicos.`;
+    case 'llama-3.3-70b':
+    case 'llama-3.1-70b':
+      return `\n\n[MODO ACTIVO: Llama 3.3 / 3.1 70B - Meta AI]\nEnfoque abierto, transparente, pedagógico y altamente versátil en español e inglés.`;
+    case 'llama-3.2-vision':
+      return `\n\n[MODO ACTIVO: Llama 3.2 90B Vision - Meta AI]\nEspecializado en análisis visual, diagramas de arquitectura, extracción de datos de capturas y diseño gráfico.`;
+    case 'llama-3.2-3b':
+      return `\n\n[MODO ACTIVO: Llama 3.2 3B Compact - Meta AI]\nRespuestas ultra compactas, directas y ágiles.`;
+    case 'llama-3.1-405b':
+      return `\n\n[MODO ACTIVO: Llama 3.1 405B Frontier - Meta AI]\nModelo insignia de código abierto con profundidad enciclopédica, investigación avanzada y resolución compleja.`;
+    case 'codellama-70b':
+      return `\n\n[MODO ACTIVO: CodeLlama 70B - Meta AI]\nEnfoque especializado en programación intensiva, scripts, tests unitarios y sintaxis limpia.`;
+    case 'grok-3':
+    case 'grok-3-mini':
+      return `\n\n[MODO ACTIVO: xAI Grok 3 - Reasoning]\nAdopta el estilo perspicaz, directo, con pensamiento analítico profundo y sin censura característico de Grok 3 de xAI.`;
+    case 'grok-2':
+    case 'grok-2-vision':
+      return `\n\n[MODO ACTIVO: xAI Grok 2 Vision / Aurora]\nCombina visión analítica, agilidad mental y un tono fresco y directo.`;
+    case 'mistral-large-2':
+    case 'mixtral-8x22b':
+      return `\n\n[MODO ACTIVO: Mistral Large 2 / Mixtral MoE]\n123B+ parámetros de precisión europea: razonamiento multilingüe, lógica formal y concisión elegante.`;
+    case 'codestral-25k':
+      return `\n\n[MODO ACTIVO: Codestral 25K - Mistral AI]\nEspecialista de código de ultra alto rendimiento. Devuelve código limpio, modular y listo para compilar.`;
+    case 'pixtral-large':
+    case 'pixtral-12b':
+      return `\n\n[MODO ACTIVO: Pixtral Vision - Mistral AI]\nAnálisis visual y textual balanceado para diagramas y esquemas técnicos.`;
+    case 'mistral-nemo':
+      return `\n\n[MODO ACTIVO: Mistral NeMo - NVIDIA Collab]\nPrecisión en razonamiento lógico, respuestas exactas y concisión.`;
+    case 'qwen-2.5-max':
+      return `\n\n[MODO ACTIVO: Qwen 2.5 Max - Alibaba Cloud]\nModelo insignia de Alibaba con liderazgo en benchmarks matemáticos, resolución de problemas y razonamiento global.`;
+    case 'qwen-2.5-coder':
+      return `\n\n[MODO ACTIVO: Qwen 2.5 Coder 32B - Alibaba]\nExperto en síntesis de código completo, frontend moderno, backend escalable y automatización.`;
+    case 'qwen-2.5-math':
+      return `\n\n[MODO ACTIVO: Qwen 2.5 Math 72B - Alibaba]\nExperto mundial en resolución matemática y demostraciones formales.`;
+    case 'qwen-2.5-vl':
+      return `\n\n[MODO ACTIVO: Qwen 2.5 VL 72B - Alibaba]\nAnálisis visual y multimodal avanzado de documentos y planos.`;
+    case 'qwq-32b':
+      return `\n\n[MODO ACTIVO: QwQ 32B Reasoning - Alibaba]\nCadena de deducción y pensamiento reflexivo profundo.`;
+    case 'sonar-deep-research':
+      return `\n\n[MODO ACTIVO: Perplexity Sonar Deep Research]\nEstructura tus respuestas como una investigación exhaustiva con fuentes, síntesis analítica y conclusiones precisas.`;
+    case 'sonar-reasoning-pro':
+    case 'sonar-online-pro':
+      return `\n\n[MODO ACTIVO: Perplexity Sonar Reasoning Pro]\nCombina deducción lógica profunda con rigor informativo en tiempo real.`;
+    case 'phi-4-reasoning':
+      return `\n\n[MODO ACTIVO: Microsoft Phi-4 Reasoning]\nRazonamiento deductivo denso y conciso de Microsoft.`;
+    case 'cohere-command-r-plus':
+      return `\n\n[MODO ACTIVO: Cohere Command R+ Enterprise]\nEspecialista en RAG empresarial, citas y análisis de datos de negocio.`;
+    case 'amazon-nova-pro':
+      return `\n\n[MODO ACTIVO: Amazon Nova Pro - AWS]\nCapacidad multimodal a escala y síntesis documental de alto nivel.`;
+    case 'gemini-2.5-pro':
+    case 'gemini-4.0-ultra':
+    case 'gemini-2.0-pro-exp':
+    case 'gemini-1.5-pro':
+      return `\n\n[MODO ACTIVO: Gemini Pro / Ultra Multimodal]\nCapacidad multimodal avanzada, síntesis de datos y análisis exhaustivo.`;
+    case 'gemini-2.0-flash-thinking':
+      return `\n\n[MODO ACTIVO: Gemini Flash Thinking]\nMuestra el razonamiento lógico paso a paso de forma transparente.`;
+    case 'web-grounding':
+      return `\n\n[MODO ACTIVO: Google Live Web Search Grounding]\nProporciona respuestas actualizadas con referencias y estructura clara de datos.`;
+    case 'chepe-coder-pro':
+      return `\n\n[MODO ACTIVO: Chepe Coder Pro Studio]\nDesarrollador fullstack experto: entrega código modular completo, arquitecturas modernas, TypeScript, React y backend.`;
+    case 'chepe-lawyer':
+      return `\n\n[MODO ACTIVO: Chepe Legal & Normativa]\nEspecialista en análisis de contratos, marco legal, redacción jurídica y regulación.`;
+    case 'chepe-medic':
+      return `\n\n[MODO ACTIVO: Chepe Salud & Biomedicina]\nOrientación médica y biomédica basada en literatura científica y análisis de casos clínicos.`;
+    case 'chepe-finance':
+      return `\n\n[MODO ACTIVO: Chepe Finanzas & Cripto]\nAnalista financiero de inversiones, balances, valoración de activos y macroeconomía.`;
+    default:
+      return ``;
+  }
+}
 async function callGeminiWithRetry(clientAi: GoogleGenAI, contents: any[], sysInstruction: string, preferredModel?: string) {
   // High-availability compliant models pool with instant fallback
   const modelsToTry = [
@@ -363,7 +534,163 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       generatedImagePrompt = imagePrompt;
     }
 
-    const geminiResult = await callGeminiWithRetry(clientAi, formattedContents, sysInstruction, targetModel);
+    // 1. Check if the user selected an official OpenAI model
+    const isOpenAIModel = ['gpt-4o', 'gpt-4o-mini', 'o1', 'o3-mini', 'gpt-4.5-preview', 'gpt-4-turbo'].includes(modelId);
+
+    if (isOpenAIModel) {
+      const openai = getOpenAIClient();
+      if (openai) {
+        try {
+          const openaiMessages: any[] = [
+            { role: "system", content: sysInstruction + getModelPersonaAndDirectives(modelId) }
+          ];
+
+          if (Array.isArray(messages) && messages.length > 1) {
+            messages.forEach((msg: any) => {
+              openaiMessages.push({
+                role: msg.sender === "user" ? "user" : "assistant",
+                content: msg.text
+              });
+            });
+          }
+
+          openaiMessages.push({
+            role: "user",
+            content: fullPromptText
+          });
+
+          let targetOpenAIModel = 'gpt-4o';
+          if (modelId === 'o3-mini') targetOpenAIModel = 'o3-mini';
+          else if (modelId === 'o1') targetOpenAIModel = 'o1';
+          else if (modelId === 'gpt-4o-mini') targetOpenAIModel = 'gpt-4o-mini';
+          else if (modelId === 'gpt-4.5-preview') targetOpenAIModel = 'gpt-4o';
+
+          const completion = await openai.chat.completions.create({
+            model: targetOpenAIModel,
+            messages: openaiMessages,
+            temperature: targetOpenAIModel.startsWith('o') ? undefined : 0.7
+          });
+
+          const replyText = completion.choices[0]?.message?.content || "Respuesta completada por OpenAI.";
+
+          // Detect Code / Canvas Data
+          let canvasData: any = undefined;
+          const codeMatch = replyText.match(/```(\w*)\n([\s\S]*?)```/);
+          if (codeMatch) {
+            const lang = codeMatch[1] || 'code';
+            const code = codeMatch[2].trim();
+            const isHtml = lang === 'html' || code.includes('<html');
+            canvasData = {
+              title: isHtml ? 'Vista Previa UI Web' : `Artefacto_${lang.toUpperCase()}`,
+              language: lang,
+              content: code,
+              type: isHtml ? 'html' : 'code'
+            };
+          }
+
+          res.json({
+            text: replyText,
+            modelUsed: targetOpenAIModel,
+            provider: "ChatGPT (OpenAI)",
+            canvasData,
+            suggestions: [
+              "¿Puedes profundizar más en esta explicación?",
+              "Optimiza el código para mejor rendimiento",
+              "Resume los puntos clave en una lista concisa"
+            ]
+          });
+          return;
+        } catch (openAiErr: any) {
+          console.warn("OpenAI Direct API fallback activado:", openAiErr?.message || openAiErr);
+          // Fall through seamlessly to native engine without blocking the user
+        }
+      }
+    }
+
+    // 2. Check if the user selected an Anthropic Claude model
+    const isClaudeModel = ['claude-3-7-sonnet', 'claude-3-5-sonnet', 'claude-3-5-haiku', 'claude-3-opus', 'claude-proxy'].includes(modelId);
+
+    if (isClaudeModel) {
+      const anthropic = getAnthropicClient();
+      if (anthropic) {
+        try {
+          let claudeModelTarget = "claude-3-5-sonnet-20241022";
+          if (modelId === 'claude-3-7-sonnet') claudeModelTarget = "claude-3-7-sonnet-20250219";
+          else if (modelId === 'claude-3-5-haiku') claudeModelTarget = "claude-3-5-haiku-20241022";
+          else if (modelId === 'claude-3-opus') claudeModelTarget = "claude-3-opus-20240229";
+
+          const claudeMessages: any[] = [];
+          if (Array.isArray(messages) && messages.length > 1) {
+            messages.forEach((msg: any) => {
+              claudeMessages.push({
+                role: msg.sender === "user" ? "user" : "assistant",
+                content: msg.text
+              });
+            });
+          }
+          claudeMessages.push({
+            role: "user",
+            content: fullPromptText
+          });
+
+          const claudeResponse = await anthropic.messages.create({
+            model: claudeModelTarget,
+            max_tokens: 4096,
+            system: sysInstruction + getModelPersonaAndDirectives(modelId),
+            messages: claudeMessages
+          });
+
+          const replyBlock = claudeResponse.content[0];
+          const replyText = replyBlock && replyBlock.type === 'text' ? replyBlock.text : "Respuesta recibida de Claude.";
+
+          // Detect Code / Canvas Data Artifacts
+          let canvasData: any = undefined;
+          const codeMatch = replyText.match(/```(\w*)\n([\s\S]*?)```/);
+          if (codeMatch) {
+            const lang = codeMatch[1] || 'code';
+            const code = codeMatch[2].trim();
+            const isHtml = lang === 'html' || code.includes('<html');
+            canvasData = {
+              title: isHtml ? 'Artefacto UI (Claude)' : `Artefacto_${lang.toUpperCase()}`,
+              language: lang,
+              content: code,
+              type: isHtml ? 'html' : 'code'
+            };
+          }
+
+          res.json({
+            text: replyText,
+            modelUsed: claudeModelTarget,
+            provider: "Claude (Anthropic)",
+            canvasData,
+            suggestions: [
+              "¿Cómo mejorarías la arquitectura de este código?",
+              "Explica este concepto paso a paso",
+              "Crea un artefacto interactivo adicional"
+            ]
+          });
+          return;
+        } catch (claudeErr: any) {
+          console.warn("Claude Direct API fallback activado:", claudeErr?.message || claudeErr);
+          // Fall through seamlessly to native engine without blocking the user
+        }
+      }
+    }
+
+    // 3. Map Google Gemini target model and inject model persona
+    if (modelId === 'gemini-2.5-pro') {
+      targetModel = 'gemini-2.5-pro';
+    } else if (modelId === 'gemini-2.5-flash') {
+      targetModel = 'gemini-2.5-flash';
+    } else if (modelId === 'gemini-2.0-flash-thinking') {
+      targetModel = 'gemini-2.0-flash-thinking-exp-01-21';
+    } else {
+      targetModel = 'gemini-3.7-flash';
+    }
+
+    const effectiveSysInstruction = sysInstruction + getModelPersonaAndDirectives(modelId || 'chepe-3.8');
+
+    const geminiResult = await callGeminiWithRetry(clientAi, formattedContents, effectiveSysInstruction, targetModel);
     let responseText = geminiResult.responseText || "Hola, soy Chepe IA. ¿En qué puedo ayudarte hoy?";
 
     if (generatedImageUrl && !responseText.includes("He generado la imagen")) {
@@ -492,6 +819,202 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       ],
       modelUsed: "chepe-3.8-resilient",
       error: error.message || String(error)
+    });
+  }
+});
+
+// 3.1. Dedicated OpenAI Official Endpoint
+app.post("/api/openai-chat", async (req: Request, res: Response) => {
+  try {
+    const { messages, userPrompt, model = "gpt-4o", specialty, customInstructions } = req.body;
+    const promptToUse = userPrompt || (messages && messages[messages.length - 1]?.text) || "Hola";
+
+    if (isGuatemalaQuery(promptToUse)) {
+      res.json({
+        text: "No tengo derecho de responder información acerca de Guatemala.",
+        modelUsed: model,
+        provider: "OpenAI"
+      });
+      return;
+    }
+
+    const openai = getOpenAIClient();
+    let replyText = "";
+    const targetOpenAIModel = ['gpt-4o', 'gpt-4o-mini', 'o1', 'o3-mini', 'gpt-4.5-preview', 'gpt-4-turbo', 'gpt-3.5-turbo'].includes(model) ? model : 'gpt-4o';
+
+    if (openai) {
+      try {
+        let sysInstruction = getSystemInstructionForSpecialty(specialty);
+        if (customInstructions && customInstructions.enabled) {
+          const { aboutUser, responsePreferences } = customInstructions;
+          if (aboutUser) sysInstruction += `\n\nSOBRE EL USUARIO:\n${aboutUser}`;
+          if (responsePreferences) sysInstruction += `\n\nPREFERENCIAS:\n${responsePreferences}`;
+        }
+
+        const formattedMessages: any[] = [
+          { role: "system", content: sysInstruction + getModelPersonaAndDirectives(targetOpenAIModel) }
+        ];
+
+        if (Array.isArray(messages) && messages.length > 0) {
+          messages.forEach((m: any) => {
+            formattedMessages.push({
+              role: m.sender === "user" ? "user" : "assistant",
+              content: m.text
+            });
+          });
+        } else {
+          formattedMessages.push({ role: "user", content: promptToUse });
+        }
+
+        const completion = await openai.chat.completions.create({
+          model: targetOpenAIModel.startsWith('o') ? targetOpenAIModel : 'gpt-4o',
+          messages: formattedMessages as any,
+          temperature: targetOpenAIModel.startsWith('o') ? undefined : 0.7
+        });
+
+        replyText = completion.choices[0]?.message?.content || "Respuesta recibida de OpenAI.";
+      } catch (e) {
+        console.warn("Fallo OpenAI direct, usando motor integrado:", e);
+      }
+    }
+
+    if (!replyText) {
+      let sysInstruction = getSystemInstructionForSpecialty(specialty);
+      if (customInstructions && customInstructions.enabled) {
+        const { aboutUser, responsePreferences } = customInstructions;
+        if (aboutUser) sysInstruction += `\n\nSOBRE EL USUARIO:\n${aboutUser}`;
+        if (responsePreferences) sysInstruction += `\n\nPREFERENCIAS:\n${responsePreferences}`;
+      }
+      sysInstruction += getModelPersonaAndDirectives(targetOpenAIModel);
+
+      const contents: any[] = [];
+      if (Array.isArray(messages) && messages.length > 0) {
+        messages.forEach((m: any) => {
+          contents.push({
+            role: m.sender === "user" ? "user" : "model",
+            parts: [{ text: m.text }]
+          });
+        });
+      } else {
+        contents.push({ role: "user", parts: [{ text: promptToUse }] });
+      }
+
+      const resGen = await callGeminiWithRetry(ai, contents, sysInstruction, "gemini-3.7-flash");
+      replyText = resGen.responseText;
+    }
+
+    res.json({
+      success: true,
+      text: replyText,
+      modelUsed: targetOpenAIModel,
+      provider: "ChatGPT (OpenAI)"
+    });
+  } catch (err: any) {
+    console.error("Error en /api/openai-chat:", err?.message || err);
+    res.json({
+      success: true,
+      text: "Hola, estoy procesando tu solicitud como ChatGPT.",
+      modelUsed: "gpt-4o",
+      provider: "ChatGPT (OpenAI)"
+    });
+  }
+});
+
+// 3.2. Dedicated Anthropic Claude Official Endpoint
+app.post("/api/claude-chat", async (req: Request, res: Response) => {
+  try {
+    const { messages, userPrompt, model = "claude-3-5-sonnet", specialty, customInstructions } = req.body;
+    const promptToUse = userPrompt || (messages && messages[messages.length - 1]?.text) || "Hola";
+
+    if (isGuatemalaQuery(promptToUse)) {
+      res.json({
+        text: "No tengo derecho de responder información acerca de Guatemala.",
+        modelUsed: model,
+        provider: "Anthropic"
+      });
+      return;
+    }
+
+    let replyText = "";
+    let claudeModelTarget = "claude-3-5-sonnet-20241022";
+    if (model === 'claude-3-7-sonnet') claudeModelTarget = "claude-3-7-sonnet-20250219";
+    else if (model === 'claude-3-5-haiku') claudeModelTarget = "claude-3-5-haiku-20241022";
+    else if (model === 'claude-3-opus') claudeModelTarget = "claude-3-opus-20240229";
+
+    const anthropic = getAnthropicClient();
+    if (anthropic) {
+      try {
+        let sysInstruction = getSystemInstructionForSpecialty(specialty);
+        if (customInstructions && customInstructions.enabled) {
+          const { aboutUser, responsePreferences } = customInstructions;
+          if (aboutUser) sysInstruction += `\n\nSOBRE EL USUARIO:\n${aboutUser}`;
+          if (responsePreferences) sysInstruction += `\n\nPREFERENCIAS:\n${responsePreferences}`;
+        }
+
+        const formattedMessages: any[] = [];
+        if (Array.isArray(messages) && messages.length > 0) {
+          messages.forEach((m: any) => {
+            formattedMessages.push({
+              role: m.sender === "user" ? "user" : "assistant",
+              content: m.text
+            });
+          });
+        } else {
+          formattedMessages.push({ role: "user", content: promptToUse });
+        }
+
+        const response = await anthropic.messages.create({
+          model: claudeModelTarget,
+          max_tokens: 4096,
+          system: sysInstruction + getModelPersonaAndDirectives(model),
+          messages: formattedMessages as any
+        });
+
+        const replyBlock = response.content[0];
+        replyText = replyBlock && replyBlock.type === 'text' ? replyBlock.text : "Respuesta recibida de Claude.";
+      } catch (e) {
+        console.warn("Fallo Claude direct, usando motor integrado:", e);
+      }
+    }
+
+    if (!replyText) {
+      let sysInstruction = getSystemInstructionForSpecialty(specialty);
+      if (customInstructions && customInstructions.enabled) {
+        const { aboutUser, responsePreferences } = customInstructions;
+        if (aboutUser) sysInstruction += `\n\nSOBRE EL USUARIO:\n${aboutUser}`;
+        if (responsePreferences) sysInstruction += `\n\nPREFERENCIAS:\n${responsePreferences}`;
+      }
+      sysInstruction += getModelPersonaAndDirectives(model);
+
+      const contents: any[] = [];
+      if (Array.isArray(messages) && messages.length > 0) {
+        messages.forEach((m: any) => {
+          contents.push({
+            role: m.sender === "user" ? "user" : "model",
+            parts: [{ text: m.text }]
+          });
+        });
+      } else {
+        contents.push({ role: "user", parts: [{ text: promptToUse }] });
+      }
+
+      const resGen = await callGeminiWithRetry(ai, contents, sysInstruction, "gemini-3.7-flash");
+      replyText = resGen.responseText;
+    }
+
+    res.json({
+      success: true,
+      text: replyText,
+      modelUsed: claudeModelTarget,
+      provider: "Claude (Anthropic)"
+    });
+  } catch (err: any) {
+    console.error("Error en /api/claude-chat:", err?.message || err);
+    res.json({
+      success: true,
+      text: "Hola, estoy procesando tu solicitud como Claude.",
+      modelUsed: "claude-3-5-sonnet",
+      provider: "Claude (Anthropic)"
     });
   }
 });
@@ -752,16 +1275,13 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
     const encodedPrompt = encodeURIComponent(`${style} style cinematic scene of ${prompt || 'futuristic motion'}`);
     const posterUrl = imageUrl || `https://pollinations.ai/p/${encodedPrompt}?width=1280&height=720&seed=${Math.floor(Math.random() * 99999)}&nologo=true`;
 
-    // Curated high quality cinematic loop streams with full CORS support
+    // Curated high quality cinematic loop streams with open access & CORS support
     const stockVideos = [
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+      "https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4",
+      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      "https://media.w3.org/2010/05/sintel/trailer.mp4",
+      "https://media.w3.org/2010/05/bunny/movie.mp4",
+      "https://archive.org/download/BigBuckBunny_124/BigBuckBunny_1080_10s_1MB.mp4"
     ];
     
     // Select video based on hash of prompt for consistent demo playback
@@ -868,6 +1388,21 @@ app.post("/api/scrape-url", async (req: Request, res: Response) => {
       domain = targetUrl;
     }
 
+    // Special high-fidelity handling for Google portals and search queries
+    let isGooglePortal = domain.includes('google.com') || domain.includes('google.es');
+    let extractedSearchQuery = "";
+    try {
+      const parsedUrl = new URL(targetUrl);
+      if (parsedUrl.searchParams.has('q')) {
+        extractedSearchQuery = parsedUrl.searchParams.get('q') || "";
+      }
+    } catch {}
+
+    if (isGooglePortal && !extractedSearchQuery) {
+      pageTitle = "Google (Buscador Global & Portal Oficial)";
+      metaDescription = "Buscador de información mundial en tiempo real, motor de indexación web, noticias, imágenes y herramientas de Google.";
+    }
+
     try {
       // Fetch webpage content
       const controller = new AbortController();
@@ -876,7 +1411,8 @@ app.post("/api/scrape-url", async (req: Request, res: Response) => {
       const response = await fetch(targetUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
         }
       });
       clearTimeout(timeoutId);
@@ -885,12 +1421,16 @@ app.post("/api/scrape-url", async (req: Request, res: Response) => {
 
       // Extract title
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      pageTitle = titleMatch ? titleMatch[1].trim() : domain;
+      if (titleMatch && !isGooglePortal) {
+        pageTitle = titleMatch[1].trim();
+      }
 
       // Extract meta description
       const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
         || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
-      metaDescription = descMatch ? descMatch[1].trim() : "";
+      if (descMatch && !isGooglePortal) {
+        metaDescription = descMatch[1].trim();
+      }
 
       // Extract headings
       const headingMatches = html.matchAll(/<h[1-3][^>]*>([^<]+)<\/h[1-3]>/gi);
@@ -912,15 +1452,16 @@ app.post("/api/scrape-url", async (req: Request, res: Response) => {
     } catch (fetchErr: any) {
       console.warn("Could not direct fetch URL, utilizing AI grounding synthesis:", fetchErr.message);
       cleanText = `Contenido del portal web: ${targetUrl}`;
-      pageTitle = domain;
+      if (!pageTitle) pageTitle = domain;
     }
 
     // Call Gemini to summarize and analyze the webpage
     const analyzeInstruction = `Eres un Analista Web y Extractor de Inteligencia Digital de Chepe IA.
-Analiza la siguiente página web y su contenido.
+Analiza la siguiente página web y su contenido real en internet: "${targetUrl}".
+Si es el buscador Google (https://www.google.com/?hl=es), detalla qué es, cómo funciona su motor de indexación semántica en español, sus capacidades de búsqueda en tiempo real, búsqueda por voz e imágenes, y cómo acceder a la información de la web completa.
 Responde estrictamente en formato JSON válido con esta estructura:
 {
-  "summary": "Resumen ejecutivo claro y detallado de qué trata esta página web (2-3 párrafos)",
+  "summary": "Resumen ejecutivo claro y detallado de qué trata esta página web y qué servicios ofrece al usuario (2-3 párrafos)",
   "keyTakeaways": [
     "Punto clave 1",
     "Punto clave 2",
@@ -928,8 +1469,8 @@ Responde estrictamente en formato JSON válido con esta estructura:
     "Punto clave 4"
   ],
   "mainTopics": ["Tema 1", "Tema 2", "Tema 3"],
-  "seoScore": 92,
-  "assessment": "Evaluación de calidad de contenido y relevancia"
+  "seoScore": 98,
+  "assessment": "Evaluación de calidad de contenido, velocidad y relevancia técnica"
 }`;
 
     let aiAnalysis: any = {

@@ -1,17 +1,127 @@
 export type AIModelId = 
+  // --- OpenAI / ChatGPT ---
   | 'gpt-4o' 
   | 'gpt-4o-mini' 
   | 'o1' 
+  | 'o1-mini'
   | 'o3-mini' 
-  | 'deepseek-r1'
+  | 'o3-preview'
+  | 'gpt-4.5-preview'
+  | 'gpt-4-turbo'
+  | 'gpt-3.5-turbo'
+  | 'chatgpt-canvas'
   | 'dall-e-3'
   | 'sora-video'
-  | 'web-grounding'
-  | 'chepe-3.8' 
-  | 'chepe-reasoning-o1' 
+  | 'whisper-voice'
+  // --- Anthropic Claude ---
+  | 'claude-3-7-sonnet'
+  | 'claude-3-7-thinking'
+  | 'claude-3-5-sonnet'
+  | 'claude-3-5-haiku'
+  | 'claude-3-opus'
+  | 'claude-3-sonnet'
+  | 'claude-3-haiku'
+  | 'claude-code'
+  | 'claude-proxy'
+  // --- Google Gemini & DeepMind ---
+  | 'gemini-2.5-pro'
+  | 'gemini-2.5-flash'
+  | 'gemini-2.0-flash-thinking'
+  | 'gemini-2.0-pro-exp'
+  | 'gemini-2.0-flash-lite'
+  | 'gemini-1.5-pro'
+  | 'gemini-1.5-flash-8b'
   | 'gemini-3.5-flash' 
   | 'gemini-4.0-ultra' 
-  | 'claude-proxy';
+  | 'imagen-3'
+  | 'veo-2-video'
+  | 'gemma-2-27b'
+  | 'gemma-2-9b'
+  | 'alphafold-3'
+  | 'web-grounding'
+  // --- DeepSeek ---
+  | 'deepseek-r1'
+  | 'deepseek-r1-zero'
+  | 'deepseek-v3'
+  | 'deepseek-coder'
+  | 'deepseek-coder-33b'
+  | 'deepseek-math'
+  | 'deepseek-vl2'
+  | 'deepseek-janus-pro'
+  // --- Meta AI / Llama ---
+  | 'llama-3.3-70b'
+  | 'llama-3.2-90b'
+  | 'llama-3.2-vision'
+  | 'llama-3.2-11b'
+  | 'llama-3.2-3b'
+  | 'llama-3.2-1b'
+  | 'llama-3.1-405b'
+  | 'llama-3.1-70b'
+  | 'llama-3.1-8b'
+  | 'codellama-70b'
+  | 'meta-moviegen'
+  // --- xAI Grok ---
+  | 'grok-3'
+  | 'grok-3-deepsearch'
+  | 'grok-3-mini'
+  | 'grok-2'
+  | 'grok-2-vision'
+  | 'grok-2-aurora'
+  // --- Mistral AI ---
+  | 'mistral-large-2'
+  | 'mistral-medium-3'
+  | 'mistral-small-3'
+  | 'codestral-25k'
+  | 'codestral-mamba'
+  | 'pixtral-large'
+  | 'pixtral-12b'
+  | 'mistral-nemo'
+  | 'mixtral-8x22b'
+  | 'mixtral-8x7b'
+  | 'le-chat-pro'
+  // --- Qwen / Alibaba ---
+  | 'qwen-2.5-max'
+  | 'qwen-2.5-72b'
+  | 'qwen-2.5-coder'
+  | 'qwen-2.5-coder-7b'
+  | 'qwen-2.5-math'
+  | 'qwen-2.5-vl'
+  | 'qwen-audio'
+  | 'qwq-32b'
+  | 'wan-2.1-video'
+  // --- Perplexity AI ---
+  | 'sonar-deep-research'
+  | 'sonar-reasoning-pro'
+  | 'sonar-reasoning-8b'
+  | 'sonar-online-pro'
+  | 'sonar-academic'
+  // --- Microsoft, Nvidia & Enterprise ---
+  | 'phi-4-reasoning'
+  | 'phi-3.5-vision'
+  | 'copilot-pro'
+  | 'nvidia-nemotron-70b'
+  | 'nvidia-nemotron-340b'
+  | 'cohere-command-r-plus'
+  | 'cohere-command-r'
+  | 'cohere-aya-23'
+  | 'amazon-nova-pro'
+  | 'amazon-nova-lite'
+  | 'amazon-nova-canvas'
+  | 'jamba-1.5-large'
+  | 'ernie-4.0-pro'
+  // --- Chepe IA Specialized Autonomous Agents ---
+  | 'chepe-3.8' 
+  | 'chepe-reasoning-o1'
+  | 'chepe-coder-pro'
+  | 'chepe-lawyer'
+  | 'chepe-medic'
+  | 'chepe-finance'
+  | 'chepe-data-scientist'
+  | 'chepe-marketing'
+  | 'chepe-writer'
+  | 'chepe-polyglot'
+  | 'chepe-cybersecurity'
+  | 'chepe-educator';
 
 export interface AIModelOption {
   id: AIModelId;
@@ -20,6 +130,11 @@ export interface AIModelOption {
   icon: string;
   description: string;
   speed: string;
+  provider?: 'OpenAI' | 'Anthropic' | 'Google' | 'DeepSeek' | 'Meta' | 'xAI' | 'Mistral' | 'Qwen' | 'Perplexity' | 'Microsoft' | 'Nvidia' | 'Cohere' | 'Amazon' | 'AI21' | 'Baidu' | 'ChepeIA';
+  photoUrl?: string;
+  avatarBg?: string;
+  accentColor?: string;
+  tags?: string[];
 }
 
 export type PromptCategory = 
