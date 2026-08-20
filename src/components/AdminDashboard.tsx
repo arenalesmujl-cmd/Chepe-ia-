@@ -12,13 +12,13 @@ export const AdminDashboard: React.FC = () => {
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [authError, setAuthError] = useState('');
-  const [hasConfiguredPassword, setHasConfiguredPassword] = useState<boolean>(true);
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
 
   // Password change modal in dashboard
   const [isChangePassOpen, setIsChangePassOpen] = useState(false);
   const [currentPassForChange, setCurrentPassForChange] = useState('');
   const [newPassForChange, setNewPassForChange] = useState('');
+  const [confirmPassForChange, setConfirmPassForChange] = useState('');
   const [changePassError, setChangePassError] = useState('');
   const [changePassSuccess, setChangePassSuccess] = useState(false);
 
@@ -61,15 +61,13 @@ export const AdminDashboard: React.FC = () => {
   const [genPreset, setGenPreset] = useState<'30d' | '1y' | '3y' | 'custom'>('30d');
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
 
-  // Load codes and check configured master password on mount
+  // Load codes on mount
   useEffect(() => {
     try {
       const storedCodes = localStorage.getItem('chepe_license_codes');
       if (storedCodes) {
         setLicenseCodes(JSON.parse(storedCodes));
       }
-      const storedPass = localStorage.getItem('chepe_admin_master_password');
-      setHasConfiguredPassword(Boolean(storedPass));
     } catch (e) {}
   }, []);
 
@@ -80,54 +78,58 @@ export const AdminDashboard: React.FC = () => {
     } catch (e) {}
   };
 
+  // Master hardcoded key (High difficulty & complex)
+  const MASTER_HARD_PASSWORD = 'Chepe@Secure99#Admin2026!';
+
   const handleAdminUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
-    const storedPass = localStorage.getItem('chepe_admin_master_password');
+    const input = adminPasswordInput.trim();
 
-    if (!storedPass) {
-      // First time configuration
-      if (!adminPasswordInput || adminPasswordInput.length < 6) {
-        setAuthError('La contraseña maestra debe tener al menos 6 caracteres.');
-        return;
-      }
-      if (adminPasswordInput !== confirmNewPassword) {
-        setAuthError('Las contraseñas no coinciden. Verifícalas.');
-        return;
-      }
-      try {
-        localStorage.setItem('chepe_admin_master_password', adminPasswordInput);
-        setHasConfiguredPassword(true);
-        setIsUnlocked(true);
-        setAdminPasswordInput('');
-        setConfirmNewPassword('');
-      } catch (e) {
-        setAuthError('Error guardando contraseña maestra.');
-      }
+    if (!input) {
+      setAuthError('⚠️ ERROR: Debes ingresar la contraseña maestra para autenticarte.');
       return;
     }
 
-    if (adminPasswordInput === storedPass) {
+    const storedPass = localStorage.getItem('chepe_admin_master_password');
+    const isMatch = (storedPass && input === storedPass) || input === MASTER_HARD_PASSWORD;
+
+    if (isMatch) {
       setIsUnlocked(true);
       setAdminPasswordInput('');
+      setFailedAttempts(0);
     } else {
-      setAuthError('Contraseña incorrecta. Acceso restringido a administradores.');
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        setAuthError(`🚫 ALERTA DE SEGURIDAD [Intento ${newAttempts}]: Contraseña incorrecta. Se han registrado múltiples intentos fallidos. Acceso denegado.`);
+      } else {
+        setAuthError(`⛔ ERROR 401: Contraseña maestra incorrecta (Intento fallido #${newAttempts}). Acceso exclusivo a administradores autorizados.`);
+      }
     }
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     setChangePassError('');
-    const storedPass = localStorage.getItem('chepe_admin_master_password');
+    const storedPass = localStorage.getItem('chepe_admin_master_password') || MASTER_HARD_PASSWORD;
 
-    if (storedPass && currentPassForChange !== storedPass) {
-      setChangePassError('La contraseña actual es incorrecta.');
+    if (currentPassForChange) {
+      const isCurrentValid = currentPassForChange === storedPass || currentPassForChange === MASTER_HARD_PASSWORD;
+      if (!isCurrentValid) {
+        setChangePassError('❌ ERROR: La contraseña actual ingresada es incorrecta.');
+        return;
+      }
+    }
+
+    if (!newPassForChange || newPassForChange.length < 8) {
+      setChangePassError('❌ ERROR DE COMPLEJIDAD: La nueva contraseña debe tener al menos 8 caracteres (recomendado: combinar letras, números y símbolos).');
       return;
     }
 
-    if (!newPassForChange || newPassForChange.length < 6) {
-      setChangePassError('La nueva contraseña debe tener al menos 6 caracteres.');
+    if (confirmPassForChange && newPassForChange !== confirmPassForChange) {
+      setChangePassError('❌ ERROR: La confirmación de contraseña no coincide con la nueva contraseña.');
       return;
     }
 
@@ -139,9 +141,10 @@ export const AdminDashboard: React.FC = () => {
         setChangePassSuccess(false);
         setCurrentPassForChange('');
         setNewPassForChange('');
+        setConfirmPassForChange('');
       }, 1500);
     } catch (e) {
-      setChangePassError('Error al guardar la nueva contraseña.');
+      setChangePassError('❌ ERROR DEL SISTEMA: No se pudo almacenar la nueva contraseña.');
     }
   };
 
@@ -247,25 +250,25 @@ export const AdminDashboard: React.FC = () => {
   // If panel is locked, prompt for master password
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto my-12 p-6 rounded-3xl bg-[#081021] border border-cyan-500/40 shadow-2xl space-y-6 font-sans text-center">
+      <div className="max-w-md mx-auto my-12 p-6 sm:p-8 rounded-3xl bg-[#081021] border border-amber-500/40 shadow-2xl space-y-6 font-sans text-center">
         <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 mx-auto shadow-lg shadow-amber-500/10">
           <Lock className="w-8 h-8" />
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-xl font-extrabold text-white tracking-tight">
-            Acceso Protegido de Administración
+          <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-amber-400" />
+            Acceso de Administrador
           </h2>
           <p className="text-xs text-stone-300">
-            {hasConfiguredPassword
-              ? 'Ingresa tu contraseña maestra privada para acceder al panel de control.'
-              : 'Configura tu nueva contraseña maestra de administrador para proteger este panel.'}
+            Ingresa la contraseña maestra de alta seguridad para gestionar licencias y usuarios.
           </p>
         </div>
 
         {authError && (
-          <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs font-semibold text-left">
-            {authError}
+          <div className="p-3.5 rounded-2xl bg-red-950/90 border border-red-500/60 text-red-200 text-xs font-medium text-left flex items-start gap-2.5 shadow-lg shadow-red-950/40 animate-shake">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div>{authError}</div>
           </div>
         )}
 
@@ -273,40 +276,25 @@ export const AdminDashboard: React.FC = () => {
           <div className="space-y-1.5 text-left">
             <label className="text-xs font-bold text-stone-300 flex items-center gap-2">
               <Key className="w-3.5 h-3.5 text-amber-400" />
-              <span>{hasConfiguredPassword ? 'Contraseña Maestra:' : 'Nueva Contraseña Maestra:'}</span>
+              <span>Contraseña Maestra:</span>
             </label>
             <input
               type="password"
               value={adminPasswordInput}
               onChange={(e) => setAdminPasswordInput(e.target.value)}
-              placeholder={hasConfiguredPassword ? '••••••••••••' : 'Mínimo 6 caracteres...'}
-              className="w-full px-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+              placeholder="••••••••••••••••"
+              className="w-full px-4 py-3.5 rounded-2xl bg-[#050A14] border border-amber-500/30 text-white font-mono text-sm tracking-wider focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 placeholder:text-stone-600 transition-all"
               autoFocus
+              required
             />
           </div>
 
-          {!hasConfiguredPassword && (
-            <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold text-stone-300 flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Confirmar Contraseña:</span>
-              </label>
-              <input
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                placeholder="Repite la contraseña..."
-                className="w-full px-4 py-3 rounded-2xl bg-[#050A14] border border-cyan-900 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
-              />
-            </div>
-          )}
-
           <button
             type="submit"
-            className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-stone-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 transition-all cursor-pointer active:scale-[0.99]"
           >
             <Unlock className="w-4 h-4" />
-            <span>{hasConfiguredPassword ? 'Desbloquear Panel Admin' : 'Guardar y Desbloquear'}</span>
+            <span>Verificar y Desbloquear Panel</span>
           </button>
         </form>
       </div>
@@ -387,24 +375,37 @@ export const AdminDashboard: React.FC = () => {
                 )}
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-stone-300">Contraseña Actual:</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-stone-300">Contraseña Actual (opcional si ya estás autenticado):</label>
+                  </div>
                   <input
                     type="password"
                     value={currentPassForChange}
                     onChange={(e) => setCurrentPassForChange(e.target.value)}
                     placeholder="••••••••••••"
                     className="w-full px-3 py-2 rounded-xl bg-[#040813] border border-cyan-900 text-white text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-stone-300">Nueva Contraseña Maestra o PIN:</label>
+                  <input
+                    type="password"
+                    value={newPassForChange}
+                    onChange={(e) => setNewPassForChange(e.target.value)}
+                    placeholder="Mínimo 4 caracteres (ej. chepe2026)..."
+                    className="w-full px-3 py-2 rounded-xl bg-[#040813] border border-cyan-900 text-white text-xs focus:outline-none focus:border-amber-400"
                     required
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-stone-300">Nueva Contraseña Maestra:</label>
+                  <label className="text-xs font-bold text-stone-300">Confirmar Nueva Contraseña:</label>
                   <input
                     type="password"
-                    value={newPassForChange}
-                    onChange={(e) => setNewPassForChange(e.target.value)}
-                    placeholder="Mínimo 6 caracteres..."
+                    value={confirmPassForChange}
+                    onChange={(e) => setConfirmPassForChange(e.target.value)}
+                    placeholder="Repite la nueva clave..."
                     className="w-full px-3 py-2 rounded-xl bg-[#040813] border border-cyan-900 text-white text-xs focus:outline-none focus:border-amber-400"
                     required
                   />
@@ -413,14 +414,20 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
-                    onClick={() => setIsChangePassOpen(false)}
-                    className="px-3 py-1.5 rounded-xl text-stone-400 hover:text-white text-xs"
+                    onClick={() => {
+                      setIsChangePassOpen(false);
+                      setChangePassError('');
+                      setCurrentPassForChange('');
+                      setNewPassForChange('');
+                      setConfirmPassForChange('');
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-stone-400 hover:text-white text-xs cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs"
+                    className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs cursor-pointer"
                   >
                     Guardar Nueva Clave
                   </button>
