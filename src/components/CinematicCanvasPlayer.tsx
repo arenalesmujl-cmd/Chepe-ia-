@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Play, Pause, Volume2, VolumeX, RotateCcw, Download,
-  Maximize2, Sparkles, Layers, Sliders, CheckCircle, Flame, RefreshCw
+  Maximize2, Sparkles, Layers, Sliders, CheckCircle, Flame, RefreshCw,
+  Film, ChevronLeft, ChevronRight, MessageSquare, Clapperboard
 } from 'lucide-react';
-import { VideoProject } from '../types';
+import { VideoProject, MovieScene } from '../types';
 import {
   drawCinematicFrame,
   COLOR_PALETTES,
@@ -38,6 +39,12 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordProgress, setRecordProgress] = useState<number>(0);
   const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false);
+  const [showSubtitles, setShowSubtitles] = useState<boolean>(true);
+
+  // Multi-scene movie state
+  const [activeSceneIndex, setActiveSceneIndex] = useState<number>(0);
+  const movieScenes: MovieScene[] = project.movieScenes || [];
+  const isMovieMode = Boolean(project.isMovie && movieScenes.length > 0);
 
   // Particle and background image state for canvas renderer
   const particlesRef = useRef<Array<{
@@ -60,7 +67,14 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Initialize particles & background image when project changes
+  // Load active image (either movie scene poster or main project poster)
+  const activePosterUrl = isMovieMode && movieScenes[activeSceneIndex]?.posterUrl
+    ? movieScenes[activeSceneIndex].posterUrl
+    : project.posterUrl;
+
+  const currentScene = isMovieMode ? movieScenes[activeSceneIndex] : null;
+
+  // Initialize particles & background image when project or scene changes
   useEffect(() => {
     const width = 1280;
     const height = 720;
@@ -83,7 +97,7 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
     particlesRef.current = newParticles;
 
     // Load poster / image
-    if (project.posterUrl) {
+    if (activePosterUrl) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
@@ -92,17 +106,17 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
       img.onerror = () => {
         bgImgRef.current = null;
       };
-      img.src = project.posterUrl;
+      img.src = activePosterUrl;
     } else {
       bgImgRef.current = null;
     }
 
     setCurrentTime(0);
     currentTimeRef.current = 0;
-    setDuration(project.duration || 8);
+    setDuration(currentScene?.sceneDuration || project.duration || 8);
     setIsPlaying(true);
     setPlayerMode('canvas');
-  }, [project.id, project.posterUrl, project.style, project.duration]);
+  }, [project.id, activePosterUrl, project.style, activeSceneIndex]);
 
   // Canvas Animation Render Loop
   useEffect(() => {
@@ -120,17 +134,26 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
       if (isPlaying && playerMode === 'canvas') {
         localTime += delta * playbackSpeed;
         if (localTime >= duration) {
-          localTime = 0; // Seamless continuous loop
+          if (isMovieMode && movieScenes.length > 1) {
+            // Auto advance scene if in movie mode
+            setActiveSceneIndex(prev => (prev + 1) % movieScenes.length);
+            localTime = 0;
+          } else {
+            localTime = 0; // Seamless continuous loop
+          }
         }
         currentTimeRef.current = localTime;
         setCurrentTime(localTime);
       }
 
+      const activeTitle = currentScene ? `Escena ${currentScene.sceneNumber}: ${currentScene.title}` : project.title;
+      const activePrompt = currentScene ? (currentScene.description || currentScene.visualPrompt || project.prompt) : project.prompt;
+
       drawCinematicFrame(ctx, canvas.width, canvas.height, localTime, duration, {
-        prompt: project.prompt || project.title,
+        prompt: activePrompt || activeTitle,
         style: project.style,
-        cameraMotion: project.cameraMotion || 'Paneo Suave & Zoom',
-        title: project.title,
+        cameraMotion: currentScene?.cameraAngle || project.cameraMotion || 'Paneo Suave & Zoom',
+        title: activeTitle,
         bgImage: bgImgRef.current,
         particles: particlesRef.current
       });
@@ -146,7 +169,7 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [isPlaying, playerMode, duration, playbackSpeed, project]);
+  }, [isPlaying, playerMode, duration, playbackSpeed, project, activeSceneIndex, isMovieMode, movieScenes.length]);
 
   // Audio Synth sync with playback
   useEffect(() => {
@@ -224,16 +247,17 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
     setRecordProgress(0);
 
     try {
+      const activeImg = activePosterUrl || project.posterUrl || undefined;
       const result = await renderAndRecordVideo({
-        prompt: project.prompt || project.title,
+        prompt: (currentScene?.description || project.prompt || project.title),
         style: project.style,
-        durationSeconds: duration,
+        durationSeconds: Math.min(duration, 15),
         fps: project.fps || 30,
         width: project.aspectRatio === '9:16' ? 720 : 1280,
         height: project.aspectRatio === '9:16' ? 1280 : 720,
-        backgroundImageUrl: project.posterUrl || undefined,
-        title: project.title,
-        cameraMotion: project.cameraMotion || 'Paneo Suave & Zoom In',
+        backgroundImageUrl: activeImg,
+        title: currentScene ? `${project.title} - Escena ${currentScene.sceneNumber}` : project.title,
+        cameraMotion: currentScene?.cameraAngle || project.cameraMotion || 'Paneo Suave & Zoom In',
         onProgress: (pct) => setRecordProgress(pct)
       });
 
@@ -266,7 +290,7 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative bg-black rounded-3xl overflow-hidden border border-cyan-500/20 shadow-2xl shadow-cyan-950/40 flex flex-col select-none ${className}`}
+      className={`relative bg-black rounded-3xl overflow-hidden border border-cyan-500/30 shadow-2xl shadow-cyan-950/40 flex flex-col select-none ${className}`}
     >
       {/* Top Header Mode Selector */}
       <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-auto flex-wrap gap-2">
@@ -336,7 +360,7 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
             ) : (
               <>
                 <Flame className="w-3.5 h-3.5 text-stone-950" />
-                <span>⚡ Producir & Descargar MP4</span>
+                <span>⚡ Descargar Video MP4</span>
               </>
             )}
           </button>
@@ -358,23 +382,45 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
         ) : (
           <video
             ref={videoRef}
-            key={project.id + '-' + project.videoUrl}
+            key={project.id + '-' + project.videoUrl + '-' + activeSceneIndex}
             src={project.videoUrl}
-            poster={project.posterUrl}
+            poster={activePosterUrl}
             loop
             playsInline
             muted={isMuted}
             onTimeUpdate={() => {
               if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
             }}
-            onEnded={() => setIsPlaying(false)}
+            onEnded={() => {
+              if (isMovieMode && movieScenes.length > 1) {
+                setActiveSceneIndex(prev => (prev + 1) % movieScenes.length);
+              } else {
+                setIsPlaying(false);
+              }
+            }}
             onError={() => {
-              // Seamlessly fallback to canvas mode if video source fails
+              // Seamlessly fallback to canvas engine if video source fails
               setPlayerMode('canvas');
               setIsPlaying(true);
             }}
             className="w-full h-full object-contain"
           />
+        )}
+
+        {/* Cinematic Subtitles / Dialogue Overlay for Movies */}
+        {showSubtitles && (currentScene?.dialogue || currentScene?.description) && (
+          <div className="absolute bottom-6 left-6 right-6 z-20 pointer-events-none flex justify-center">
+            <div className="bg-black/85 backdrop-blur-md px-4 py-2 rounded-2xl border border-cyan-500/40 max-w-xl text-center shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+              {currentScene.speaker && (
+                <span className="text-[10px] font-mono font-black text-[#00E5FF] uppercase block tracking-wider mb-0.5">
+                  {currentScene.speaker}:
+                </span>
+              )}
+              <p className="text-xs sm:text-sm font-semibold text-white leading-relaxed drop-shadow-md">
+                "{currentScene.dialogue || currentScene.description}"
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Center Play Button Overlay if Paused */}
@@ -393,6 +439,66 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
           </div>
         )}
       </div>
+
+      {/* Multi-Scene Timeline Switcher (For Movie Mode) */}
+      {isMovieMode && movieScenes.length > 0 && (
+        <div className="bg-[#070D1E] border-t border-cyan-900/50 p-2 px-3 flex items-center justify-between gap-2 overflow-x-auto">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] font-bold text-cyan-400 flex items-center gap-1">
+              <Film className="w-3 h-3 text-[#00E5FF]" />
+              Escenas:
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+            {movieScenes.map((sc, idx) => (
+              <button
+                key={sc.sceneNumber || idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveSceneIndex(idx);
+                  setCurrentTime(0);
+                  currentTimeRef.current = 0;
+                  setIsPlaying(true);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+                  activeSceneIndex === idx
+                    ? 'bg-[#00E5FF] text-stone-950 shadow-md shadow-cyan-500/30'
+                    : 'bg-[#0A162C] text-stone-300 hover:text-white border border-cyan-900/50'
+                }`}
+              >
+                <span>Acto {idx + 1}:</span>
+                <span className="truncate max-w-[100px]">{sc.title}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveSceneIndex(prev => Math.max(0, prev - 1));
+              }}
+              disabled={activeSceneIndex === 0}
+              className="p-1 rounded-lg bg-stone-900 hover:bg-cyan-950 text-stone-300 disabled:opacity-30 cursor-pointer"
+              title="Escena anterior"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveSceneIndex(prev => Math.min(movieScenes.length - 1, prev + 1));
+              }}
+              disabled={activeSceneIndex === movieScenes.length - 1}
+              className="p-1 rounded-lg bg-stone-900 hover:bg-cyan-950 text-stone-300 disabled:opacity-30 cursor-pointer"
+              title="Siguiente escena"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modern Control Bar */}
       <div className="bg-[#050A14] border-t border-cyan-950/60 p-3 space-y-2.5 z-30">
@@ -464,6 +570,21 @@ export const CinematicCanvasPlayer: React.FC<CinematicCanvasPlayerProps> = ({
               title={isMuted ? 'Activar sonido ambiental sintético' : 'Silenciar'}
             >
               {!isMuted ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            {/* Subtitles Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowSubtitles(!showSubtitles)}
+              className={`p-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                showSubtitles
+                  ? 'bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40'
+                  : 'bg-stone-900 text-stone-400 hover:text-white'
+              }`}
+              title="Subtítulos / Diálogos de escena"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">Subtítulos</span>
             </button>
 
             {/* Speed Selector */}

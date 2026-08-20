@@ -1212,6 +1212,269 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
   },
 
   // ==========================================
+  // --- IMAGE GENERATION & ARTISTIC LEADERS ---
+  // ==========================================
+  {
+    id: 'midjourney-v6',
+    name: 'Midjourney v6.1 Ultra Art',
+    badge: 'ARTE & FOTORREALISMO',
+    icon: '🎨',
+    description: 'Composición fotográfica hiperrealista, texturas dérmicas perfectas y estética visual de vanguardia.',
+    speed: 'Render Ultra HD (0.35s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-fuchsia-600 to-rose-950',
+    accentColor: '#D946EF',
+    tags: ['Fotorrealismo', '8K', 'Estética']
+  },
+  {
+    id: 'flux-1-schnell',
+    name: 'FLUX.1 Schnell BFL',
+    badge: 'ULTRA VELOZ BFL',
+    icon: '⚡',
+    description: 'Generador de imágenes de 12B parámetros de Black Forest Labs con velocidad de inferencia récord.',
+    speed: 'Instantáneo (0.15s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-purple-600 to-black',
+    accentColor: '#A855F7',
+    tags: ['FLUX.1', 'BFL', 'Veloz']
+  },
+  {
+    id: 'flux-1-dev',
+    name: 'FLUX.1 Dev Studio',
+    badge: 'MÁXIMA CALIDAD BFL',
+    icon: '💎',
+    description: 'Máxima precisión tipográfica, coherencia anatómica y fidelidad estricta al prompt.',
+    speed: 'Alta Fidelidad (0.28s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-indigo-600 to-slate-950',
+    accentColor: '#6366F1',
+    tags: ['FLUX Dev', 'Tipografía', 'Arte']
+  },
+  {
+    id: 'stable-diffusion-3-5',
+    name: 'Stable Diffusion 3.5 Large',
+    badge: 'STABILITY AI FLAGSHIP',
+    icon: '🔮',
+    description: 'Modelo de difusión de 8B parámetros con comprensión espacial avanzada y representación multitemática.',
+    speed: 'Rápido (0.25s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-fuchsia-700 to-slate-950',
+    accentColor: '#EC4899',
+    tags: ['SD 3.5', 'Stability AI']
+  },
+  {
+    id: 'ideogram-2',
+    name: 'Ideogram 2.0 Poster & Typography',
+    badge: 'TIPOGRAFÍA PERFECTA',
+    icon: '📐',
+    description: 'Líder absoluto en renderizado de texto legible, logos vectoriales, posters publicitarios y tipografía.',
+    speed: 'Rápido (0.22s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-violet-600 to-fuchsia-950',
+    accentColor: '#8B5CF6',
+    tags: ['Texto en Imagen', 'Posters', 'Logos']
+  },
+  {
+    id: 'recraft-v3',
+    name: 'Recraft V3 Vector Design',
+    badge: 'VECTORES & ICONOS',
+    icon: '✨',
+    description: 'Generación de gráficos vectoriales SVG, iconos limpios, sets de UI y paletas corporativas.',
+    speed: 'Instantáneo (0.18s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-pink-600 to-indigo-950',
+    accentColor: '#F43F5E',
+    tags: ['SVG Vectorial', 'Iconos UI']
+  },
+
+  // ==========================================
+  // --- CINEMA VIDEO GENERATION ---
+  // ==========================================
+  {
+    id: 'runway-gen3',
+    name: 'Runway Gen-3 Alpha Cinema',
+    badge: 'HOLLYWOOD VIDEO AI',
+    icon: '🎬',
+    description: 'Cinematografía hiperrealista con control de cámara de director, iluminación de estudio y simulación física.',
+    speed: 'Render Cinemático',
+    provider: 'Runway',
+    photoUrl: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-pink-600 to-black',
+    accentColor: '#EC4899',
+    tags: ['Gen-3 Alpha', 'Hollywood FX']
+  },
+  {
+    id: 'kling-1-5',
+    name: 'Kling 1.5 HD AI Video',
+    badge: 'MOVIMIENTO FLUIDO',
+    icon: '🎥',
+    description: 'Excelente fidelidad en movimientos anatómicos complejos, efectos cinemáticos y tomas aéreas.',
+    speed: 'Render 1080p 60FPS',
+    provider: 'Runway',
+    photoUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-purple-700 to-black',
+    accentColor: '#A855F7',
+    tags: ['Kling HD', 'Física Fluida']
+  },
+  {
+    id: 'pika-2-1',
+    name: 'Pika 2.1 Video FX',
+    badge: 'EFECTOS ESPECIALES',
+    icon: '🪄',
+    description: 'Modificación dinámica de objetos, física cómica, explosiones y animaciones 3D de alta velocidad.',
+    speed: 'Rápido FX',
+    provider: 'Runway',
+    photoUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-rose-600 to-black',
+    accentColor: '#F43F5E',
+    tags: ['Pikaffects', 'Animación 3D']
+  },
+  {
+    id: 'hunyuan-video',
+    name: 'Tencent Hunyuan Video 3D',
+    badge: 'TENCENT CINEMA',
+    icon: '🎞️',
+    description: 'Modelo de video de código abierto con 13B parámetros especializado en cinemáticas orientales y física.',
+    speed: 'Render HD',
+    provider: 'Runway',
+    photoUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-blue-600 to-black',
+    accentColor: '#3B82F6',
+    tags: ['Hunyuan', 'Tencent']
+  },
+
+  // ==========================================
+  // --- AUDIO, VOICE & MUSIC AI ---
+  // ==========================================
+  {
+    id: 'suno-v3-5',
+    name: 'Suno AI v3.5 Music Studio',
+    badge: 'COMPOSICIÓN MUSICAL',
+    icon: '🎵',
+    description: 'Generación completa de canciones con arreglos de instrumentos acústicos, vocales y estilos variados.',
+    speed: 'Render Acústico (0.2s)',
+    provider: 'AudioAI',
+    photoUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-amber-600 to-rose-950',
+    accentColor: '#F59E0B',
+    tags: ['Canciones', 'Vocales', 'Hits']
+  },
+  {
+    id: 'udio-v1-5',
+    name: 'Udio v1.5 High-Fidelity Audio',
+    badge: 'CALIDAD MASTER DE ESTUDIO',
+    icon: '🎧',
+    description: 'Producción musical de alta resolución con separación por pistas de audio y mezcla profesional.',
+    speed: 'Alta Fidelidad (0.24s)',
+    provider: 'AudioAI',
+    photoUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-rose-600 to-indigo-950',
+    accentColor: '#E11D48',
+    tags: ['Mastering', 'Stereo 48kHz']
+  },
+  {
+    id: 'elevenlabs-voice',
+    name: 'ElevenLabs Prime Voice HD',
+    badge: 'VOZ ULTRA-REALISTA',
+    icon: '🎙️',
+    description: 'Síntesis vocal hiperrealista con entonación emocional, acentos nativos y clonación de audio.',
+    speed: 'Tiempo Real (0.1s)',
+    provider: 'AudioAI',
+    photoUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-blue-600 to-teal-950',
+    accentColor: '#0EA5E9',
+    tags: ['TTS', 'Voz Emocional']
+  },
+
+  // ==========================================
+  // --- FRONTIER & LONG-CONTEXT EXTENSIONS ---
+  // ==========================================
+  {
+    id: 'kimi-k1-5',
+    name: 'Moonshot Kimi K1.5 (2M Context)',
+    badge: '2 MILLONES TOKENS',
+    icon: '🌙',
+    description: 'Pionero en lectura masiva de libros enteros, expedientes de miles de páginas e historiales gigantes.',
+    speed: 'Ultra Rápido (0.22s)',
+    provider: 'Moonshot',
+    photoUrl: 'https://images.unsplash.com/photo-1532635241-c7e820219f63?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-cyan-600 to-slate-950',
+    accentColor: '#06B6D4',
+    tags: ['2M Contexto', 'Lectura Masiva']
+  },
+  {
+    id: 'yi-lightning',
+    name: '01.AI Yi-Lightning Leaderboard Top',
+    badge: 'LEADERBOARD CHAMPION',
+    icon: '⚡',
+    description: 'Modelo insignia de 01.AI con altas puntuaciones en LMSYS Chatbot Arena y velocidad extrema.',
+    speed: 'Instantáneo (0.14s)',
+    provider: '01AI',
+    photoUrl: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-violet-600 to-indigo-950',
+    accentColor: '#8B5CF6',
+    tags: ['01.AI', 'Top Arena']
+  },
+  {
+    id: 'yi-large',
+    name: '01.AI Yi-Large Frontier',
+    badge: 'FRONTIER LEVEL',
+    icon: '🦁',
+    description: 'Arquitectura bilingüe inglés-chino para razonamiento complejo y traducción literaria.',
+    speed: 'Rápido (0.24s)',
+    provider: '01AI',
+    photoUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-purple-700 to-slate-950',
+    accentColor: '#A855F7',
+    tags: ['Bilingüe', 'Razonamiento']
+  },
+  {
+    id: 'minimax-abab-6',
+    name: 'MiniMax abab 6.5s MoE',
+    badge: 'MINIMAX MOE',
+    icon: '🪐',
+    description: 'MoE de alto rendimiento para diálogos multilingües, empatía y respuestas rápidas.',
+    speed: 'Ultra Rápido (0.16s)',
+    provider: '01AI',
+    photoUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-sky-600 to-slate-950',
+    accentColor: '#0284C7',
+    tags: ['MiniMax', 'MoE']
+  },
+  {
+    id: 'dbrx-instruct',
+    name: 'Databricks DBRX Instruct 132B',
+    badge: 'DATABRICKS ENTERPRISE',
+    icon: '🧱',
+    description: 'MoE abierto de Databricks para analítica corporativa, pipelines SQL y procesamiento de datos.',
+    speed: 'Fluido (0.22s)',
+    provider: 'Microsoft',
+    photoUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-red-600 to-slate-950',
+    accentColor: '#EF4444',
+    tags: ['Databricks', 'SQL Analytics']
+  },
+  {
+    id: 'phind-70b',
+    name: 'Phind 70B Developer Search',
+    badge: 'DEV SEARCH & CODE',
+    icon: '🔍',
+    description: 'Buscador y asistente técnico para desarrolladores con citas directas de documentación oficial.',
+    speed: 'Ultra Rápido (0.18s)',
+    provider: 'Meta',
+    photoUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=120&h=120&q=80',
+    avatarBg: 'from-teal-600 to-slate-950',
+    accentColor: '#14B8A6',
+    tags: ['Docs Oficiales', 'Dev Search']
+  },
+
+  // ==========================================
   // --- CHEPE IA SPECIALIZED MOTORS ---
   // ==========================================
   {

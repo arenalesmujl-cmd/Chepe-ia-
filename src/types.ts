@@ -95,6 +95,22 @@ export type AIModelId =
   | 'sonar-reasoning-8b'
   | 'sonar-online-pro'
   | 'sonar-academic'
+  // --- Image Gen & Artistic Leaders ---
+  | 'midjourney-v6'
+  | 'flux-1-schnell'
+  | 'flux-1-dev'
+  | 'stable-diffusion-3-5'
+  | 'ideogram-2'
+  | 'recraft-v3'
+  // --- Cinema Video Generation ---
+  | 'runway-gen3'
+  | 'kling-1-5'
+  | 'pika-2-1'
+  | 'hunyuan-video'
+  // --- Audio, Voice & Music AI ---
+  | 'suno-v3-5'
+  | 'udio-v1-5'
+  | 'elevenlabs-voice'
   // --- Microsoft, Nvidia & Enterprise ---
   | 'phi-4-reasoning'
   | 'phi-3.5-vision'
@@ -109,6 +125,12 @@ export type AIModelId =
   | 'amazon-nova-canvas'
   | 'jamba-1.5-large'
   | 'ernie-4.0-pro'
+  | 'kimi-k1-5'
+  | 'yi-lightning'
+  | 'yi-large'
+  | 'minimax-abab-6'
+  | 'dbrx-instruct'
+  | 'phind-70b'
   // --- Chepe IA Specialized Autonomous Agents ---
   | 'chepe-3.8' 
   | 'chepe-reasoning-o1'
@@ -130,7 +152,28 @@ export interface AIModelOption {
   icon: string;
   description: string;
   speed: string;
-  provider?: 'OpenAI' | 'Anthropic' | 'Google' | 'DeepSeek' | 'Meta' | 'xAI' | 'Mistral' | 'Qwen' | 'Perplexity' | 'Microsoft' | 'Nvidia' | 'Cohere' | 'Amazon' | 'AI21' | 'Baidu' | 'ChepeIA';
+  provider?: 
+    | 'OpenAI' 
+    | 'Anthropic' 
+    | 'Google' 
+    | 'DeepSeek' 
+    | 'Meta' 
+    | 'xAI' 
+    | 'Mistral' 
+    | 'Qwen' 
+    | 'Perplexity' 
+    | 'Stability'
+    | 'Runway'
+    | 'AudioAI'
+    | 'Microsoft' 
+    | 'Nvidia' 
+    | 'Cohere' 
+    | 'Amazon' 
+    | 'Moonshot'
+    | '01AI'
+    | 'AI21' 
+    | 'Baidu' 
+    | 'ChepeIA';
   photoUrl?: string;
   avatarBg?: string;
   accentColor?: string;
@@ -320,6 +363,50 @@ export interface AdminStats {
   serverHealth: string;
 }
 
+export interface CharacterProfile {
+  id: string;
+  name: string;
+  description: string;
+  avatarUrl?: string;
+}
+
+export interface MovieActor {
+  name: string;
+  role: string;
+  description?: string;
+  avatarUrl?: string;
+}
+
+export interface MovieSoundtrack {
+  title: string;
+  composer?: string;
+  mood?: string;
+}
+
+export interface MovieScene {
+  sceneNumber: number;
+  title: string;
+  description: string;
+  location?: string;
+  characters?: string[];
+  action?: string;
+  visualPrompt?: string;
+  videoPrompt?: string;
+  dialogue?: string;
+  speaker?: string;
+  cameraAngle?: string;
+  lighting?: string;
+  audioEffect?: string;
+  style?: string;
+  sound?: string;
+  sceneDuration?: number;
+  posterUrl?: string;
+  videoUrl?: string;
+  operationName?: string;
+  status?: 'idle' | 'queued' | 'generating' | 'completed' | 'failed';
+  errorMessage?: string;
+}
+
 export interface VideoScene {
   sceneNumber: number;
   title: string;
@@ -327,23 +414,42 @@ export interface VideoScene {
   cameraAngle?: string;
   lighting?: string;
   audioEffect?: string;
+  visualPrompt?: string;
+  videoPrompt?: string;
+  dialogue?: string;
+  posterUrl?: string;
+  videoUrl?: string;
+  status?: 'idle' | 'queued' | 'generating' | 'completed' | 'failed';
 }
 
 export interface VideoProject {
   id: string;
   title: string;
   prompt: string;
-  videoUrl: string;
-  posterUrl: string;
-  duration: number; // in seconds (5, 10, 15, 30)
+  videoUrl?: string;
+  operationName?: string;
+  posterUrl?: string;
+  duration: number; // in seconds (5, 10, 15, 30, 60)
   aspectRatio: '16:9' | '9:16' | '1:1' | '4:3';
+  resolution?: '720p' | '1080p' | '4k';
   style: string;
-  cameraMotion: string;
-  fps: number;
-  tags: string[];
+  cameraMotion?: string;
+  fps?: number;
+  tags?: string[];
   createdAt: string;
   isFavorite?: boolean;
   storyboard?: VideoScene[];
+  isMovie?: boolean;
+  genre?: string;
+  synopsis?: string;
+  movieScenes?: MovieScene[];
+  cast?: (string | MovieActor)[];
+  characters?: CharacterProfile[];
+  soundtrack?: string | MovieSoundtrack;
+  referenceImages?: string[];
+  audioPrompt?: string;
+  generationStatus?: 'idle' | 'generating' | 'completed' | 'failed';
+  errorMessage?: string;
 }
 
 export interface WebScrapedResult {

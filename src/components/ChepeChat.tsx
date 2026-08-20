@@ -1324,7 +1324,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                     <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-2.5 top-2.5" />
                     <input
                       type="text"
-                      placeholder="Buscar entre 45+ modelos de IA (OpenAI, Claude, Gemini, DeepSeek, Grok...)"
+                      placeholder="Buscar entre 65+ modelos de IA (OpenAI, Claude, Gemini, DeepSeek, Midjourney, FLUX, Sora...)"
                       value={modelSearchQuery}
                       onChange={(e) => setModelSearchQuery(e.target.value)}
                       className="w-full bg-[#050A14] text-white text-xs pl-8 pr-7 py-2 rounded-xl border border-cyan-900 focus:border-[#00E5FF] focus:outline-none placeholder-stone-500"
@@ -1352,6 +1352,11 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                       { id: 'Mistral', label: 'Mistral' },
                       { id: 'Qwen', label: 'Qwen' },
                       { id: 'Perplexity', label: 'Perplexity' },
+                      { id: 'Stability', label: 'Arte & Imágenes' },
+                      { id: 'Runway', label: 'Video Cinema' },
+                      { id: 'AudioAI', label: 'Audio & Música' },
+                      { id: 'Moonshot', label: 'Moonshot' },
+                      { id: '01AI', label: '01.AI' },
                       { id: 'Microsoft', label: 'Microsoft' },
                       { id: 'Nvidia', label: 'NVIDIA' },
                       { id: 'Cohere', label: 'Cohere' },
@@ -1668,6 +1673,11 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                     { id: 'Mistral', label: 'Mistral AI' },
                     { id: 'Qwen', label: 'Qwen Alibaba' },
                     { id: 'Perplexity', label: 'Perplexity' },
+                    { id: 'Stability', label: 'Arte & Imágenes' },
+                    { id: 'Runway', label: 'Video Cinema' },
+                    { id: 'AudioAI', label: 'Voz & Audio' },
+                    { id: 'Moonshot', label: 'Moonshot Kimi' },
+                    { id: '01AI', label: '01.AI' },
                     { id: 'Microsoft', label: 'Microsoft' },
                     { id: 'Nvidia', label: 'NVIDIA' },
                     { id: 'Cohere', label: 'Cohere' },
@@ -1808,6 +1818,24 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                             : 'bg-[#00E5FF] text-stone-950 font-medium border-cyan-400 rounded-tr-none ml-auto'
                         }`}
                       >
+                        {/* Model Identification Header for Assistant Messages */}
+                        {isAI && (
+                          <div className="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-cyan-900/50 text-[10px] font-mono text-cyan-400">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse shrink-0" />
+                              <span className="font-bold text-white truncate">{msgModel.name}</span>
+                              {msgModel.provider && (
+                                <span className="px-1.5 py-0.2 rounded bg-[#0A162C] text-stone-300 border border-cyan-900/60 shrink-0">
+                                  {msgModel.provider}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 shrink-0">
+                              {msgModel.badge}
+                            </span>
+                          </div>
+                        )}
+
                         {/* Reasoning Chain Accordion */}
                         {msg.reasoningChain && msg.reasoningChain.length > 0 && (
                           <div className="mb-2 rounded-xl bg-[#081021] border border-cyan-800/80 p-2.5 text-xs">

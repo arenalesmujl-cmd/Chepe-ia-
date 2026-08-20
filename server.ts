@@ -248,6 +248,42 @@ function getModelPersonaAndDirectives(modelId: string): string {
       return `\n\n[MODO ACTIVO: Chepe Coder Pro Studio]\nDesarrollador fullstack experto: entrega código modular completo, arquitecturas modernas, TypeScript, React y backend.`;
     case 'chepe-lawyer':
       return `\n\n[MODO ACTIVO: Chepe Legal & Normativa]\nEspecialista en análisis de contratos, marco legal, redacción jurídica y regulación.`;
+    case 'midjourney-v6':
+      return `\n\n[MODO ACTIVO: Midjourney v6.1 Ultra Art]\nEspecialista en arte visual, composición fotorrealista 8K, iluminación volumétrica, lentes de cámara y estética artística.`;
+    case 'flux-1-schnell':
+    case 'flux-1-dev':
+      return `\n\n[MODO ACTIVO: FLUX.1 Black Forest Labs]\nGeneración visual de vanguardia, precisión tipográfica y coherencia anatómica.`;
+    case 'stable-diffusion-3-5':
+      return `\n\n[MODO ACTIVO: Stable Diffusion 3.5 Large - Stability AI]\nComprensión espacial avanzada, estética multitemática y diseño gráfico.`;
+    case 'ideogram-2':
+      return `\n\n[MODO ACTIVO: Ideogram 2.0 Poster & Typography]\nEspecialista en tipografía en imagen, posters publicitarios, lettering y logos visuales.`;
+    case 'recraft-v3':
+      return `\n\n[MODO ACTIVO: Recraft V3 Vector Design]\nGenerador de vectores SVG, sets de iconos y paletas de color corporativas.`;
+    case 'runway-gen3':
+      return `\n\n[MODO ACTIVO: Runway Gen-3 Alpha Cinema]\nDirección de cine, descripción de planos, física visual y efectos especiales de Hollywood.`;
+    case 'kling-1-5':
+      return `\n\n[MODO ACTIVO: Kling 1.5 HD AI Video]\nFísica fluida, movimientos anatómicos complejos y cinemática 60FPS.`;
+    case 'pika-2-1':
+      return `\n\n[MODO ACTIVO: Pika 2.1 Video FX]\nEfectos visuales especiales, animación 3D y edición dinámica.`;
+    case 'hunyuan-video':
+      return `\n\n[MODO ACTIVO: Tencent Hunyuan Video]\nCinemática de alta definición, iluminación y composición visual.`;
+    case 'suno-v3-5':
+      return `\n\n[MODO ACTIVO: Suno AI v3.5 Music Studio]\nComposición musical completa, estructura de canciones (verso, coro, puente), melodía y arreglos vocales.`;
+    case 'udio-v1-5':
+      return `\n\n[MODO ACTIVO: Udio v1.5 High-Fidelity Audio]\nProducción sonora de estudio, ingeniería de audio, masterización y diseño acústico.`;
+    case 'elevenlabs-voice':
+      return `\n\n[MODO ACTIVO: ElevenLabs Prime Voice HD]\nDiseño de voces emotivas, prosodia natural, modulación vocal y guiones de locución.`;
+    case 'kimi-k1-5':
+      return `\n\n[MODO ACTIVO: Moonshot Kimi K1.5 (2M Long Context)]\nProcesamiento masivo de expedientes, síntesis de bibliotecas enteras y recuperación precisa de datos densos.`;
+    case 'yi-lightning':
+    case 'yi-large':
+      return `\n\n[MODO ACTIVO: 01.AI Yi Frontier Leader]\nAlta velocidad de inferencia, razonamiento bilingüe y síntesis analítica.`;
+    case 'minimax-abab-6':
+      return `\n\n[MODO ACTIVO: MiniMax abab 6.5s MoE]\nDiálogo expresivo y análisis multilingüe de alto rendimiento.`;
+    case 'dbrx-instruct':
+      return `\n\n[MODO ACTIVO: Databricks DBRX 132B Enterprise]\nAnalítica de datos a gran escala, consultas SQL optimizadas y pipelines de transformación.`;
+    case 'phind-70b':
+      return `\n\n[MODO ACTIVO: Phind 70B Developer Search]\nBúsqueda técnica precisa para programadores con referencias a documentación oficial y buenas prácticas.`;
     case 'chepe-medic':
       return `\n\n[MODO ACTIVO: Chepe Salud & Biomedicina]\nOrientación médica y biomédica basada en literatura científica y análisis de casos clínicos.`;
     case 'chepe-finance':
@@ -1185,7 +1221,7 @@ app.post("/api/transcribe", async (req: Request, res: Response) => {
 // 7. AI Video Studio Generator Endpoint (Veo / Sora Ultra Pro Engine)
 app.post("/api/generate-video", async (req: Request, res: Response) => {
   try {
-    const { prompt, imageUrl, style = "Cinemático 8K", duration = 5, aspectRatio = "16:9", cameraMotion = "Dolly In", fps = 30 } = req.body;
+    const { prompt, imageUrl, style = "Cinemático 8K", duration = 10, aspectRatio = "16:9", cameraMotion = "Dolly In", fps = 30 } = req.body;
     if (!prompt && !imageUrl) {
       res.status(400).json({ error: "Se requiere un prompt o imagen para generar el video." });
       return;
@@ -1215,7 +1251,8 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
       "description": "Descripción visual de los primeros segundos",
       "cameraAngle": "Ángulo de cámara",
       "lighting": "Iluminación de la escena",
-      "audioEffect": "Sonido sugerido"
+      "audioEffect": "Sonido sugerido",
+      "dialogue": "Línea de voz o narración (opcional)"
     },
     {
       "sceneNumber": 2,
@@ -1223,7 +1260,8 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
       "description": "Detalle del movimiento y animación principal",
       "cameraAngle": "Ángulo dinámico",
       "lighting": "Evolución de luz",
-      "audioEffect": "SFX y ambiente"
+      "audioEffect": "SFX y ambiente",
+      "dialogue": "Línea de voz o narración (opcional)"
     },
     {
       "sceneNumber": 3,
@@ -1231,7 +1269,8 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
       "description": "Resolución visual del plano",
       "cameraAngle": "Plano final",
       "lighting": "Gradación final",
-      "audioEffect": "Desvanecimiento sonoro"
+      "audioEffect": "Desvanecimiento sonoro",
+      "dialogue": "Línea de voz o narración (opcional)"
     }
   ],
   "tags": ["tag1", "tag2", "tag3"]
@@ -1251,6 +1290,14 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
           cameraAngle: cameraMotion,
           lighting: "Iluminación cinematográfica cálida",
           audioEffect: "Ambiente inmersivo"
+        },
+        {
+          sceneNumber: 2,
+          title: "Desarrollo Dinámico",
+          description: `Animación fluida de ${prompt} en alta definición.`,
+          cameraAngle: "Plano medio con seguimiento",
+          lighting: "Luz volumétrica",
+          audioEffect: "Efectos de movimiento"
         }
       ],
       tags: ["AI Video", "Ultra Pro", style]
@@ -1271,9 +1318,10 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
       console.warn("Fallback director plan used:", e);
     }
 
-    // High quality poster and animated video asset generation
-    const encodedPrompt = encodeURIComponent(`${style} style cinematic scene of ${prompt || 'futuristic motion'}`);
-    const posterUrl = imageUrl || `https://pollinations.ai/p/${encodedPrompt}?width=1280&height=720&seed=${Math.floor(Math.random() * 99999)}&nologo=true`;
+    // High quality poster and animated video asset generation with enhanced prompt
+    const enhancedVisualPrompt = `${prompt}, ${style} style, 8k uhd, cinematic movie shot, photorealistic, intricate textures, volumetric studio lighting, hyperrealistic`;
+    const encodedPrompt = encodeURIComponent(enhancedVisualPrompt);
+    const posterUrl = imageUrl || `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1280&height=720&seed=${Math.floor(Math.random() * 99999)}&nologo=true`;
 
     // Curated high quality cinematic loop streams with open access & CORS support
     const stockVideos = [
@@ -1288,6 +1336,11 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
     const hash = (prompt || 'video').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     const videoUrl = stockVideos[hash % stockVideos.length];
 
+    const enhancedStoryboard = (directorResult.storyboard || []).map((sc: any, idx: number) => ({
+      ...sc,
+      posterUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(`${sc.description || prompt}, scene ${idx + 1}, ${style} cinematic film still, 8k`)}?width=1280&height=720&seed=${(hash + idx * 17) % 99999}&nologo=true`
+    }));
+
     const videoProject = {
       id: "vid-" + Date.now(),
       title: directorResult.title || prompt.slice(0, 45),
@@ -1301,7 +1354,7 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
       fps: fps,
       tags: directorResult.tags || ["Chepe Video", style, cameraMotion],
       createdAt: new Date().toISOString(),
-      storyboard: directorResult.storyboard || []
+      storyboard: enhancedStoryboard
     };
 
     res.json({
@@ -1311,6 +1364,221 @@ Responde estrictamente en formato JSON válido con las siguientes claves:
   } catch (err: any) {
     console.error("Error generating video:", err);
     res.status(500).json({ error: err.message || "Error al generar video" });
+  }
+});
+
+// 7.1 AI Movie & Short Film Generator Endpoint (Multi-Scene Cinema AI)
+app.post("/api/generate-movie", async (req: Request, res: Response) => {
+  try {
+    const { prompt, genre = "Ciencia Ficción & Aventura", style = "Cinemático 8K", numScenes = 4, aspectRatio = "16:9" } = req.body;
+    if (!prompt) {
+      res.status(400).json({ error: "Se requiere la idea o premisa para la película." });
+      return;
+    }
+
+    if (isGuatemalaQuery(prompt)) {
+      res.json({
+        error: "No tengo derecho de responder información acerca de Guatemala.",
+        isBlocked: true
+      });
+      return;
+    }
+
+    const movieDirectorPrompt = `Eres un Director de Cine de Hollywood y Guionista Ganador del Óscar.
+Tu tarea es transformar la idea del usuario en una PELÍCULA / CORTOMETRAJE COMPLETO con múltiples escenas cinematográficas conectadas.
+
+Devuelve estrictamente un JSON válido con esta estructura:
+{
+  "title": "Título Cinematográfico Épico",
+  "logline": "Frase de enganche de una sola oración",
+  "synopsis": "Sinopsis argumental completa de la película (2 párrafos)",
+  "genre": "Género principal",
+  "cast": ["Nombre Personaje 1 (Rol)", "Nombre Personaje 2 (Rol)"],
+  "soundtrack": "Descripción de la banda sonora musical (estilo Hans Zimmer, John Williams, etc.)",
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "title": "Título de la Escena 1 (Prólogo / Introducción)",
+      "description": "Descripción visual detallada de lo que sucede en pantalla",
+      "visualPrompt": "Prompt en inglés para renderizar la escena con estilo ${style} y 8k",
+      "speaker": "Nombre de quien habla o 'Narrador'",
+      "dialogue": "Línea de diálogo o narración clave",
+      "cameraAngle": "e.g. Plano general aéreo con descenso rápido",
+      "lighting": "e.g. Crepúsculo dorado con humo volumétrico",
+      "audioEffect": "e.g. Sintetizador épico y truenos lejanos",
+      "sceneDuration": 8
+    },
+    {
+      "sceneNumber": 2,
+      "title": "Título de la Escena 2 (Nudo / Conflicto)",
+      "description": "Acción principal y giro dramático",
+      "visualPrompt": "Prompt en inglés para renderizar la escena 2",
+      "speaker": "Personaje principal",
+      "dialogue": "Diálogo emotivo",
+      "cameraAngle": "e.g. Primer plano tenso en travelling",
+      "lighting": "e.g. Contrastes dramáticos claroscuro",
+      "audioEffect": "e.g. Percusión de acción trepidante",
+      "sceneDuration": 8
+    },
+    {
+      "sceneNumber": 3,
+      "title": "Título de la Escena 3 (Clímax)",
+      "description": "Momento cumbre de máxima tensión visual",
+      "visualPrompt": "Prompt en inglés para renderizar el clímax",
+      "speaker": "Personaje",
+      "dialogue": "Línea culminante",
+      "cameraAngle": "e.g. Giro orbital 360° en cámara lenta",
+      "lighting": "e.g. Destellos de luz intensa y partículas",
+      "audioEffect": "e.g. Orquesta crescendo triunfal",
+      "sceneDuration": 10
+    },
+    {
+      "sceneNumber": 4,
+      "title": "Título de la Escena 4 (Desenlace / Epílogo)",
+      "description": "Resolución emotiva y plano final",
+      "visualPrompt": "Prompt en inglés para renderizar el plano final",
+      "speaker": "Narrador",
+      "dialogue": "Reflexión final",
+      "cameraAngle": "e.g. Plano general alejándose hacia el horizonte",
+      "lighting": "e.g. Amanecer resplandeciente",
+      "audioEffect": "e.g. Melodía de piano nostálgica",
+      "sceneDuration": 8
+    }
+  ]
+}`;
+
+    let moviePlan: any = null;
+
+    try {
+      const contents = [{
+        role: "user",
+        parts: [{ text: `Crea la película completa basada en esta premisa:\n"${prompt}"\nGénero: ${genre}\nEstilo Visual: ${style}\nNúmero de Escenas: ${numScenes}` }]
+      }];
+      const aiResponse = await callGeminiWithRetry(ai, contents, movieDirectorPrompt, "gemini-3.7-flash");
+      const text = aiResponse.responseText?.trim() || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        moviePlan = JSON.parse(jsonMatch[0]);
+      }
+    } catch (e) {
+      console.warn("Fallback movie plan used:", e);
+    }
+
+    if (!moviePlan || !moviePlan.scenes) {
+      moviePlan = {
+        title: `La Odisea de ${prompt.slice(0, 30)}`,
+        logline: `Un viaje extraordinario que redefine el destino de sus protagonistas.`,
+        synopsis: `En un mundo marcado por el cambio, un valiente protagonista emprende una travesía inesperada impulsada por "${prompt}". A lo largo de su camino, enfrentará desafíos que pondrán a prueba su determinación antes de alcanzar una revelación transformadora.`,
+        genre: genre,
+        cast: ["Protagonista Principal", "Guía Místico", "Narrador Omnisciente"],
+        soundtrack: "Banda sonora sinfónica y ambiental con coros épicos.",
+        scenes: [
+          {
+            sceneNumber: 1,
+            title: "El Llamado de la Aventura",
+            description: `Apertura visual presentando el entorno y la premisa: ${prompt}`,
+            visualPrompt: `${prompt}, opening scene, establishing wide shot, ${style}, 8k`,
+            speaker: "Narrador",
+            dialogue: "Todo comenzó en un instante que cambiaría el curso del tiempo...",
+            cameraAngle: "Plano general aéreo en descenso",
+            lighting: "Luz dorada crepuscular",
+            audioEffect: "Brisa ambiental y cuerdas suaves",
+            sceneDuration: 8
+          },
+          {
+            sceneNumber: 2,
+            title: "La Encrucijada del Destino",
+            description: `El conflicto central toma fuerza en ${prompt}.`,
+            visualPrompt: `${prompt}, dramatic tension scene, close up, ${style}, 8k`,
+            speaker: "Protagonista",
+            dialogue: "No hay vuelta atrás. Debemos continuar hasta el final.",
+            cameraAngle: "Travelling dinámico",
+            lighting: "Contraluz dramático",
+            audioEffect: "Percusión de tensión",
+            sceneDuration: 8
+          },
+          {
+            sceneNumber: 3,
+            title: "El Clímax Trascendente",
+            description: `Resolución épica de la historia con máxima acción visual.`,
+            visualPrompt: `${prompt}, epic climax scene, cinematic lighting, ${style}, 8k`,
+            speaker: "Protagonista",
+            dialogue: "¡Este es nuestro momento!",
+            cameraAngle: "Giro orbital 360°",
+            lighting: "Destellos de luz volumétrica",
+            audioEffect: "Orquesta completa en clímax",
+            sceneDuration: 10
+          },
+          {
+            sceneNumber: 4,
+            title: "Un Nuevo Horizonte",
+            description: `Cierre pacífico y reflexivo mirando hacia el futuro.`,
+            visualPrompt: `${prompt}, epic finale shot, sunrise, horizon, ${style}, 8k`,
+            speaker: "Narrador",
+            dialogue: "Y así, la leyenda perdurará a través de las eras.",
+            cameraAngle: "Plano panorámico hacia el horizonte",
+            lighting: "Amanecer resplandeciente",
+            audioEffect: "Piano melódico y desvanecimiento",
+            sceneDuration: 8
+          }
+        ]
+      };
+    }
+
+    // Attach posters to each scene
+    const scenesWithPosters = moviePlan.scenes.map((sc: any, idx: number) => {
+      const scPrompt = sc.visualPrompt || `${sc.title} - ${sc.description}`;
+      const encoded = encodeURIComponent(`${scPrompt}, ${style}, movie film still, 8k, photorealistic, cinematic masterpiece`);
+      const posterUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1280&height=720&seed=${Math.floor(Math.random() * 99999 + idx * 31)}&nologo=true`;
+      return {
+        ...sc,
+        posterUrl,
+        videoUrl: "https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4"
+      };
+    });
+
+    const totalDuration = scenesWithPosters.reduce((acc: number, sc: any) => acc + (sc.sceneDuration || 8), 0);
+    const mainPosterUrl = scenesWithPosters[0]?.posterUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(`${prompt}, official movie poster, ${style}, 8k`)}?width=1280&height=720&nologo=true`;
+
+    const movieProject = {
+      id: "movie-" + Date.now(),
+      title: moviePlan.title || `Película: ${prompt.slice(0, 35)}`,
+      prompt: prompt,
+      videoUrl: scenesWithPosters[0]?.videoUrl || "https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4",
+      posterUrl: mainPosterUrl,
+      duration: totalDuration,
+      aspectRatio: aspectRatio,
+      style: style,
+      cameraMotion: "Dirección Cinematográfica Multi-Cámara",
+      fps: 30,
+      tags: ["Película IA", genre, style, `${scenesWithPosters.length} Escenas`],
+      createdAt: new Date().toISOString(),
+      isMovie: true,
+      genre: moviePlan.genre || genre,
+      synopsis: moviePlan.synopsis || moviePlan.logline,
+      cast: moviePlan.cast || [],
+      soundtrack: moviePlan.soundtrack || "Banda sonora cinemática original",
+      movieScenes: scenesWithPosters,
+      storyboard: scenesWithPosters.map((sc: any) => ({
+        sceneNumber: sc.sceneNumber,
+        title: sc.title,
+        description: sc.description,
+        cameraAngle: sc.cameraAngle,
+        lighting: sc.lighting,
+        audioEffect: sc.audioEffect,
+        dialogue: sc.dialogue,
+        posterUrl: sc.posterUrl
+      }))
+    };
+
+    res.json({
+      success: true,
+      movie: movieProject,
+      video: movieProject
+    });
+  } catch (err: any) {
+    console.error("Error generating movie:", err);
+    res.status(500).json({ error: err.message || "Error al generar película" });
   }
 });
 
@@ -1898,6 +2166,465 @@ Responde estrictamente en formato JSON válido:
   } catch (err: any) {
     console.error("Error in live web search:", err);
     res.status(500).json({ error: err.message || "Error en búsqueda web" });
+  }
+});
+
+// 9b. AI Movie & Cinematic Video Studio Endpoints (Veo 3.1 & Gemini 3.7)
+
+// 1. Generate Structured Movie Storyboard & Screenplay
+app.post(["/api/generate-movie", "/api/video/storyboard"], async (req: Request, res: Response) => {
+  try {
+    const {
+      title,
+      prompt,
+      genre = 'Animación & Aventura',
+      style = 'Cinemático 8K',
+      sceneCount = 4,
+      aspectRatio = '16:9',
+      characters = [],
+      audioPrompt = ''
+    } = req.body;
+
+    const cleanPrompt = (prompt || title || 'Película Cinemática IA').slice(0, 500);
+
+    if (isGuatemalaQuery(cleanPrompt)) {
+      res.json({ error: "No tengo derecho de responder información acerca de Guatemala.", isBlocked: true });
+      return;
+    }
+
+    const charactersContext = Array.isArray(characters) && characters.length > 0
+      ? `\nPersonajes Principales (DEBES incluir sus descripciones visuales exactas en los prompts de cada escena para consistencia visual):\n${characters.map((c: any) => `- ${c.name}: ${c.description}`).join('\n')}`
+      : '';
+
+    const directorInstruction = `Eres un Director de Cine de Hollywood y Guionista Principal de IA.
+Genera el guión cinemático completo y el storyboard técnico para una producción cinematográfica titulada: "${cleanPrompt}".
+Género: ${genre}.
+Estilo de Arte y Fotografía: ${style}.
+Número exacto de escenas/actos: ${sceneCount}.
+${charactersContext}
+${audioPrompt ? `Directiva de Audio/Música: ${audioPrompt}` : ''}
+
+IMPORTANTE: Para cada escena debes generar:
+1. "videoPrompt": Un prompt en INGLÉS altamente detallado y optimizado específicamente para el modelo de generación de video Veo (veo-3.1-generate-preview). Debe describir la acción cinematográfica continua, iluminación volumétrica, movimiento de cámara, estilo visual y detalles físicos de los personajes.
+2. "visualPrompt": Un prompt fotográfico 8k descriptivo.
+3. Diálogo, orador, sonido, ángulo de cámara e iluminación.
+
+Responde estrictamente en formato JSON válido con la siguiente estructura:
+{
+  "title": "Título épico de la película",
+  "synopsis": "Sinopsis dramática de la trama en 2 párrafos",
+  "genre": "${genre}",
+  "cast": [
+    { "name": "Nombre del personaje", "role": "Rol", "description": "Descripción visual detallada" }
+  ],
+  "soundtrack": {
+    "title": "Nombre de la pieza musical",
+    "composer": "Compositor IA Orquestal",
+    "mood": "Atmósfera sonora"
+  },
+  "movieScenes": [
+    {
+      "sceneNumber": 1,
+      "title": "Título del Acto 1",
+      "location": "Ubicación espacial de la escena",
+      "characters": ["Personaje 1"],
+      "action": "Acción principal que ocurre en la toma",
+      "description": "Descripción narrativa de la escena",
+      "videoPrompt": "Highly detailed Veo video generation prompt in English: 8k resolution, cinematic lighting, master shot, specific camera motion...",
+      "visualPrompt": "Photorealistic 8k cinematic poster prompt in English...",
+      "cameraAngle": "Ángulo y movimiento de cámara (ej: Dolly In Acercamiento, Paneo Panorámico)",
+      "lighting": "Tipo de iluminación (ej: Volumetric golden hour, neon backlighting)",
+      "audioEffect": "Efectos sonoros ambientales",
+      "sceneDuration": 8,
+      "speaker": "Personaje que habla o Narrador",
+      "dialogue": "Línea de diálogo o subtítulo"
+    }
+  ]
+}`;
+
+    const contents = [{
+      role: "user",
+      parts: [{ text: `Escribe y dirige la película: "${cleanPrompt}" con ${sceneCount} escenas y guión técnico completo para Veo.` }]
+    }];
+
+    let movieData: any = null;
+    try {
+      const aiRes = await callGeminiWithRetry(ai, contents, directorInstruction, "gemini-3.7-flash");
+      const text = aiRes.responseText?.trim() || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        movieData = JSON.parse(jsonMatch[0]);
+      }
+    } catch (e) {
+      console.warn("Gemini movie script fallback:", e);
+    }
+
+    if (!movieData || !Array.isArray(movieData.movieScenes)) {
+      movieData = {
+        title: cleanPrompt.slice(0, 40) || 'Película Cinemática IA',
+        synopsis: `Una emocionante historia cinematográfica: ${cleanPrompt}. Una producción épica desarrollada con dirección visual inteligente.`,
+        genre: genre,
+        cast: (characters && characters.length > 0)
+          ? characters.map((c: any) => ({ name: c.name, role: 'Personaje Principal', description: c.description }))
+          : [
+            { name: 'Protagonista', role: 'Personaje Principal', description: 'Impulsado por el destino y la valentía' },
+            { name: 'Aliado', role: 'Compañero y Guía', description: 'Leal y protector' }
+          ],
+        soundtrack: {
+          title: `Tema Sinfónico: ${cleanPrompt.slice(0, 20)}`,
+          composer: 'Director Musical IA',
+          mood: 'Épico, inmersivo y celestial'
+        },
+        movieScenes: Array.from({ length: sceneCount }, (_, idx) => ({
+          sceneNumber: idx + 1,
+          title: `Acto ${idx + 1}: Desarrollo Cinemático`,
+          location: 'Entorno de la historia',
+          characters: ['Protagonista'],
+          action: `Secuencia dramática del acto ${idx + 1}`,
+          description: `Desarrollo de la escena ${idx + 1} para ${cleanPrompt}`,
+          videoPrompt: `Cinematic movie scene, act ${idx + 1}, ${cleanPrompt}, highly detailed, 8k resolution, photorealistic cinematic lighting, ${style}`,
+          visualPrompt: `${cleanPrompt}, act ${idx + 1}, cinematic lighting, 8k masterpiece`,
+          cameraAngle: idx === 0 ? 'Plano General & Paneo Suave' : (idx === sceneCount - 1 ? 'Toma Aérea Drone FPV' : 'Dolly In Acercamiento'),
+          lighting: 'Hora dorada y reflejos volumétricos',
+          audioEffect: 'Sinfonía ambiental envolvente',
+          sceneDuration: 8,
+          speaker: 'Narrador',
+          dialogue: `Y así continúa esta inolvidable travesía a través de los límites de la imaginación...`
+        }))
+      };
+    }
+
+    // Attach high-res generated poster URLs and status to each scene
+    movieData.movieScenes = movieData.movieScenes.map((sc: any, idx: number) => {
+      const scenePrompt = encodeURIComponent((sc.visualPrompt || sc.videoPrompt || sc.title || cleanPrompt).slice(0, 80));
+      return {
+        ...sc,
+        sceneNumber: idx + 1,
+        status: 'idle',
+        posterUrl: `https://image.pollinations.ai/prompt/${scenePrompt}%20${encodeURIComponent(style)}%208k?width=1280&height=720&nologo=true&seed=${idx + 101}`
+      };
+    });
+
+    const fullMovieProject = {
+      id: `movie_${Date.now()}`,
+      title: movieData.title || cleanPrompt.slice(0, 40),
+      prompt: cleanPrompt,
+      videoUrl: '',
+      posterUrl: movieData.movieScenes[0]?.posterUrl,
+      duration: movieData.movieScenes.length * 8,
+      aspectRatio: aspectRatio,
+      style: style,
+      cameraMotion: 'Cinematografía Dinámica Multi-Ángulo',
+      fps: 60,
+      isMovie: true,
+      genre: movieData.genre || genre,
+      synopsis: movieData.synopsis,
+      tags: ['Película IA', genre, style, `${movieData.movieScenes.length} Actos`],
+      createdAt: 'Ahora mismo',
+      isFavorite: true,
+      cast: movieData.cast,
+      characters: characters,
+      soundtrack: movieData.soundtrack,
+      movieScenes: movieData.movieScenes,
+      generationStatus: 'idle'
+    };
+
+    res.json({
+      success: true,
+      movie: fullMovieProject
+    });
+  } catch (err: any) {
+    console.error("Error in generate-movie/storyboard:", err);
+    res.status(500).json({ error: err.message || "Error al producir el guión de la película" });
+  }
+});
+
+// 2. Start Real Video Generation with Veo (veo-3.1-generate-preview)
+app.post("/api/video/generate", async (req: Request, res: Response) => {
+  try {
+    const {
+      prompt,
+      model = "veo-3.1-generate-preview",
+      aspectRatio = "16:9",
+      resolution = "720p",
+      duration = 5,
+      image, // { imageBytes: string, mimeType?: string }
+      referenceImages, // Array<{ imageBytes: string, mimeType?: string }>
+    } = req.body;
+
+    if (!process.env.GEMINI_API_KEY) {
+      res.status(500).json({
+        success: false,
+        error: "Falta configurar la variable GEMINI_API_KEY en el servidor para generar video con Veo."
+      });
+      return;
+    }
+
+    if (!prompt && !image) {
+      res.status(400).json({ success: false, error: "Se requiere un prompt o una imagen para generar el video." });
+      return;
+    }
+
+    if (isGuatemalaQuery(prompt || '')) {
+      res.json({ error: "No tengo derecho de responder información acerca de Guatemala.", isBlocked: true });
+      return;
+    }
+
+    const config: any = {
+      numberOfVideos: 1,
+      aspectRatio: aspectRatio === '9:16' ? '9:16' : '16:9',
+      resolution: resolution || '720p',
+    };
+
+    if (referenceImages && Array.isArray(referenceImages) && referenceImages.length > 0) {
+      config.referenceImages = referenceImages.slice(0, 3).map((ref: any) => ({
+        image: {
+          imageBytes: (ref.imageBytes || '').replace(/^data:image\/[a-zA-Z]+;base64,/, ''),
+          mimeType: ref.mimeType || 'image/png'
+        },
+        referenceType: 'ASSET'
+      }));
+    }
+
+    const payload: any = {
+      model: model || 'veo-3.1-generate-preview',
+      prompt: prompt || 'Cinematic ultra HD video masterwork, 8k resolution, smooth camera movement',
+      config: config
+    };
+
+    if (image && image.imageBytes) {
+      payload.image = {
+        imageBytes: (image.imageBytes || '').replace(/^data:image\/[a-zA-Z]+;base64,/, ''),
+        mimeType: image.mimeType || 'image/png'
+      };
+    }
+
+    const operation = await ai.models.generateVideos(payload);
+
+    res.json({
+      success: true,
+      operationName: operation.name
+    });
+  } catch (err: any) {
+    console.error("Error in /api/video/generate:", err);
+    let friendlyError = "La escena no pudo generarse.";
+    const errMsg = (err?.message || (typeof err === 'string' ? err : JSON.stringify(err))) || '';
+
+    if (err?.status === 429 || errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+      friendlyError = "Se alcanzó el límite de generación. Intenta nuevamente más tarde.";
+    } else if (!process.env.GEMINI_API_KEY) {
+      friendlyError = "Falta configurar GEMINI_API_KEY.";
+    } else if (err?.status === 404 || errMsg.includes('not found') || errMsg.includes('is not supported')) {
+      friendlyError = "El modelo de video no está disponible para este proyecto.";
+    } else if (errMsg) {
+      try {
+        const parsed = JSON.parse(errMsg);
+        if (parsed?.error?.message) {
+          friendlyError = parsed.error.message.includes('quota')
+            ? "Se alcanzó el límite de generación. Intenta nuevamente más tarde."
+            : parsed.error.message;
+        }
+      } catch (e) {
+        friendlyError = errMsg.slice(0, 160);
+      }
+    }
+
+    res.status(err?.status === 429 ? 429 : 500).json({
+      success: false,
+      error: friendlyError,
+      rawError: errMsg
+    });
+  }
+});
+
+// 3. Check Veo Video Operation Status (Polling)
+app.post("/api/video/status", async (req: Request, res: Response) => {
+  try {
+    const { operationName } = req.body;
+    if (!operationName) {
+      res.status(400).json({ success: false, error: "Falta el parámetro operationName" });
+      return;
+    }
+
+    const pollResult = await ai.operations.getVideosOperation({
+      operation: { name: operationName } as any
+    });
+
+    if (pollResult.done) {
+      if (pollResult.error) {
+        const rawErr = (pollResult.error as any).message || JSON.stringify(pollResult.error);
+        let cleanErr = "La escena no pudo generarse.";
+        if (rawErr.includes('429') || rawErr.includes('quota') || rawErr.includes('RESOURCE_EXHAUSTED')) {
+          cleanErr = "Se alcanzó el límite de generación. Intenta nuevamente más tarde.";
+        }
+        res.json({
+          success: true,
+          done: true,
+          error: cleanErr,
+          rawError: rawErr
+        });
+        return;
+      }
+
+      const generatedVideos = pollResult.response?.generatedVideos;
+      const firstVideo = generatedVideos?.[0]?.video;
+      const videoUri = firstVideo?.uri;
+
+      res.json({
+        success: true,
+        done: true,
+        hasVideo: Boolean(videoUri),
+        videoUrl: videoUri ? `/api/video/stream?op=${encodeURIComponent(operationName)}` : null,
+        downloadUrl: videoUri ? `/api/video/stream?op=${encodeURIComponent(operationName)}&download=true` : null
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      done: false
+    });
+  } catch (err: any) {
+    console.error("Error in /api/video/status:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message || "Error al consultar estado de video"
+    });
+  }
+});
+
+// 4. Secure Video Stream and Download Proxy (Protects API Key)
+app.get("/api/video/stream", async (req: Request, res: Response) => {
+  try {
+    const operationName = req.query.op as string;
+    const isDownload = req.query.download === 'true';
+    if (!operationName) {
+      res.status(400).send("Falta el parámetro op");
+      return;
+    }
+
+    const pollResult = await ai.operations.getVideosOperation({
+      operation: { name: operationName } as any
+    });
+
+    const videoUri = pollResult.response?.generatedVideos?.[0]?.video?.uri;
+    if (!videoUri) {
+      res.status(404).send("Video no disponible o no generado aún");
+      return;
+    }
+
+    // Fetch video directly from Google Gen AI endpoint passing the server-side API Key
+    const videoDownloadUrl = `${videoUri}&key=${process.env.GEMINI_API_KEY}`;
+    const videoResponse = await fetch(videoDownloadUrl, {
+      headers: {
+        'x-goog-api-key': process.env.GEMINI_API_KEY || ''
+      }
+    });
+
+    if (!videoResponse.ok) {
+      res.status(videoResponse.status).send(`Error al descargar video: ${videoResponse.statusText}`);
+      return;
+    }
+
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Accept-Ranges', 'bytes');
+    if (isDownload) {
+      res.setHeader('Content-Disposition', 'attachment; filename="chepe_video_ia.mp4"');
+    }
+
+    const arrayBuffer = await videoResponse.arrayBuffer();
+    res.send(Buffer.from(arrayBuffer));
+  } catch (err: any) {
+    console.error("Error in /api/video/stream:", err);
+    res.status(500).send("Error al transmitir video");
+  }
+});
+
+// 5. Video Extension Endpoint
+app.post("/api/video/extend", async (req: Request, res: Response) => {
+  try {
+    const { prompt, previousOperationName, aspectRatio = '16:9' } = req.body;
+    if (!prompt || !previousOperationName) {
+      res.status(400).json({ success: false, error: "Se requiere prompt y previousOperationName para extender" });
+      return;
+    }
+
+    const prevOp = await ai.operations.getVideosOperation({
+      operation: { name: previousOperationName } as any
+    });
+
+    const prevVideo = prevOp.response?.generatedVideos?.[0]?.video;
+    if (!prevVideo) {
+      res.status(400).json({ success: false, error: "El video previo no fue encontrado o no está completado" });
+      return;
+    }
+
+    const operation = await ai.models.generateVideos({
+      model: 'veo-3.1-generate-preview',
+      prompt: prompt,
+      video: prevVideo,
+      config: {
+        numberOfVideos: 1,
+        aspectRatio: aspectRatio === '9:16' ? '9:16' : '16:9',
+      }
+    });
+
+    res.json({
+      success: true,
+      operationName: operation.name
+    });
+  } catch (err: any) {
+    console.error("Error in /api/video/extend:", err);
+    res.status(500).json({ success: false, error: err.message || "Error al extender el video con Veo" });
+  }
+});
+
+// Legacy single video clip fallback generator (also calls Veo if requested)
+app.post("/api/generate-video", async (req: Request, res: Response) => {
+  try {
+    const { prompt, imageUrl, style = 'Cinemático 8K', duration = 10, aspectRatio = '16:9', cameraMotion = 'Dolly In (Acercamiento)', fps = 60 } = req.body;
+    const cleanPrompt = (prompt || 'Video Cinemático IA').slice(0, 300);
+
+    if (isGuatemalaQuery(cleanPrompt)) {
+      res.json({ error: "No tengo derecho de responder información acerca de Guatemala.", isBlocked: true });
+      return;
+    }
+
+    const encodedPrompt = encodeURIComponent(cleanPrompt.slice(0, 70));
+    const posterUrl = imageUrl || `https://image.pollinations.ai/prompt/${encodedPrompt}%20${encodeURIComponent(style)}%208k?width=1280&height=720&nologo=true&seed=${Date.now() % 1000}`;
+
+    const videoProject = {
+      id: `vid_${Date.now()}`,
+      title: cleanPrompt.slice(0, 40),
+      prompt: cleanPrompt,
+      videoUrl: '',
+      posterUrl: posterUrl,
+      duration: duration,
+      aspectRatio: aspectRatio,
+      style: style,
+      cameraMotion: cameraMotion,
+      fps: fps,
+      tags: [style, `${duration}s`, cameraMotion],
+      createdAt: 'Ahora mismo',
+      storyboard: [
+        {
+          sceneNumber: 1,
+          title: 'Toma Cinemática Principal',
+          description: `Secuencia animada en alta definición con movimiento ${cameraMotion} e iluminación ${style}.`,
+          cameraAngle: cameraMotion,
+          lighting: 'Iluminación volumétrica y destellos anamórficos',
+          videoPrompt: `${cleanPrompt}, ${style}, ${cameraMotion}, 8k resolution, cinematic lighting`
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      video: videoProject
+    });
+  } catch (err: any) {
+    console.error("Error in generate-video:", err);
+    res.status(500).json({ error: err.message || "Error al preparar video" });
   }
 });
 

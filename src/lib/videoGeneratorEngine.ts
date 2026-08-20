@@ -67,7 +67,9 @@ export class CinematicAudioSynth {
     if (!this.ctx || this.isRunning) return;
     try {
       if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        this.ctx.resume().catch(() => {
+          // Ignored if user hasn't interacted with document yet
+        });
       }
 
       this.osc1 = this.ctx.createOscillator();
@@ -92,8 +94,8 @@ export class CinematicAudioSynth {
       this.osc1.start();
       this.osc2.start();
       this.isRunning = true;
-    } catch (e) {
-      console.warn('Audio start warning:', e);
+    } catch {
+      // Audio autoplay gracefully suppressed until user interaction
     }
   }
 

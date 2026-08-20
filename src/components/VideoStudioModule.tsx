@@ -3,9 +3,11 @@ import {
   Video, Film, Sparkles, Play, Pause, RotateCcw, Download, Maximize2,
   Sliders, Wand2, Layers, Image as ImageIcon, CheckCircle, Volume2,
   VolumeX, Copy, Check, ChevronRight, Eye, RefreshCw, Star, Info,
-  Compass, Radio, Flame, Clock, Monitor, Smartphone, Grid, Clapperboard, VideoOff
+  Compass, Radio, Flame, Clock, Monitor, Smartphone, Grid, Clapperboard, VideoOff,
+  Users, Music, BookOpen, ChevronLeft, Plus, Trash2, AlertCircle, FastForward,
+  Share2, ArrowRight
 } from 'lucide-react';
-import { VideoProject, VideoScene } from '../types';
+import { VideoProject, VideoScene, MovieScene, CharacterProfile } from '../types';
 import { renderAndRecordVideo } from '../lib/videoGeneratorEngine';
 import { CinematicCanvasPlayer } from './CinematicCanvasPlayer';
 
@@ -34,141 +36,121 @@ const CAMERA_MOTIONS = [
   { id: 'static_cinema', name: 'Cámara Fija de Cine', desc: 'Encuadre estático con animación de elementos' }
 ];
 
+const MOVIE_GENRES = [
+  'Ciencia Ficción Épica',
+  'Animación & Aventura',
+  'Cyberpunk Noir',
+  'Fantasía Mística',
+  'Acción & Suspenso',
+  'Terror Psicológico',
+  'Documental Naturaleza 8K',
+  'Drama Cinemático'
+];
+
 const SAMPLE_PROJECTS: VideoProject[] = [
   {
-    id: 'sample-1',
-    title: 'Metrópolis Futurista en Lluvia Neón',
-    prompt: 'Vehículos voladores atravesando rascacielos iluminados por neones holográficos bajo una lluvia suave, reflejos cinematográficos en charcos de asfalto, 8K ultra realista.',
-    videoUrl: 'https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1200&auto=format&fit=crop&q=80',
-    duration: 10,
+    id: 'sample-movie-1',
+    title: 'El Felino Galáctico: Guardián de las Estrellas',
+    prompt: 'Un gato callejero con un collar cuántico viaja por nebulosas estelares defendiendo civilizaciones antiguas.',
+    videoUrl: '',
+    posterUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&auto=format&fit=crop&q=80',
+    duration: 32,
     aspectRatio: '16:9',
-    style: 'Cyberpunk Neón',
-    cameraMotion: 'Vuelo FPV / Drone',
-    fps: 60,
-    tags: ['Cyberpunk', 'Ciencia Ficción', 'Vehículos Voladores', 'Neón'],
-    createdAt: 'Hace 1 hora',
-    isFavorite: true,
-    storyboard: [
-      {
-        sceneNumber: 1,
-        title: 'Establecimiento Aéreo',
-        description: 'La cámara desciende entre rascacielos cubiertos de carteles holográficos brillantes.',
-        cameraAngle: 'Toma cenital en descenso suave',
-        lighting: 'Luces de neón magenta y cian con lluvia volumétrica',
-        audioEffect: 'Zumbido de motores antigravedad y truenos lejanos'
-      },
-      {
-        sceneNumber: 2,
-        title: 'Tráfico Aéreo Dinámico',
-        description: 'Un auto volador aerodinámico cruza a gran velocidad dejando estelas de luz.',
-        cameraAngle: 'Paneo lateral siguiendo la trayectoria del vehículo',
-        lighting: 'Reflejos especulares en carrocería metálica mojada',
-        audioEffect: 'Aceleración sónica y sintetizador cyberpunk'
-      },
-      {
-        sceneNumber: 3,
-        title: 'Horizonte de la Ciudad',
-        description: 'La toma se abre hacia la niebla futurista con la luna emergiendo tras las torres.',
-        cameraAngle: 'Plano general amplio',
-        lighting: 'Contraluz lunar con destellos cromados',
-        audioEffect: 'Foley de lluvia constante y campanas de fondo'
-      }
-    ]
-  },
-  {
-    id: 'sample-2',
-    title: 'Túnel Cuántico Digital en Bucle',
-    prompt: 'Viaje a velocidad luz por un túnel cuántico de filamentos ópticos y datos holográficos brillantes.',
-    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&auto=format&fit=crop&q=80',
-    duration: 5,
-    aspectRatio: '16:9',
-    style: 'Cinemático 8K',
-    cameraMotion: 'Dolly In (Acercamiento)',
-    fps: 60,
-    tags: ['Abstracto', 'Túnel Cuántico', 'FX', 'Loop'],
-    createdAt: 'Hace 3 horas',
-    storyboard: [
-      {
-        sceneNumber: 1,
-        title: 'Aceleración Cuántica',
-        description: 'Filamentos de luz se tensan y comienzan a desplazarse hacia el observador.',
-        cameraAngle: 'Dolly in a alta velocidad',
-        lighting: 'Gradientes azul eléctrico y violeta pulsante',
-        audioEffect: 'Pulso electromagnético creciente'
-      }
-    ]
-  },
-  {
-    id: 'sample-3',
-    title: 'Atardecer Dorado sobre las Olas del Mar',
-    prompt: 'Olas suaves del océano rompiendo contra la orilla con destellos dorados durante la puesta de sol, cámara lenta cinematográfica.',
-    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80',
-    duration: 10,
-    aspectRatio: '16:9',
-    style: 'Cinemático 8K',
-    cameraMotion: 'Paneo Lateral Dinámico',
-    fps: 30,
-    tags: ['Naturaleza', 'Océano', 'Atardecer', 'Slow Motion'],
-    createdAt: 'Ayer',
-    storyboard: [
-      {
-        sceneNumber: 1,
-        title: 'Luz Dorada',
-        description: 'La espuma marina brilla como oro mientras el sol toca el horizonte.',
-        cameraAngle: 'Plano bajo a ras del agua',
-        lighting: 'Luz dorada cálida natural',
-        audioEffect: 'Sonido suave de olas y brisa marina'
-      }
-    ]
-  },
-  {
-    id: 'sample-4',
-    title: 'Explorador Espacial en los Anillos de Saturno',
-    prompt: 'Nave de exploración interestelar maniobrando suavemente entre partículas de hielo y asteroides dorados reflejando la atmósfera de Saturno, 8K ultra realista.',
-    videoUrl: 'https://raw.githubusercontent.com/mdn/learning-area/main/javascript/apis/video-audio/start/media/video.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
-    duration: 10,
-    aspectRatio: '16:9',
-    style: 'Cinemático 8K',
-    cameraMotion: 'Giro Orbital 360°',
-    fps: 60,
-    tags: ['Espacio', 'Saturno', 'Nave', 'Sci-Fi'],
-    createdAt: 'Hace 5 horas',
-    storyboard: [
-      {
-        sceneNumber: 1,
-        title: 'Aproximación Orbital',
-        description: 'La nave cruza el plano de los anillos revelando la inmensidad del planeta.',
-        cameraAngle: 'Plano general épico',
-        lighting: 'Luz solar indirecta con destellos especulares en el hielo',
-        audioEffect: 'Sintetizador ambiental espacial y propulsores de iones'
-      }
-    ]
-  },
-  {
-    id: 'sample-5',
-    title: 'Bosque Místico de Luciérnagas Anime',
-    prompt: 'Sendero de musgo iluminado por cientos de esferas de luz flotantes bajo árboles gigantes milenarios, estilo Studio Ghibli, 4K.',
-    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&auto=format&fit=crop&q=80',
-    duration: 8,
-    aspectRatio: '16:9',
+    resolution: '720p',
     style: 'Anime Studio Ghibli',
     cameraMotion: 'Vuelo FPV / Drone',
     fps: 60,
-    tags: ['Anime', 'Fantasía', 'Bosque', 'Ghibli'],
-    createdAt: 'Hace 8 horas',
-    storyboard: [
+    isMovie: true,
+    genre: 'Animación & Aventura',
+    synopsis: 'Orion, un felino callejero de Tokio, tropieza con una gema cuántica que lo transporta a los confines de la galaxia Andrómeda, donde debe unir fuerzas con robots astrónomos para salvar el Sol Central.',
+    tags: ['Película Veo', 'Gatos', 'Espacio', 'Aventura', 'Ghibli'],
+    createdAt: 'Reciente',
+    isFavorite: true,
+    cast: [
+      { name: 'Orion', role: 'El Gato Guardián Cuántico', description: 'Gato atigrado con inteligencia sobrehumana y botas gravitatorias', avatarUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Kira-9', role: 'Androide de Navegación', description: 'Inteligencia artificial que guía la nave estelar', avatarUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&auto=format&fit=crop&q=80' }
+    ],
+    characters: [
+      { id: 'c1', name: 'Orion', description: 'Gato atigrado con traje espacial blanco y botas gravitatorias' },
+      { id: 'c2', name: 'Kira-9', description: 'Androide holográfica con visor cian brillante' }
+    ],
+    soundtrack: {
+      title: 'Sinfonía Cósmica de las Siete Lunas',
+      composer: 'Maestro IA Orquestal',
+      mood: 'Épico, emotivo y celestial con coros sintetizados'
+    },
+    movieScenes: [
       {
         sceneNumber: 1,
-        title: 'Despertar del Bosque',
-        description: 'Las luciérnagas se elevan en espiral entre la niebla esmeralda.',
-        cameraAngle: 'Paneo ascendente suave',
-        lighting: 'Resplandor bioluminiscente turquesa y dorado',
-        audioEffect: 'Arpa de cristal y brisa mística'
+        title: 'El Descubrimiento en el Callejón',
+        location: 'Callejón neón en Shibuya, Tokio',
+        characters: ['Orion'],
+        action: 'Orion camina bajo la lluvia y encuentra un cristal brillante pulsante en el suelo.',
+        description: 'Bajo la lluvia neón de Shibuya, Orion encuentra un cristal flotante que emite pulsos de luz violeta.',
+        visualPrompt: 'Cute cat in Tokyo neon rain alley touching glowing purple crystal gem, cinematic lighting, 8k',
+        videoPrompt: 'Cinematic shot of a cute tabby cat wearing a tiny reflective collar in a rainy Tokyo alley with bright neon reflections, touching a glowing pulsating purple energy crystal, camera dollies in smoothly, photorealistic 8k, volumetric lighting',
+        cameraAngle: 'Plano bajo a nivel del suelo',
+        lighting: 'Neones cian y púrpura reflejados en charcos',
+        audioEffect: 'Goteo de lluvia y zumbido armónico de cristal',
+        sceneDuration: 8,
+        speaker: 'Orion (Pensamiento)',
+        dialogue: 'No era una joya ordinaria... el universo entero latía dentro de ella.',
+        posterUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&auto=format&fit=crop&q=80',
+        status: 'idle'
+      },
+      {
+        sceneNumber: 2,
+        title: 'Salto al Hiperespacio Interestelar',
+        location: 'Vórtice cósmico sobre la atmósfera',
+        characters: ['Orion', 'Kira-9'],
+        action: 'El cristal se activa disparando un torrente de energía que impulsa al héroe a través de una nebulosa.',
+        description: 'El cristal se activa disparando un vórtice gravitacional que eleva al gato hacia una aurora cósmica.',
+        visualPrompt: 'Heroic cat floating in cosmic hyperdrive nebula space, stars streaks, anime fantasy art style',
+        videoPrompt: 'Heroic cat wearing a sleek white astronaut suit floating peacefully in a cosmic nebula with purple and turquoise stars streaking by, dynamic hyperdrive acceleration, 8k render, Studio Ghibli inspired cinematic art',
+        cameraAngle: 'Dolly in dinámico a gran velocidad',
+        lighting: 'Destellos de plasma turquesa y estrellas fugaces',
+        audioEffect: 'Rugido de salto cuántico y arpegios celestiales',
+        sceneDuration: 8,
+        speaker: 'Kira-9',
+        dialogue: 'Coordenadas fijadas: Sector Andrómeda 7. Bienvenido a bordo, Guardián.',
+        posterUrl: 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1200&auto=format&fit=crop&q=80',
+        status: 'idle'
+      },
+      {
+        sceneNumber: 3,
+        title: 'La Ciudadela Flotante de Cristal',
+        location: 'Palacio celestial sobre nubes de gas esmeralda',
+        characters: ['Orion'],
+        action: 'Llegada a las torres flotantes sobre nubes cósmicas donde aguardan los sabios estelares.',
+        description: 'Llegada a las torres flotantes sobre nubes de gas esmeralda donde se reúnen los sabios de la galaxia.',
+        visualPrompt: 'Majestic futuristic crystal palace floating in emerald nebula clouds, epic scale, Studio Ghibli style',
+        videoPrompt: 'Sweeping drone aerial pan of colossal floating crystal spires above vibrant emerald nebula clouds, cinematic majestic scale, soft golden double-sun lighting, 8k masterpiece',
+        cameraAngle: 'Paneo panorámico majestuoso',
+        lighting: 'Luz solar doble dorada y turquesa',
+        audioEffect: 'Campanas de viento etéreas y cuerdas sinfónicas',
+        sceneDuration: 8,
+        speaker: 'Sabio de Cristal',
+        dialogue: 'La profecía se ha cumplido. El Guardián de cuatro patas ha llegado.',
+        posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&auto=format&fit=crop&q=80',
+        status: 'idle'
+      },
+      {
+        sceneNumber: 4,
+        title: 'El Destino del Sol Central',
+        location: 'Cámara del reactor solar cósmico',
+        characters: ['Orion'],
+        action: 'Orion deposita el cristal en el núcleo, desatando una oleada dorada de vida interestelar.',
+        description: 'Orion coloca el cristal en el reactor solar restaurando la luz y la vida en miles de mundos.',
+        visualPrompt: 'Hero cat standing triumphantly in front of blazing golden star core, majestic energy waves, 8k wallpaper',
+        videoPrompt: 'Heroic cat with glowing golden suit standing triumphantly before a colossal blazing golden star core, massive waves of radiant warm energy pulsing outward, 360 orbital camera rotation, ultra high definition 8k',
+        cameraAngle: 'Giro orbital 360° triunfal',
+        lighting: 'Explosión de luz dorada resplandeciente',
+        audioEffect: 'Crescendo orquestal triunfante con coro celestial',
+        sceneDuration: 8,
+        speaker: 'Orion',
+        dialogue: 'Mientras brillen las estrellas, ningún rincón del cosmos quedará en la oscuridad.',
+        posterUrl: 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=1200&auto=format&fit=crop&q=80',
+        status: 'idle'
       }
     ]
   }
@@ -178,192 +160,615 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
   onAskAI,
   onSendVideoToChat
 }) => {
-  // Mode: Text-to-Video vs Image-to-Video
-  const [studioMode, setStudioMode] = useState<'text' | 'image' | 'storyboard'>('text');
+  // Mode: Movie Generator vs Single Clip vs Image-to-Video vs Extender vs Storyboard
+  const [studioMode, setStudioMode] = useState<'movie' | 'text' | 'image' | 'extend' | 'storyboard'>('movie');
 
   // Input states
-  const [prompt, setPrompt] = useState<string>('');
+  const [prompt, setPrompt] = useState<string>('Un gato explorador con traje espacial en Marte descubriendo un cristal de energía ancestral');
   const [selectedStyle, setSelectedStyle] = useState<string>('Cinemático 8K');
   const [selectedCamera, setSelectedCamera] = useState<string>('Dolly In (Acercamiento)');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1' | '4:3'>('16:9');
-  const [duration, setDuration] = useState<number>(10);
+  const [resolution, setResolution] = useState<'720p' | '1080p'>('720p');
+  const [duration, setDuration] = useState<number>(5);
   const [fps, setFps] = useState<number>(30);
+  const [audioPrompt, setAudioPrompt] = useState<string>('Banda sonora épica orquestal, sintetizadores espaciales y efectos de viento cósmico');
+
+  // Image to Video State
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+
+  // Reference Images for Character/Style Consistency (Up to 3)
+  const [referenceImages, setReferenceImages] = useState<Array<{ id: string; base64: string; name: string }>>([]);
+
+  // Character Consistency State
+  const [characters, setCharacters] = useState<CharacterProfile[]>([
+    { id: 'c1', name: 'Leo', description: 'Joven explorador con chaqueta azul marino y visor holográfico' },
+    { id: 'c2', name: 'Aria', description: 'Piloto estelar con traje blanco y detalles dorados' }
+  ]);
+  const [newCharName, setNewCharName] = useState<string>('');
+  const [newCharDesc, setNewCharDesc] = useState<string>('');
+  const [showCharacterModal, setShowCharacterModal] = useState<boolean>(false);
+
+  // Movie specific states
+  const [movieGenre, setMovieGenre] = useState<string>('Animación & Aventura');
+  const [sceneCount, setSceneCount] = useState<number>(4);
+
+  // Video Extension State
+  const [extendPrompt, setExtendPrompt] = useState<string>('Continúa la toma ingresando dentro de la estructura misteriosa con luz brillante');
 
   // Generation status
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [generatingSceneNumber, setGeneratingSceneNumber] = useState<number | null>(null);
   const [generationStep, setGenerationStep] = useState<string>('');
   const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [retryAction, setRetryAction] = useState<(() => void) | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState<boolean>(false);
 
+  // Helper to parse errors into user-friendly messages
+  const parseVideoErrorMessage = (err: any): string => {
+    if (!err) return 'La escena no pudo generarse.';
+    let rawStr = '';
+    if (typeof err === 'string') {
+      rawStr = err;
+    } else if (err.message) {
+      rawStr = err.message;
+    } else {
+      rawStr = JSON.stringify(err);
+    }
+
+    // Try parsing internal JSON string error
+    try {
+      const parsed = JSON.parse(rawStr);
+      if (parsed?.error?.message) {
+        rawStr = parsed.error.message;
+      }
+    } catch (e) {
+      // not a json string
+    }
+
+    if (
+      rawStr.includes('429') ||
+      rawStr.includes('RESOURCE_EXHAUSTED') ||
+      rawStr.includes('quota') ||
+      rawStr.includes('exceeded your current quota') ||
+      rawStr.includes('rate-limit') ||
+      rawStr.includes('Rate limit')
+    ) {
+      return 'Se alcanzó el límite de generación. Intenta nuevamente más tarde.';
+    }
+
+    if (rawStr.includes('GEMINI_API_KEY') || rawStr.includes('API key') || rawStr.includes('API_KEY')) {
+      return 'Falta configurar GEMINI_API_KEY.';
+    }
+
+    if (rawStr.includes('not found') || rawStr.includes('no está disponible') || rawStr.includes('404')) {
+      return 'El modelo de video no está disponible para este proyecto.';
+    }
+
+    return rawStr.length > 140 ? 'La escena no pudo generarse. Intenta nuevamente.' : rawStr;
+  };
+
   // Active Video Project
-  const [activeProject, setActiveProject] = useState<VideoProject>(SAMPLE_PROJECTS[0]);
-  const [projectsList, setProjectsList] = useState<VideoProject[]>(SAMPLE_PROJECTS);
+  const [activeProject, setActiveProject] = useState<VideoProject>(() => {
+    try {
+      const saved = localStorage.getItem('chepe_video_projects');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      }
+    } catch (e) {}
+    return SAMPLE_PROJECTS[0];
+  });
+
+  const [projectsList, setProjectsList] = useState<VideoProject[]>(() => {
+    try {
+      const saved = localStorage.getItem('chepe_video_projects');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return SAMPLE_PROJECTS;
+  });
+
+  // Selected Scene for preview in Movie Player
+  const [selectedSceneIndex, setSelectedSceneIndex] = useState<number>(0);
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'player' | 'movie-script' | 'storyboard' | 'characters' | 'references' | 'prompt'>('player');
 
-  // Video Player Controls
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [videoDuration, setVideoDuration] = useState<number>(10);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [playbackRate, setPlaybackRate] = useState<number>(1);
-  const [isLooping, setIsLooping] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<'player' | 'storyboard' | 'prompt'>('player');
+  // Player ref for smooth scrolling
+  const playerSectionRef = useRef<HTMLDivElement>(null);
 
-  // Sync video time updates
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-      if (videoRef.current.duration) {
-        setVideoDuration(videoRef.current.duration);
-      }
+  // Save projects to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('chepe_video_projects', JSON.stringify(projectsList));
+    } catch (e) {}
+  }, [projectsList]);
+
+  // Image Upload Handler
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUploadedImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleTogglePlay = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      videoRef.current.play().catch(e => console.warn('Autoplay error:', e));
-      setIsPlaying(true);
+  // Add Reference Image Handler
+  const handleAddReferenceImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && referenceImages.length < 3) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setReferenceImages(prev => [
+          ...prev,
+          { id: `ref-${Date.now()}`, base64, name: file.name }
+        ]);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = parseFloat(e.target.value);
-    setCurrentTime(time);
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-    }
+  // Remove Reference Image
+  const handleRemoveReferenceImage = (id: string) => {
+    setReferenceImages(prev => prev.filter(r => r.id !== id));
   };
 
-  const handleToggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
+  // Add Character Handler
+  const handleAddCharacter = () => {
+    if (!newCharName.trim()) return;
+    const newChar: CharacterProfile = {
+      id: `char-${Date.now()}`,
+      name: newCharName.trim(),
+      description: newCharDesc.trim() || 'Personaje de la historia'
+    };
+    setCharacters(prev => [...prev, newChar]);
+    setNewCharName('');
+    setNewCharDesc('');
   };
 
-  const handleChangeSpeed = (speed: number) => {
-    setPlaybackRate(speed);
-    if (videoRef.current) {
-      videoRef.current.playbackRate = speed;
-    }
+  // Remove Character
+  const handleRemoveCharacter = (id: string) => {
+    setCharacters(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleToggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
-      }
-    }
-  };
-
-  // Enhance Prompt using Director AI
+  // Enhance prompt with Director AI
   const handleEnhancePrompt = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isEnhancingPrompt) return;
     setIsEnhancingPrompt(true);
+
     try {
       const res = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          draftPrompt: `Genera una descripción cinematográfica detallada para renderizar un video con: ${prompt}. Incluye lentes, iluminación, texturas y física de movimiento.`
+          prompt: prompt,
+          style: selectedStyle,
+          type: studioMode === 'movie' ? 'movie' : 'video'
         })
       });
-      const data = await res.json();
-      if (data.enhancedPrompt) {
-        setPrompt(data.enhancedPrompt);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.enhancedPrompt) {
+          setPrompt(data.enhancedPrompt);
+        }
       }
     } catch (e) {
-      console.error('Error enhancing video prompt:', e);
+      console.warn('Enhance prompt fallback:', e);
+      setPrompt(prev => `${prev}, 8k resolution, photorealistic cinematic lighting, anamorphic lens flare, masterwork`);
     } finally {
       setIsEnhancingPrompt(false);
     }
   };
 
-  // Handle Image Upload for Image-to-Video
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setUploadedImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  // Helper: Poll Veo Video Operation
+  const pollVeoOperation = async (
+    operationName: string,
+    onStatusUpdate?: (step: string, progress: number) => void
+  ): Promise<{ videoUrl: string; downloadUrl?: string }> => {
+    const maxAttempts = 60; // 5 minutes max
+    let attempts = 0;
+
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(async () => {
+        attempts++;
+        const estimatedProgress = Math.min(95, 20 + Math.floor(attempts * 2.5));
+        onStatusUpdate?.(
+          `Renderizando fotogramas con Veo 3.1 (${attempts * 5}s transcurridos)...`,
+          estimatedProgress
+        );
+
+        try {
+          const res = await fetch('/api/video/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ operationName })
+          });
+
+          if (!res.ok) {
+            throw new Error(`Error en el servidor de video (${res.status})`);
+          }
+
+          const data = await res.json();
+
+          if (data.done) {
+            clearInterval(interval);
+            if (data.error) {
+              reject(new Error(data.error));
+            } else if (data.hasVideo && data.videoUrl) {
+              resolve({
+                videoUrl: data.videoUrl,
+                downloadUrl: data.downloadUrl
+              });
+            } else {
+              reject(new Error('La operación finalizó pero no devolvió el archivo de video'));
+            }
+          }
+
+          if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            reject(new Error('Tiempo de espera agotado al renderizar el video'));
+          }
+        } catch (err: any) {
+          clearInterval(interval);
+          reject(err);
+        }
+      }, 5000);
+    });
   };
 
-  // Generate Video with Cloud Sora / Veo AI
-  const handleGenerateVideo = async () => {
-    const effectivePrompt = prompt.trim() || activeProject.prompt || 'Metrópolis Cyberpunk en lluvia neón con autos voladores 8K';
+  // 1. Generate Full Movie Storyboard & Scenes
+  const handleGenerateMovie = async () => {
+    const effectivePrompt = prompt.trim() || 'El misterio del felino cibernético en la ciudad de neón';
 
     setIsGenerating(true);
+    setGenerationError(null);
     setGenerationProgress(10);
-    setGenerationStep('Planificando dirección de arte y composición cinematográfica...');
+    setGenerationStep('🎬 Escribiendo guión cinemático, reparto y actos con Director IA (Gemini 3.7 Flash)...');
 
     try {
-      const progressTimer = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 90) return prev;
-          if (prev === 30) setGenerationStep('Configurando trayectoria de cámara y física de partículas...');
-          if (prev === 60) setGenerationStep('Renderizando fotogramas clave y animación en alta definición...');
-          if (prev === 80) setGenerationStep('Compilando pistas de video, iluminación volumétrica y audio...');
-          return prev + 15;
-        });
-      }, 700);
-
-      const res = await fetch('/api/generate-video', {
+      const res = await fetch('/api/video/storyboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          title: effectivePrompt.slice(0, 45),
           prompt: effectivePrompt,
-          imageUrl: uploadedImage,
+          genre: movieGenre,
           style: selectedStyle,
-          duration: duration,
+          sceneCount: sceneCount,
           aspectRatio: aspectRatio,
-          cameraMotion: selectedCamera,
-          fps: fps
+          resolution: resolution,
+          characters: characters,
+          audioPrompt: audioPrompt
         })
       });
 
-      clearInterval(progressTimer);
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.video) {
-          setGenerationProgress(100);
-          setGenerationStep('¡Renderizado completado con éxito!');
-          const newProj: VideoProject = data.video;
-          setActiveProject(newProj);
-          setActiveTab('player');
-          setProjectsList(prev => [newProj, ...prev]);
-          setTimeout(() => {
-            setIsGenerating(false);
-          }, 400);
-          return;
-        }
+      if (!res.ok) {
+        throw new Error('Error al contactar el servidor de storyboard');
       }
 
-      // If backend was unreachable or returned error, produce with local canvas engine
-      await handleProduceLocalCanvasVideo();
+      const data = await res.json();
+      if (!data.movie) {
+        throw new Error(data.error || 'No se pudo generar el guión de la película');
+      }
+
+      const newMovie: VideoProject = data.movie;
+      setActiveProject(newMovie);
+      setProjectsList(prev => [newMovie, ...prev.filter(p => p.id !== newMovie.id)]);
+      setActiveTab('storyboard');
+      setGenerationProgress(30);
+      setGenerationStep('✨ Guión generado con éxito. Iniciando producción de escenas de video con Veo 3.1...');
+
+      // Smooth scroll to view
+      playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Automatically begin rendering Scene 1 with Veo
+      if (newMovie.movieScenes && newMovie.movieScenes.length > 0) {
+        await handleGenerateSingleSceneVideo(newMovie, 0);
+      } else {
+        setIsGenerating(false);
+      }
     } catch (err: any) {
-      console.warn('Fallback to local canvas video recording engine:', err);
-      await handleProduceLocalCanvasVideo();
+      console.error('Error generating movie:', err);
+      const friendlyMsg = parseVideoErrorMessage(err);
+      setGenerationError(friendlyMsg);
+      setRetryAction(() => () => handleGenerateMovie());
+      setIsGenerating(false);
     }
   };
 
-  // Direct In-Browser Canvas Video Producer & MediaRecorder (100% Offline & Instant)
+  // 2. Generate Video for a Specific Scene in a Movie
+  const handleGenerateSingleSceneVideo = async (targetMovie: VideoProject, sceneIndex: number) => {
+    const scenes = targetMovie.movieScenes;
+    if (!scenes || !scenes[sceneIndex]) return;
+
+    const targetScene = scenes[sceneIndex];
+    setGeneratingSceneNumber(targetScene.sceneNumber);
+    setIsGenerating(true);
+    setGenerationError(null);
+    setGenerationStep(`🎬 Iniciando generación de Acto ${targetScene.sceneNumber}: "${targetScene.title}" con Veo...`);
+    setGenerationProgress(35);
+
+    // Update scene status to generating
+    const updatedScenes = [...scenes];
+    updatedScenes[sceneIndex] = {
+      ...targetScene,
+      status: 'generating',
+      errorMessage: undefined
+    };
+
+    const updatedMovie: VideoProject = {
+      ...targetMovie,
+      movieScenes: updatedScenes
+    };
+    setActiveProject(updatedMovie);
+    setProjectsList(prev => prev.map(p => p.id === updatedMovie.id ? updatedMovie : p));
+
+    try {
+      const charDescriptions = characters.length > 0
+        ? `Characters: ${characters.map(c => `${c.name} (${c.description})`).join(', ')}. `
+        : '';
+
+      const effectiveScenePrompt = targetScene.videoPrompt
+        ? `${charDescriptions}${targetScene.videoPrompt}`
+        : `${charDescriptions}${targetScene.description}, ${targetScene.cameraAngle || ''}, ${targetScene.lighting || ''}, ${targetMovie.style || 'cinematic 8k'}`;
+
+      // Start generation with Veo
+      const genRes = await fetch('/api/video/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: effectiveScenePrompt,
+          model: 'veo-3.1-generate-preview',
+          aspectRatio: targetMovie.aspectRatio === '9:16' ? '9:16' : '16:9',
+          resolution: resolution,
+          duration: 5,
+          referenceImages: referenceImages.map(r => ({ imageBytes: r.base64, mimeType: 'image/png' }))
+        })
+      });
+
+      const genData = await genRes.json();
+      if (!genRes.ok || !genData.success || !genData.operationName) {
+        throw new Error(genData.error || 'No se pudo iniciar la generación con el modelo Veo');
+      }
+
+      const operationName = genData.operationName;
+      setGenerationStep(`⏳ Renderizando Acto ${targetScene.sceneNumber} con Veo 3.1...`);
+
+      // Poll until done
+      const pollResult = await pollVeoOperation(operationName, (step, pct) => {
+        setGenerationStep(`Acto ${targetScene.sceneNumber}: ${step}`);
+        setGenerationProgress(pct);
+      });
+
+      // Update scene with real video URL
+      const finalScenes = [...(activeProject.movieScenes || updatedScenes)];
+      finalScenes[sceneIndex] = {
+        ...finalScenes[sceneIndex],
+        videoUrl: pollResult.videoUrl,
+        operationName: operationName,
+        status: 'completed',
+        errorMessage: undefined
+      };
+
+      const finalMovie: VideoProject = {
+        ...activeProject,
+        videoUrl: pollResult.videoUrl,
+        movieScenes: finalScenes,
+        generationStatus: 'completed'
+      };
+
+      setActiveProject(finalMovie);
+      setProjectsList(prev => prev.map(p => p.id === finalMovie.id ? finalMovie : p));
+      setSelectedSceneIndex(sceneIndex);
+      setGenerationProgress(100);
+      setGenerationStep(`✅ ¡Acto ${targetScene.sceneNumber} completado con éxito!`);
+
+      setTimeout(() => {
+        setIsGenerating(false);
+        setGeneratingSceneNumber(null);
+      }, 1500);
+    } catch (err: any) {
+      console.error(`Error rendering scene ${targetScene.sceneNumber}:`, err);
+      const friendlyMsg = parseVideoErrorMessage(err);
+      const failedScenes = [...(activeProject.movieScenes || updatedScenes)];
+      failedScenes[sceneIndex] = {
+        ...failedScenes[sceneIndex],
+        status: 'failed',
+        errorMessage: friendlyMsg
+      };
+
+      const failedMovie: VideoProject = {
+        ...activeProject,
+        movieScenes: failedScenes
+      };
+
+      setActiveProject(failedMovie);
+      setProjectsList(prev => prev.map(p => p.id === failedMovie.id ? failedMovie : p));
+      setGenerationError(`Acto ${targetScene.sceneNumber}: ${friendlyMsg}`);
+      setRetryAction(() => () => handleGenerateSingleSceneVideo(failedMovie, sceneIndex));
+      setIsGenerating(false);
+      setGeneratingSceneNumber(null);
+    }
+  };
+
+  // 3. Generate Single Clip Video (Text-to-Video / Image-to-Video)
+  const handleGenerateSingleClip = async () => {
+    const effectivePrompt = prompt.trim() || 'Metrópolis Cyberpunk en lluvia neón con autos voladores 8K';
+
+    setIsGenerating(true);
+    setGenerationError(null);
+    setGenerationProgress(15);
+    setGenerationStep(
+      uploadedImage
+        ? '🎨 Animando imagen con Google Veo 3.1...'
+        : '🎬 Iniciando generación de clip de video con Veo 3.1...'
+    );
+
+    try {
+      const charDescriptions = characters.length > 0
+        ? `Characters: ${characters.map(c => `${c.name} (${c.description})`).join(', ')}. `
+        : '';
+
+      const fullPrompt = `${charDescriptions}${effectivePrompt}, ${selectedStyle}, ${selectedCamera}, ultra high quality, 8k masterpiece`;
+
+      const genRes = await fetch('/api/video/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          model: 'veo-3.1-generate-preview',
+          aspectRatio: aspectRatio === '9:16' ? '9:16' : '16:9',
+          resolution: resolution,
+          duration: duration,
+          image: uploadedImage ? { imageBytes: uploadedImage, mimeType: 'image/png' } : undefined,
+          referenceImages: referenceImages.map(r => ({ imageBytes: r.base64, mimeType: 'image/png' }))
+        })
+      });
+
+      const genData = await genRes.json();
+      if (!genRes.ok || !genData.success || !genData.operationName) {
+        throw new Error(genData.error || 'No se pudo iniciar la generación con el modelo Veo');
+      }
+
+      const operationName = genData.operationName;
+      setGenerationStep('⏳ Renderizando clip de video con Veo 3.1...');
+
+      const pollResult = await pollVeoOperation(operationName, (step, pct) => {
+        setGenerationStep(step);
+        setGenerationProgress(pct);
+      });
+
+      const newProject: VideoProject = {
+        id: `vid-${Date.now()}`,
+        title: effectivePrompt.slice(0, 40),
+        prompt: effectivePrompt,
+        videoUrl: pollResult.videoUrl,
+        operationName: operationName,
+        posterUrl: uploadedImage || `https://image.pollinations.ai/prompt/${encodeURIComponent(effectivePrompt.slice(0, 60))}%20${encodeURIComponent(selectedStyle)}?width=1280&height=720&nologo=true`,
+        duration: duration,
+        aspectRatio: aspectRatio,
+        resolution: resolution,
+        style: selectedStyle,
+        cameraMotion: selectedCamera,
+        fps: fps,
+        isMovie: false,
+        tags: [selectedStyle, `${duration}s`, 'Veo 3.1'],
+        createdAt: 'Ahora mismo',
+        isFavorite: true,
+        generationStatus: 'completed',
+        storyboard: [
+          {
+            sceneNumber: 1,
+            title: 'Toma Cinemática Veo',
+            description: effectivePrompt,
+            cameraAngle: selectedCamera,
+            lighting: selectedStyle,
+            videoUrl: pollResult.videoUrl,
+            status: 'completed'
+          }
+        ]
+      };
+
+      setActiveProject(newProject);
+      setProjectsList(prev => [newProject, ...prev]);
+      setActiveTab('player');
+      setGenerationProgress(100);
+      setGenerationStep('✅ ¡Video generado con Veo 3.1 listo para reproducir!');
+
+      setTimeout(() => {
+        playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setIsGenerating(false);
+      }, 1000);
+    } catch (err: any) {
+      console.error('Error generating clip:', err);
+      setGenerationError(err.message || 'Error al generar video');
+      setIsGenerating(false);
+    }
+  };
+
+  // 4. Extend Video
+  const handleExtendVideo = async () => {
+    if (!activeProject.operationName && !activeProject.videoUrl) {
+      setGenerationError('Se requiere un video previo completado para poder extenderlo.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationError(null);
+    setGenerationProgress(15);
+    setGenerationStep('🎬 Extendiendo video con Veo 3.1...');
+
+    try {
+      const res = await fetch('/api/video/extend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: extendPrompt.trim() || 'Continúa la escena suavemente con movimiento de cámara',
+          previousOperationName: activeProject.operationName || '',
+          aspectRatio: activeProject.aspectRatio === '9:16' ? '9:16' : '16:9'
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.operationName) {
+        throw new Error(data.error || 'No se pudo extender el video');
+      }
+
+      const pollResult = await pollVeoOperation(data.operationName, (step, pct) => {
+        setGenerationStep(step);
+        setGenerationProgress(pct);
+      });
+
+      const extendedProject: VideoProject = {
+        id: `ext-${Date.now()}`,
+        title: `${activeProject.title} (Extensión)`,
+        prompt: `${activeProject.prompt} -> ${extendPrompt}`,
+        videoUrl: pollResult.videoUrl,
+        operationName: data.operationName,
+        posterUrl: activeProject.posterUrl,
+        duration: activeProject.duration + 5,
+        aspectRatio: activeProject.aspectRatio,
+        style: activeProject.style,
+        cameraMotion: activeProject.cameraMotion,
+        fps: activeProject.fps,
+        tags: [...(activeProject.tags || []), 'Extensión Veo'],
+        createdAt: 'Ahora mismo',
+        isFavorite: true,
+        generationStatus: 'completed'
+      };
+
+      setActiveProject(extendedProject);
+      setProjectsList(prev => [extendedProject, ...prev]);
+      setActiveTab('player');
+      setGenerationProgress(100);
+      setGenerationStep('✅ ¡Extensión de video completada!');
+
+      setTimeout(() => {
+        playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setIsGenerating(false);
+      }, 1000);
+    } catch (err: any) {
+      console.error('Error extending video:', err);
+      setGenerationError(err.message || 'Error al extender video');
+      setIsGenerating(false);
+    }
+  };
+
+  // Direct In-Browser Canvas Video Producer & MediaRecorder fallback
   const handleProduceLocalCanvasVideo = async () => {
     const effectivePrompt = prompt.trim() || activeProject.prompt || 'Metrópolis Cyberpunk en lluvia neón con autos voladores 8K';
 
     setIsGenerating(true);
-    setGenerationProgress(5);
+    setGenerationError(null);
+    setGenerationProgress(10);
     setGenerationStep('Iniciando motor de renderizado Canvas 60 FPS...');
 
     try {
@@ -373,7 +778,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
         durationSeconds: duration || 8,
         fps: fps || 30,
         width: aspectRatio === '9:16' ? 720 : 1280,
-        height: aspectRatio === '9:16' ? 1280 : (aspectRatio === '1:1' ? 720 : 720),
+        height: aspectRatio === '9:16' ? 1280 : 720,
         backgroundImageUrl: uploadedImage || activeProject.posterUrl || undefined,
         title: effectivePrompt.slice(0, 35) || 'Video Cinemático IA',
         cameraMotion: selectedCamera,
@@ -385,7 +790,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
 
       const newProj: VideoProject = {
         id: 'vid-local-' + Date.now(),
-        title: effectivePrompt.slice(0, 40) || 'Video Animado IA',
+        title: effectivePrompt.slice(0, 40) || 'Video Animado Canvas',
         prompt: effectivePrompt,
         videoUrl: videoResult.blobUrl,
         posterUrl: videoResult.thumbnailUrl,
@@ -395,26 +800,31 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
         cameraMotion: selectedCamera,
         fps: fps,
         tags: ['Canvas 60FPS', selectedStyle, 'Render Directo'],
-        createdAt: new Date().toISOString(),
+        createdAt: 'Ahora mismo',
         storyboard: [
           {
             sceneNumber: 1,
             title: 'Entrada Cinemática y Partículas',
-            description: `Animación volumétrica con estilo ${selectedStyle} y movimiento ${selectedCamera}.`
+            description: `Animación volumétrica con estilo ${selectedStyle} y movimiento ${selectedCamera}.`,
+            videoUrl: videoResult.blobUrl,
+            status: 'completed'
           }
         ]
       };
 
       setActiveProject(newProj);
       setProjectsList(prev => [newProj, ...prev]);
+      setActiveTab('player');
       setGenerationProgress(100);
       setGenerationStep('¡Video generado y grabado con éxito!');
 
       setTimeout(() => {
+        playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setIsGenerating(false);
       }, 500);
     } catch (localErr: any) {
       console.error('Error during local canvas video production:', localErr);
+      setGenerationError('Error en renderizado Canvas local');
       setIsGenerating(false);
     }
   };
@@ -425,18 +835,17 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
     setTimeout(() => setCopiedPrompt(false), 2000);
   };
 
-  const handleDownloadVideo = async (targetVideo?: VideoProject) => {
+  const handleDownloadVideo = async (targetVideo?: VideoProject, specificUrl?: string) => {
     const proj = targetVideo || activeProject;
-    if (!proj?.videoUrl || isDownloading) return;
+    const url = specificUrl || proj?.videoUrl;
+    if (!url || isDownloading) return;
     setIsDownloading(true);
 
     try {
       const filename = `${(proj.title || 'chepe_video_ia').replace(/[^a-zA-Z0-9_-]/g, '_')}.mp4`;
-      const proxyUrl = `/api/download-video?url=${encodeURIComponent(proj.videoUrl)}&filename=${encodeURIComponent(filename)}`;
 
-      // Try client blob download
       try {
-        const res = await fetch(proj.videoUrl, { mode: 'cors' });
+        const res = await fetch(url, { mode: 'cors' });
         if (res.ok) {
           const blob = await res.blob();
           const blobUrl = URL.createObjectURL(blob);
@@ -450,53 +859,70 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
           setIsDownloading(false);
           return;
         }
-      } catch (blobErr) {
-        console.warn('CORS blob download fallback to proxy:', blobErr);
+      } catch (directErr) {
+        console.warn('Direct fetch download fallback to link:', directErr);
       }
 
-      // Proxy fallback
       const a = document.createElement('a');
-      a.href = proxyUrl;
-      a.download = filename;
+      a.href = url;
       a.target = '_blank';
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } catch (err) {
-      console.error('Error downloading video:', err);
-      window.open(proj.videoUrl, '_blank');
+    } catch (e) {
+      console.error('Download error:', e);
     } finally {
-      setTimeout(() => setIsDownloading(false), 1500);
+      setIsDownloading(false);
     }
   };
 
+  const currentScene = activeProject.isMovie && activeProject.movieScenes
+    ? activeProject.movieScenes[selectedSceneIndex]
+    : null;
+
   return (
-    <div id="video-studio-module" className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
-      {/* Studio Banner Header */}
-      <div className="rounded-3xl bg-gradient-to-r from-[#0B132B] via-[#0D1B3E] to-[#0A1628] border border-cyan-500/30 p-5 sm:p-7 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Studio Header Banner */}
+      <div className="relative rounded-3xl bg-gradient-to-r from-[#030712] via-[#08132B] to-[#040C1A] border border-cyan-500/30 p-6 shadow-2xl overflow-hidden">
+        <div className="absolute -right-10 -top-10 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-10 -bottom-10 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-[#00E5FF]/20 text-[#00E5FF] text-[11px] font-extrabold uppercase tracking-wider border border-[#00E5FF]/40 flex items-center gap-1.5">
+              <span className="px-3 py-1 rounded-full bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black tracking-wider uppercase border border-[#00E5FF]/30 flex items-center gap-1.5 shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" />
-                Motor Sora & Veo Ultra Pro
+                Estudio Cinemático & Películas IA
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
-                8K HDR 60FPS
+              <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/40">
+                Google Veo 3.1 • Gemini 3.7 Flash
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
-              <Clapperboard className="w-7 h-7 text-[#00E5FF]" />
-              Estudio de Video & Animación IA
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+              Generador de Películas y Videos Ultra HD
             </h1>
-            <p className="text-xs sm:text-sm text-stone-300 max-w-2xl">
-              Crea videos cinemáticos, animaciones ultra realistas, clips publicitarios y reels a partir de texto o imágenes con control total de cámara, lentes, iluminación y guión visual.
+            <p className="text-xs md:text-sm text-stone-300 max-w-2xl leading-relaxed">
+              Crea cortometrajes multi-escena con guión técnico y reparto, genera clips de video con Veo 3.1, o anima fotos y extiende videos directamente a MP4.
             </p>
           </div>
 
-          {/* Quick Switch Modes */}
-          <div className="flex items-center gap-2 bg-[#050A14]/80 p-1.5 rounded-2xl border border-cyan-900/60 self-start md:self-center shrink-0">
+          {/* Mode Tabs */}
+          <div className="flex items-center gap-1.5 bg-[#050A14] p-1.5 rounded-2xl border border-cyan-900/60 shadow-inner flex-wrap">
+            <button
+              onClick={() => {
+                setStudioMode('movie');
+                if (activeProject.isMovie) setActiveTab('player');
+              }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                studioMode === 'movie'
+                  ? 'bg-gradient-to-r from-[#00E5FF] to-blue-500 text-stone-950 shadow-md shadow-cyan-500/30'
+                  : 'text-stone-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Clapperboard className="w-3.5 h-3.5" />
+              🎬 Película Completa IA
+            </button>
             <button
               onClick={() => setStudioMode('text')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -506,7 +932,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               }`}
             >
               <Wand2 className="w-3.5 h-3.5" />
-              Texto a Video
+              Clip de Video
             </button>
             <button
               onClick={() => setStudioMode('image')}
@@ -520,7 +946,21 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               Imagen a Video
             </button>
             <button
-              onClick={() => setStudioMode('storyboard')}
+              onClick={() => setStudioMode('extend')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                studioMode === 'extend'
+                  ? 'bg-[#00E5FF] text-stone-950 shadow-md shadow-cyan-500/20'
+                  : 'text-stone-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <FastForward className="w-3.5 h-3.5" />
+              Extender Video
+            </button>
+            <button
+              onClick={() => {
+                setStudioMode('storyboard');
+                setActiveTab('storyboard');
+              }}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 studioMode === 'storyboard'
                   ? 'bg-[#00E5FF] text-stone-950 shadow-md shadow-cyan-500/20'
@@ -528,7 +968,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               }`}
             >
               <Film className="w-3.5 h-3.5" />
-              Storyboard IA
+              Storyboard
             </button>
           </div>
         </div>
@@ -539,11 +979,40 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
         {/* Left Column: Creator / Parameters Form (5 Cols) */}
         <div className="lg:col-span-5 space-y-5">
           <div className="rounded-3xl bg-[#080E1C] border border-cyan-900/40 p-5 space-y-4 shadow-xl">
-            {/* Mode Specific Inputs */}
+            {/* Mode Specific Banner */}
+            {studioMode === 'movie' && (
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/40 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#00E5FF] text-stone-950 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/30">
+                  <Clapperboard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-white">Director de Cine Multi-Escena</h4>
+                  <p className="text-[11px] text-cyan-200">
+                    Crea storyboard con Gemini 3.7 y produce cada escena con Veo 3.1 manteniendo consistencia de personajes.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {studioMode === 'extend' && (
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-950/80 to-indigo-950/80 border border-blue-500/40 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-400 text-stone-950 flex items-center justify-center shrink-0 shadow-lg">
+                  <FastForward className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-white">Modo Extensión de Video</h4>
+                  <p className="text-[11px] text-blue-200">
+                    Continúa la acción del video seleccionado ("{activeProject.title}") con una nueva toma fluida.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Mode Specific: Image to Video Upload */}
             {studioMode === 'image' && (
               <div className="space-y-2">
                 <label className="text-xs font-bold text-cyan-300 flex items-center justify-between">
-                  <span>Imagen de Referencia para Animar</span>
+                  <span>Imagen de Referencia para Animar (Veo 3.1)</span>
                   {uploadedImage && (
                     <button
                       onClick={() => setUploadedImage(null)}
@@ -568,7 +1037,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                     <span className="text-xs font-semibold text-stone-200">
                       Haz clic o arrastra una imagen aquí
                     </span>
-                    <span className="text-[10px] text-stone-400">PNG, JPG, WebP hasta 10MB</span>
+                    <span className="text-[10px] text-stone-400">PNG, JPG hasta 10MB</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -580,12 +1049,162 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               </div>
             )}
 
+            {/* Movie Genre & Scene Count (Only in Movie Mode) */}
+            {studioMode === 'movie' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-300 flex items-center gap-1">
+                    <Film className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    Género Fílmico
+                  </label>
+                  <select
+                    value={movieGenre}
+                    onChange={(e) => setMovieGenre(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-[#050A14] border border-cyan-900/60 text-xs text-stone-200 font-semibold focus:outline-none focus:border-[#00E5FF] cursor-pointer"
+                  >
+                    {MOVIE_GENRES.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-300 flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    Número de Actos
+                  </label>
+                  <div className="grid grid-cols-4 gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
+                    {[3, 4, 5, 6].map(num => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setSceneCount(num)}
+                        className={`py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                          sceneCount === num
+                            ? 'bg-[#00E5FF] text-stone-950 font-black'
+                            : 'text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Character Consistency Panel & Reference Images Bar */}
+            <div className="p-3 rounded-2xl bg-[#050A14] border border-cyan-950 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  Personajes ({characters.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCharacterModal(!showCharacterModal)}
+                  className="text-[11px] text-[#00E5FF] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  {showCharacterModal ? 'Cerrar editor' : 'Gestionar personajes'}
+                </button>
+              </div>
+
+              {/* Character Chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {characters.map(c => (
+                  <div
+                    key={c.id}
+                    className="px-2.5 py-1 rounded-xl bg-[#08132B] border border-cyan-500/30 text-white text-[11px] flex items-center gap-1.5"
+                  >
+                    <span className="font-bold text-[#00E5FF]">{c.name}:</span>
+                    <span className="text-stone-300 truncate max-w-[120px]">{c.description}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCharacter(c.id)}
+                      className="text-stone-400 hover:text-red-400 ml-1 cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Character Input Form when modal open */}
+              {showCharacterModal && (
+                <div className="p-2.5 rounded-xl bg-[#080E1C] border border-cyan-900/60 space-y-2 animate-in fade-in">
+                  <input
+                    type="text"
+                    value={newCharName}
+                    onChange={(e) => setNewCharName(e.target.value)}
+                    placeholder="Nombre del personaje (ej: Leo, Dra. Vance)"
+                    className="w-full p-2 rounded-lg bg-[#050A14] border border-cyan-950 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00E5FF]"
+                  />
+                  <input
+                    type="text"
+                    value={newCharDesc}
+                    onChange={(e) => setNewCharDesc(e.target.value)}
+                    placeholder="Descripción visual (ej: Chaqueta azul, visor cian, pelo castaño)"
+                    className="w-full p-2 rounded-lg bg-[#050A14] border border-cyan-950 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00E5FF]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCharacter}
+                    disabled={!newCharName.trim()}
+                    className="w-full py-1.5 rounded-lg bg-[#00E5FF] text-stone-950 text-xs font-bold disabled:opacity-40 cursor-pointer"
+                  >
+                    + Agregar Personaje a la Producción
+                  </button>
+                </div>
+              )}
+
+              {/* Reference Images (Up to 3) */}
+              <div className="pt-2 border-t border-cyan-950/80 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[11px] font-bold text-stone-400 flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3 text-cyan-400" />
+                  Referencias visuales Veo ({referenceImages.length}/3):
+                </span>
+                <label className="text-[10px] font-bold text-[#00E5FF] hover:underline cursor-pointer flex items-center gap-1">
+                  <Plus className="w-3 h-3" />
+                  + Agregar referencia
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAddReferenceImage}
+                    className="hidden"
+                    disabled={referenceImages.length >= 3}
+                  />
+                </label>
+              </div>
+
+              {referenceImages.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto py-1">
+                  {referenceImages.map(ref => (
+                    <div key={ref.id} className="relative w-14 h-14 rounded-lg overflow-hidden border border-cyan-500/50 shrink-0 group">
+                      <img src={ref.base64} alt={ref.name} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveReferenceImage(ref.id)}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-400 text-xs font-bold transition-opacity cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Prompt Textarea & Fast Suggestion Pills */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
                   <Wand2 className="w-3.5 h-3.5 text-[#00E5FF]" />
-                  {studioMode === 'image' ? 'Instrucciones de Movimiento & Animación' : 'Descripción del Video (Prompt)'}
+                  {studioMode === 'movie'
+                    ? 'Argumento / Idea de la Película'
+                    : (studioMode === 'extend'
+                        ? 'Prompt de Continuación de Escena'
+                        : (studioMode === 'image' ? 'Instrucciones de Movimiento & Animación' : 'Descripción del Video (Prompt)'))}
                 </label>
                 <button
                   type="button"
@@ -598,36 +1217,46 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                 </button>
               </div>
 
-              <div className="relative">
+              {studioMode === 'extend' ? (
+                <textarea
+                  value={extendPrompt}
+                  onChange={(e) => setExtendPrompt(e.target.value)}
+                  placeholder="Describe cómo continúa la escena: 'La cámara avanza lentamente hacia el interior del templo revelando los pilares de luz...'"
+                  rows={3}
+                  className="w-full rounded-2xl bg-[#050A14] border border-cyan-900/50 p-3.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00E5FF] transition-all resize-none shadow-inner"
+                />
+              ) : (
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder={
-                    studioMode === 'image'
-                      ? 'Describe el movimiento: "Zoom suave con partículas doradas y reflejos cinemáticos..."'
-                      : 'Describe la escena: "Un coche volador atravesando rascacielos neón bajo la lluvia en Tokio 8K..."'
+                    studioMode === 'movie'
+                      ? 'Describe la historia: "Un gato astronauta descubre una antigua reliquia en Marte que despierta una civilización alienígena..."'
+                      : (studioMode === 'image'
+                        ? 'Describe el movimiento: "Zoom suave con partículas doradas y reflejos cinemáticos..."'
+                        : 'Describe la escena: "Un coche volador atravesando rascacielos neón bajo la lluvia en Tokio 8K..."')
                   }
                   rows={3}
                   className="w-full rounded-2xl bg-[#050A14] border border-cyan-900/50 p-3.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00E5FF] transition-all resize-none shadow-inner"
                 />
-              </div>
+              )}
 
               {/* Quick Idea Presets */}
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-stone-400">⚡ Ideas Rápidas para Crear:</span>
+                <span className="text-[10px] font-bold text-stone-400">⚡ Ideas Populares:</span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    'Metrópolis Cyberpunk en lluvia neón con autos voladores',
-                    'Viaje por un túnel cuántico de datos a velocidad luz',
-                    'Atardecer dorado en el océano con olas en cámara lenta',
-                    'Bosque místico de Studio Ghibli con luciérnagas mágicas',
-                    'Nave espacial cruzando los anillos de Saturno en 8K'
+                    'Un gato astronauta navegando entre nebulosas y salvando la galaxia',
+                    'Metrópolis Cyberpunk en lluvia neón con autos voladores 8K',
+                    'Cabaña en bosque mágico de Studio Ghibli con espíritus del agua',
+                    'Aventura submarina en las ruinas perdidas de la Atlántida',
+                    'Batalla espacial épica de naves estelares en los anillos de Saturno'
                   ].map((idea, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setPrompt(idea)}
-                      className="px-2 py-1 rounded-lg bg-[#061226] hover:bg-[#0B2248] text-cyan-300 hover:text-white border border-cyan-900/40 text-[10px] truncate max-w-[210px] transition-all cursor-pointer text-left"
+                      className="px-2 py-1 rounded-lg bg-[#061226] hover:bg-[#0B2248] text-cyan-300 hover:text-white border border-cyan-900/40 text-[10px] truncate max-w-[220px] transition-all cursor-pointer text-left"
                     >
                       ✨ {idea}
                     </button>
@@ -680,7 +1309,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               </select>
             </div>
 
-            {/* Aspect Ratio, Duration & FPS */}
+            {/* Aspect Ratio, Resolution & Duration */}
             <div className="grid grid-cols-3 gap-2.5 pt-1">
               {/* Aspect Ratio */}
               <div className="space-y-1.5">
@@ -689,7 +1318,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                   Formato
                 </span>
                 <div className="grid grid-cols-2 gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
-                  {(['16:9', '9:16', '1:1', '4:3'] as const).map(ratio => (
+                  {(['16:9', '9:16'] as const).map(ratio => (
                     <button
                       key={ratio}
                       type="button"
@@ -706,14 +1335,38 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                 </div>
               </div>
 
+              {/* Resolution */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-stone-400 flex items-center gap-1">
+                  <Radio className="w-3 h-3 text-cyan-400" />
+                  Calidad
+                </span>
+                <div className="grid grid-cols-2 gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
+                  {(['720p', '1080p'] as const).map(res => (
+                    <button
+                      key={res}
+                      type="button"
+                      onClick={() => setResolution(res)}
+                      className={`py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                        resolution === res
+                          ? 'bg-[#00E5FF] text-stone-950 font-black'
+                          : 'text-stone-400 hover:text-white'
+                      }`}
+                    >
+                      {res}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Duration */}
               <div className="space-y-1.5">
                 <span className="text-[10px] font-bold text-stone-400 flex items-center gap-1">
                   <Clock className="w-3 h-3 text-cyan-400" />
                   Duración
                 </span>
-                <div className="grid grid-cols-3 gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
-                  {[5, 10, 15].map(sec => (
+                <div className="grid grid-cols-2 gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
+                  {[5, 10].map(sec => (
                     <button
                       key={sec}
                       type="button"
@@ -729,52 +1382,95 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* Frame Rate */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-stone-400 flex items-center gap-1">
-                  <Radio className="w-3 h-3 text-cyan-400" />
-                  Tasa FPS
-                </span>
-                <div className="grid grid-cols-2 gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
-                  {[30, 60].map(val => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setFps(val)}
-                      className={`py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                        fps === val
-                          ? 'bg-[#00E5FF] text-stone-950 font-black'
-                          : 'text-stone-400 hover:text-white'
-                      }`}
-                    >
-                      {val}fps
-                    </button>
-                  ))}
+            {/* Error Message Box */}
+            {generationError && (
+              <div className="p-3 rounded-2xl bg-red-950/60 border border-red-500/40 text-xs text-red-200 space-y-1.5 animate-in fade-in">
+                <div className="flex items-center gap-1.5 font-bold text-red-300">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                  <span>Aviso del Estudio de Video:</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">{generationError}</p>
+                <div className="pt-1 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGenerationError(null)}
+                    className="px-2.5 py-1 rounded-lg bg-red-900/50 hover:bg-red-800 text-[10px] font-bold text-white cursor-pointer"
+                  >
+                    Entendido
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProduceLocalCanvasVideo}
+                    className="px-2.5 py-1 rounded-lg bg-[#00E5FF]/20 hover:bg-[#00E5FF]/30 text-[#00E5FF] border border-[#00E5FF]/30 text-[10px] font-bold cursor-pointer"
+                  >
+                    Renderizar con Canvas 60FPS
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Generate Action Buttons */}
             <div className="space-y-2 pt-1">
-              <button
-                type="button"
-                onClick={handleGenerateVideo}
-                disabled={isGenerating || (!prompt.trim() && !uploadedImage)}
-                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#00E5FF] via-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-stone-950 font-black text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-98 cursor-pointer"
-              >
-                {isGenerating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-stone-950" />
-                    <span>Renderizando Clip de Video...</span>
-                  </>
-                ) : (
-                  <>
-                    <Clapperboard className="w-4 h-4 text-stone-950" />
-                    <span>Generar Video IA Sora ({duration}s • {aspectRatio})</span>
-                  </>
-                )}
-              </button>
+              {studioMode === 'movie' ? (
+                <button
+                  type="button"
+                  onClick={handleGenerateMovie}
+                  disabled={isGenerating || !prompt.trim()}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#00E5FF] via-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-stone-950 font-black text-sm shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-98 cursor-pointer"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-stone-950" />
+                      <span>{generationStep || `Produciendo Película (${sceneCount} Actos)...`}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clapperboard className="w-4 h-4 text-stone-950" />
+                      <span>🎬 Producir Película Completa IA ({sceneCount} Actos)</span>
+                    </>
+                  )}
+                </button>
+              ) : studioMode === 'extend' ? (
+                <button
+                  type="button"
+                  onClick={handleExtendVideo}
+                  disabled={isGenerating || !extendPrompt.trim()}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 hover:from-blue-400 hover:to-cyan-300 text-stone-950 font-black text-sm shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-98 cursor-pointer"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-stone-950" />
+                      <span>Extendiendo video con Veo 3.1...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FastForward className="w-4 h-4 text-stone-950" />
+                      <span>Extender Video con Veo 3.1 (+5s)</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleGenerateSingleClip}
+                  disabled={isGenerating || (!prompt.trim() && !uploadedImage)}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#00E5FF] via-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-stone-950 font-black text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-98 cursor-pointer"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-stone-950" />
+                      <span>Renderizando con Veo 3.1...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Film className="w-4 h-4 text-stone-950" />
+                      <span>Generar Video Real con Veo 3.1 ({duration}s • {aspectRatio})</span>
+                    </>
+                  )}
+                </button>
+              )}
 
               <button
                 type="button"
@@ -783,7 +1479,7 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                 className="w-full py-2.5 px-3 rounded-xl bg-[#061024] hover:bg-[#0B1E40] text-cyan-300 hover:text-white border border-cyan-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
-                <span>Producir y Grabar Video Canvas (60 FPS Directo)</span>
+                <span>Generar Video Canvas Directo (60 FPS)</span>
               </button>
             </div>
 
@@ -806,38 +1502,61 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
         </div>
 
         {/* Right Column: Ultra-Pro Player, Storyboard & Inspector (7 Cols) */}
-        <div className="lg:col-span-7 space-y-5">
+        <div ref={playerSectionRef} className="lg:col-span-7 space-y-5">
           {/* Main Interactive Video Player */}
           <div className="rounded-3xl bg-[#080E1C] border border-cyan-900/40 overflow-hidden shadow-2xl space-y-0">
             {/* Player Top Toolbar */}
-            <div className="p-3.5 bg-[#0B132B] border-b border-cyan-950 flex items-center justify-between gap-2">
+            <div className="p-3.5 bg-[#0B132B] border-b border-cyan-950 flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="font-bold text-xs text-white truncate max-w-xs">
                   {activeProject.title}
                 </span>
+                {activeProject.isMovie && (
+                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold text-[10px] border border-amber-500/40">
+                    🎬 Película
+                  </span>
+                )}
                 <span className="px-2 py-0.5 rounded-md bg-[#00E5FF]/10 text-[#00E5FF] font-bold text-[10px] border border-[#00E5FF]/30">
                   {activeProject.style}
                 </span>
               </div>
 
               {/* View Tabs */}
-              <div className="flex items-center gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950">
+              <div className="flex items-center gap-1 bg-[#050A14] p-1 rounded-xl border border-cyan-950 flex-wrap">
                 <button
                   onClick={() => setActiveTab('player')}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     activeTab === 'player' ? 'bg-[#00E5FF] text-stone-950' : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  Reproductor 60 FPS
+                  Reproductor
                 </button>
+                {activeProject.isMovie && (
+                  <button
+                    onClick={() => setActiveTab('movie-script')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      activeTab === 'movie-script' ? 'bg-[#00E5FF] text-stone-950' : 'text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    Guión & Reparto
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveTab('storyboard')}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     activeTab === 'storyboard' ? 'bg-[#00E5FF] text-stone-950' : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  Storyboard ({activeProject.storyboard?.length || 0})
+                  Storyboard ({activeProject.movieScenes?.length || activeProject.storyboard?.length || 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('characters')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    activeTab === 'characters' ? 'bg-[#00E5FF] text-stone-950' : 'text-stone-400 hover:text-white'
+                  }`}
+                >
+                  Personajes ({characters.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('prompt')}
@@ -853,8 +1572,49 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
             {/* Video Canvas / Screen Area */}
             {activeTab === 'player' && (
               <div className="p-2 bg-[#040814]">
+                {/* Scene Switcher Bar for Movies */}
+                {activeProject.isMovie && activeProject.movieScenes && activeProject.movieScenes.length > 0 && (
+                  <div className="mb-2 p-2 bg-[#08132B] rounded-2xl border border-cyan-950 flex items-center justify-between gap-2 overflow-x-auto">
+                    <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                      {activeProject.movieScenes.map((sc, idx) => (
+                        <button
+                          key={sc.sceneNumber || idx}
+                          onClick={() => setSelectedSceneIndex(idx)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                            selectedSceneIndex === idx
+                              ? 'bg-[#00E5FF] text-stone-950 shadow-md shadow-cyan-500/30'
+                              : 'bg-[#050A14] text-stone-300 hover:text-white border border-cyan-900/50'
+                          }`}
+                        >
+                          <span>Acto {idx + 1}:</span>
+                          <span className="truncate max-w-[120px]">{sc.title}</span>
+                          {sc.videoUrl && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {currentScene && !currentScene.videoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateSingleSceneVideo(activeProject, selectedSceneIndex)}
+                        disabled={isGenerating}
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-stone-950 text-xs font-black shrink-0 shadow-md flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Generar Video Acto {selectedSceneIndex + 1}</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Render Player Engine */}
                 <CinematicCanvasPlayer
-                  project={activeProject}
+                  project={{
+                    ...activeProject,
+                    videoUrl: currentScene?.videoUrl || activeProject.videoUrl
+                  }}
                   onProduceNew={(updated) => {
                     setActiveProject(updated);
                     setProjectsList((prev) => [updated, ...prev.filter(x => x.id !== updated.id)]);
@@ -863,47 +1623,230 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
               </div>
             )}
 
-            {/* Storyboard Tab Content */}
+            {/* Movie Script & Cast Tab Content */}
+            {activeTab === 'movie-script' && activeProject.isMovie && (
+              <div className="p-4 bg-[#050A14] min-h-[300px] max-h-[460px] overflow-y-auto space-y-4">
+                {/* Synopsis */}
+                {activeProject.synopsis && (
+                  <div className="p-3.5 rounded-2xl bg-[#080E1C] border border-cyan-900/40 space-y-1.5">
+                    <span className="text-[10px] font-mono font-bold text-[#00E5FF] uppercase block">
+                      📖 Sinopsis Oficial de la Película
+                    </span>
+                    <p className="text-xs text-stone-200 leading-relaxed font-serif">
+                      "{activeProject.synopsis}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Cast List */}
+                {activeProject.cast && activeProject.cast.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      Reparto & Personajes Principales:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {activeProject.cast.map((actorItem, idx) => {
+                        const actor = typeof actorItem === 'string'
+                          ? { name: actorItem, role: 'Personaje', description: '', avatarUrl: undefined }
+                          : actorItem;
+                        return (
+                          <div key={idx} className="p-2.5 rounded-xl bg-[#080E1C] border border-cyan-950 flex items-center gap-3">
+                            {actor.avatarUrl && (
+                              <img src={actor.avatarUrl} alt={actor.name} className="w-10 h-10 rounded-full object-cover border border-cyan-500/40 shrink-0" />
+                            )}
+                            <div className="overflow-hidden">
+                              <h5 className="text-xs font-bold text-white truncate">{actor.name}</h5>
+                              <span className="text-[10px] text-cyan-400 font-semibold block truncate">{actor.role}</span>
+                              {actor.description && (
+                                <span className="text-[9px] text-stone-400 line-clamp-1">{actor.description}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Soundtrack Score */}
+                {activeProject.soundtrack && (
+                  <div className="p-3 rounded-xl bg-[#080E1C] border border-cyan-950 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0">
+                      <Music className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-cyan-400 block">Banda Sonora Original</span>
+                      <h6 className="text-xs font-bold text-white">
+                        {typeof activeProject.soundtrack === 'string' ? activeProject.soundtrack : activeProject.soundtrack.title}
+                      </h6>
+                      {typeof activeProject.soundtrack !== 'string' && activeProject.soundtrack.mood && (
+                        <p className="text-[10px] text-stone-400">{activeProject.soundtrack.mood}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Storyboard Tab Content with Individual Scene Controls */}
             {activeTab === 'storyboard' && (
-              <div className="p-4 bg-[#050A14] min-h-[300px] max-h-[420px] overflow-y-auto space-y-3">
+              <div className="p-4 bg-[#050A14] min-h-[300px] max-h-[480px] overflow-y-auto space-y-4">
                 <div className="flex items-center justify-between text-xs font-bold text-cyan-300 pb-2 border-b border-cyan-950">
-                  <span>Plan de Dirección y Tomas ({activeProject.storyboard?.length || 0} Escenas)</span>
-                  <span className="text-[10px] text-stone-400">Generado por Motor Veo / Sora</span>
+                  <span>Plan de Dirección & Tomas ({activeProject.movieScenes?.length || activeProject.storyboard?.length || 0} Escenas)</span>
+                  <span className="text-[10px] text-stone-400">Google Veo 3.1 HD</span>
                 </div>
-                {activeProject.storyboard && activeProject.storyboard.length > 0 ? (
-                  activeProject.storyboard.map((scene: VideoScene) => (
+
+                {/* If movieScenes are present, show visual scene cards with Veo generation buttons */}
+                {activeProject.movieScenes && activeProject.movieScenes.length > 0 ? (
+                  activeProject.movieScenes.map((scene: MovieScene, idx: number) => (
                     <div
-                      key={scene.sceneNumber}
-                      className="p-3.5 rounded-2xl bg-[#080E1C] border border-cyan-900/40 space-y-2 hover:border-cyan-500/50 transition-colors"
+                      key={scene.sceneNumber || idx}
+                      className="p-3.5 rounded-2xl bg-[#080E1C] border border-cyan-900/40 space-y-3 hover:border-cyan-500/50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 font-bold text-[10px]">
-                          Escena 0{scene.sceneNumber}: {scene.title}
-                        </span>
-                        <span className="text-[10px] text-stone-400 font-mono">
-                          {scene.cameraAngle}
-                        </span>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 font-bold text-[10px]">
+                            Acto 0{scene.sceneNumber}: {scene.title}
+                          </span>
+                          {scene.status === 'completed' && scene.videoUrl && (
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/40 flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              Video Listo
+                            </span>
+                          )}
+                          {scene.status === 'generating' && (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold text-[10px] border border-amber-500/40 flex items-center gap-1 animate-pulse">
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                              Generando con Veo...
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {scene.videoUrl ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedSceneIndex(idx);
+                                  setActiveTab('player');
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-[#00E5FF] text-stone-950 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                              >
+                                <Play className="w-3 h-3 fill-current" />
+                                Reproducir
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadVideo(activeProject, scene.videoUrl)}
+                                className="p-1 rounded-lg bg-cyan-950 text-[#00E5FF] border border-cyan-800 text-[10px] cursor-pointer"
+                                title="Descargar MP4 de esta escena"
+                              >
+                                <Download className="w-3 h-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleGenerateSingleSceneVideo(activeProject, idx)}
+                              disabled={isGenerating}
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-stone-950 text-[10px] font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <Play className="w-3 h-3 fill-current" />
+                              Generar Video Veo
+                            </button>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Scene poster if generated */}
+                      {scene.posterUrl && (
+                        <div className="relative rounded-xl overflow-hidden aspect-video border border-cyan-950">
+                          <img src={scene.posterUrl} alt={scene.title} className="w-full h-full object-cover" />
+                          <span className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded-md text-[9px] font-mono text-cyan-300">
+                            Foto / Fotograma de Acto {scene.sceneNumber}
+                          </span>
+                        </div>
+                      )}
+
                       <p className="text-xs text-stone-200 leading-relaxed">
                         {scene.description}
                       </p>
+
+                      {scene.dialogue && (
+                        <div className="bg-[#050A14] p-2.5 rounded-xl border border-cyan-900/40 text-xs font-serif italic text-cyan-200">
+                          <span className="font-sans font-bold text-[#00E5FF] not-italic text-[10px] block mb-0.5">
+                            {scene.speaker || 'Personaje'}:
+                          </span>
+                          "{scene.dialogue}"
+                        </div>
+                      )}
+
+                      {/* Veo Prompt Inspector */}
+                      {scene.videoPrompt && (
+                        <div className="p-2 rounded-xl bg-[#050A14] border border-cyan-950 space-y-1">
+                          <span className="text-[9px] font-bold text-stone-400 block uppercase">
+                            Directiva de Video Veo (Prompt):
+                          </span>
+                          <p className="text-[10px] text-cyan-300 font-mono line-clamp-2">
+                            {scene.videoPrompt}
+                          </p>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-stone-400">
                         <div className="bg-[#050A14] p-2 rounded-xl border border-cyan-950">
                           <span className="font-bold text-cyan-400 block text-[10px]">💡 Iluminación</span>
-                          <span className="truncate block">{scene.lighting}</span>
+                          <span className="truncate block">{scene.lighting || 'Cinemática'}</span>
                         </div>
                         <div className="bg-[#050A14] p-2 rounded-xl border border-cyan-950">
-                          <span className="font-bold text-cyan-400 block text-[10px]">🎵 SFX & Audio</span>
-                          <span className="truncate block">{scene.audioEffect}</span>
+                          <span className="font-bold text-cyan-400 block text-[10px]">🎥 Cámara</span>
+                          <span className="truncate block">{scene.cameraAngle || 'Dolly In'}</span>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-10 text-stone-500 text-xs">
-                    No hay escenas de storyboard disponibles para este proyecto.
+                    No hay escenas de storyboard disponibles. Haz clic en "🎬 Producir Película Completa IA" para generarlas.
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Characters Tab Content */}
+            {activeTab === 'characters' && (
+              <div className="p-4 bg-[#050A14] min-h-[300px] space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-300">Personajes Registrados para Consistencia:</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCharacterModal(!showCharacterModal)}
+                    className="text-xs text-[#00E5FF] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    + Nuevo Personaje
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {characters.map(char => (
+                    <div key={char.id} className="p-3 rounded-2xl bg-[#080E1C] border border-cyan-950 space-y-1.5 relative group">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-white">{char.name}</h4>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCharacter(char.id)}
+                          className="text-stone-400 hover:text-red-400 text-xs cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-stone-300 leading-relaxed">{char.description}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -940,15 +1883,15 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
             )}
           </div>
 
-          {/* Quick Gallery of AI Videos */}
+          {/* Quick Gallery of AI Videos & Movies */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
                 <Film className="w-4 h-4 text-[#00E5FF]" />
-                Galería de Creaciones de Video
+                Galería de Creaciones de Video & Películas
               </h3>
               <span className="text-[11px] text-stone-400">
-                {projectsList.length} videos generados
+                {projectsList.length} proyectos generados
               </span>
             </div>
 
@@ -966,11 +1909,12 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                     onClick={() => {
                       setActiveProject(item);
                       setActiveTab('player');
+                      playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }}
                     className="relative rounded-xl overflow-hidden aspect-video bg-black cursor-pointer group"
                   >
                     <img
-                      src={item.posterUrl}
+                      src={item.posterUrl || 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop&q=80'}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -982,22 +1926,29 @@ export const VideoStudioModule: React.FC<VideoStudioModuleProps> = ({
                     <span className="absolute bottom-1 right-1 bg-black/70 px-1.5 py-0.5 rounded text-[9px] font-mono text-white">
                       {item.duration}s
                     </span>
+                    {item.isMovie && (
+                      <span className="absolute top-1 left-1 bg-amber-500/90 text-stone-950 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
+                        🎬 Película
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between gap-1">
                     <div className="overflow-hidden">
                       <h4 className="text-xs font-bold text-white truncate">{item.title}</h4>
                       <span className="text-[10px] text-cyan-400 block">{item.style}</span>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadVideo(item);
-                      }}
-                      className="p-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-[#00E5FF] border border-cyan-800 text-[10px] shrink-0 cursor-pointer transition-colors"
-                      title="Descargar este video MP4"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </button>
+                    {item.videoUrl && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadVideo(item);
+                        }}
+                        className="p-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-[#00E5FF] border border-cyan-800 text-[10px] shrink-0 cursor-pointer transition-colors"
+                        title="Descargar este video MP4"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

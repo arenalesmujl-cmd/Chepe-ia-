@@ -51,6 +51,16 @@ export const ModelAvatar: React.FC<ModelAvatarProps> = ({
         return 'bg-purple-500 text-white border-purple-300';
       case 'Perplexity':
         return 'bg-teal-500 text-stone-950 border-teal-300';
+      case 'Stability':
+        return 'bg-fuchsia-500 text-stone-950 border-fuchsia-300';
+      case 'Runway':
+        return 'bg-pink-600 text-white border-pink-300';
+      case 'AudioAI':
+        return 'bg-rose-500 text-white border-rose-300';
+      case 'Moonshot':
+        return 'bg-cyan-600 text-white border-cyan-300';
+      case '01AI':
+        return 'bg-violet-600 text-white border-violet-300';
       case 'Microsoft':
         return 'bg-sky-500 text-white border-sky-300';
       case 'Nvidia':
@@ -63,6 +73,8 @@ export const ModelAvatar: React.FC<ModelAvatarProps> = ({
         return 'bg-purple-600 text-white border-purple-300';
       case 'Baidu':
         return 'bg-blue-600 text-white border-blue-300';
+      case 'ChepeIA':
+        return 'bg-[#00E5FF] text-stone-950 border-cyan-200';
       default:
         return 'bg-[#00E5FF] text-stone-950 border-cyan-200';
     }
