@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CustomServerConfig, SavedConversation, ChatFolder, UserProfile, UploadedFileItem } from './types';
+import { CustomServerConfig, SavedConversation, ChatFolder, UserProfile, UploadedFileItem, SupportedPlan } from './types';
 import { DEFAULT_USER_PROFILE } from './data/chepeData';
 import { Navbar } from './components/Navbar';
 import { SidebarNav } from './components/SidebarNav';
@@ -137,13 +137,29 @@ export default function App() {
     } catch (e) {}
   };
 
-  const handleUpdateUserPlan = (newPlan: 'Gratis' | 'Pro' | 'Premium', expiresAt: string) => {
+  const handleUpdateUserPlan = (newPlan: SupportedPlan, expiresAt: string) => {
+    let limit = 20;
+    if (newPlan === 'Gratis') limit = 20;
+    else if (newPlan === 'Estudiante') limit = 500;
+    else if (newPlan === 'Pro') limit = 1000;
+    else if (newPlan === 'Pro Anual') limit = 2500;
+    else if (newPlan === 'Premium') limit = 10000;
+    else if (newPlan === 'Premium Anual') limit = 25000;
+    else if (newPlan === 'Enterprise' || newPlan === 'Developer VIP') limit = 999999;
+
     const updatedUser: UserProfile = {
       ...userProfile,
       planType: newPlan,
       planExpiresAt: expiresAt,
-      dailyLimit: newPlan === 'Gratis' ? 20 : newPlan === 'Pro' ? 1000 : 10000
+      dailyLimit: limit
     };
+    setUserProfile(updatedUser);
+    try {
+      localStorage.setItem('chepe_auth_user', JSON.stringify(updatedUser));
+    } catch (e) {}
+  };
+
+  const handleUpdateUserProfile = (updatedUser: UserProfile) => {
     setUserProfile(updatedUser);
     try {
       localStorage.setItem('chepe_auth_user', JSON.stringify(updatedUser));
@@ -255,6 +271,8 @@ export default function App() {
         onSelectTab={(tab) => setActiveTab(tab)}
         userRole={userProfile.role}
         isGuest={userProfile.isGuest}
+        userAvatarUrl={userProfile.avatarUrl}
+        userName={userProfile.name}
         onOpenAuthModal={handleOpenAuthModal}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
@@ -272,6 +290,8 @@ export default function App() {
           dailyLimit={userProfile.dailyLimit}
           userName={userProfile.name}
           userRole={userProfile.role}
+          userAvatarUrl={userProfile.avatarUrl}
+          userHeadline={userProfile.professionalProfile?.headline}
           isGuest={userProfile.isGuest}
           onOpenAuthModal={handleOpenAuthModal}
           onLogout={handleLogout}
@@ -367,6 +387,7 @@ export default function App() {
             <ProfileModule
               user={userProfile}
               onUpdateUserPlan={handleUpdateUserPlan}
+              onUpdateUserProfile={handleUpdateUserProfile}
               onOpenSettings={() => setActiveTab('settings')}
             />
           )}

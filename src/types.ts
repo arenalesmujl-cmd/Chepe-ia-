@@ -2,21 +2,27 @@ export type AIModelId =
   // --- OpenAI / ChatGPT ---
   | 'gpt-4o' 
   | 'gpt-4o-mini' 
+  | 'gpt-4.5'
+  | 'gpt-4.5-preview'
   | 'o1' 
   | 'o1-mini'
+  | 'o3'
   | 'o3-mini' 
   | 'o3-preview'
-  | 'gpt-4.5-preview'
   | 'gpt-4-turbo'
   | 'gpt-3.5-turbo'
   | 'chatgpt-canvas'
+  | 'chatgpt-voice-advanced'
   | 'dall-e-3'
   | 'sora-video'
+  | 'sora-turbo'
   | 'whisper-voice'
   // --- Anthropic Claude ---
   | 'claude-3-7-sonnet'
   | 'claude-3-7-thinking'
+  | 'claude-3-7-sonnet-thinking'
   | 'claude-3-5-sonnet'
+  | 'claude-3-5-opus'
   | 'claude-3-5-haiku'
   | 'claude-3-opus'
   | 'claude-3-sonnet'
@@ -26,6 +32,7 @@ export type AIModelId =
   // --- Google Gemini & DeepMind ---
   | 'gemini-2.5-pro'
   | 'gemini-2.5-flash'
+  | 'gemini-live-multimodal'
   | 'gemini-2.0-flash-thinking'
   | 'gemini-2.0-pro-exp'
   | 'gemini-2.0-flash-lite'
@@ -34,6 +41,7 @@ export type AIModelId =
   | 'gemini-3.5-flash' 
   | 'gemini-4.0-ultra' 
   | 'imagen-3'
+  | 'veo-2'
   | 'veo-2-video'
   | 'gemma-2-27b'
   | 'gemma-2-9b'
@@ -41,15 +49,20 @@ export type AIModelId =
   | 'web-grounding'
   // --- DeepSeek ---
   | 'deepseek-r1'
+  | 'deepseek-r1-671b'
   | 'deepseek-r1-zero'
   | 'deepseek-v3'
+  | 'deepseek-v3-moe'
   | 'deepseek-coder'
   | 'deepseek-coder-33b'
   | 'deepseek-math'
   | 'deepseek-vl2'
   | 'deepseek-janus-pro'
+  | 'deepseek-janus-pro-7b'
   // --- Meta AI / Llama ---
+  | 'llama-4-preview'
   | 'llama-3.3-70b'
+  | 'llama-3.3-70b-instruct'
   | 'llama-3.2-90b'
   | 'llama-3.2-vision'
   | 'llama-3.2-11b'
@@ -62,11 +75,13 @@ export type AIModelId =
   | 'meta-moviegen'
   // --- xAI Grok ---
   | 'grok-3'
+  | 'grok-3-max'
   | 'grok-3-deepsearch'
   | 'grok-3-mini'
   | 'grok-2'
   | 'grok-2-vision'
   | 'grok-2-aurora'
+  | 'grok-imagine'
   // --- Mistral AI ---
   | 'mistral-large-2'
   | 'mistral-medium-3'
@@ -97,6 +112,8 @@ export type AIModelId =
   | 'sonar-academic'
   // --- Image Gen & Artistic Leaders ---
   | 'midjourney-v6'
+  | 'midjourney-v6-1'
+  | 'flux-1-pro'
   | 'flux-1-schnell'
   | 'flux-1-dev'
   | 'stable-diffusion-3-5'
@@ -104,10 +121,13 @@ export type AIModelId =
   | 'recraft-v3'
   // --- Cinema Video Generation ---
   | 'runway-gen3'
+  | 'runway-gen3-turbo'
   | 'kling-1-5'
+  | 'kling-1-5-pro'
   | 'pika-2-1'
   | 'hunyuan-video'
   // --- Audio, Voice & Music AI ---
+  | 'suno-v4'
   | 'suno-v3-5'
   | 'udio-v1-5'
   | 'elevenlabs-voice'
@@ -135,7 +155,10 @@ export type AIModelId =
   | 'chepe-3.8' 
   | 'chepe-reasoning-o1'
   | 'chepe-coder-pro'
+  | 'chepe-super-architect'
+  | 'chepe-game-developer'
   | 'chepe-lawyer'
+  | 'chepe-legal-compliance'
   | 'chepe-medic'
   | 'chepe-finance'
   | 'chepe-data-scientist'
@@ -143,6 +166,7 @@ export type AIModelId =
   | 'chepe-writer'
   | 'chepe-polyglot'
   | 'chepe-cybersecurity'
+  | 'chepe-deep-researcher'
   | 'chepe-educator';
 
 export interface AIModelOption {
@@ -304,14 +328,46 @@ export interface SavedConversation {
   firstPrompt: string;
 }
 
+export type SupportedPlan = 'Gratis' | 'Estudiante' | 'Pro' | 'Pro Anual' | 'Premium' | 'Premium Anual' | 'Enterprise' | 'Developer VIP';
+
 export interface LicenseCode {
   id: string;
   code: string;
-  plan: 'Pro' | 'Premium';
+  plan: SupportedPlan;
   expiresAt: string; // ISO or formatted date & time e.g. "2026-12-31 23:59"
   createdAt: string;
   isUsed: boolean;
   usedBy?: string; // user email or name
+}
+
+export interface CertificationItem {
+  id: string;
+  title: string;
+  issuer: string;
+  year: string;
+}
+
+export interface UserProfessionalProfile {
+  isCreated: boolean;
+  headline: string; // e.g. "Senior Full-Stack Engineer & AI Architect"
+  organization: string; // e.g. "Google / Tech Innovations"
+  category: 'development' | 'design' | 'research' | 'business' | 'law' | 'medicine' | 'education' | 'engineering' | 'student' | 'other';
+  bio: string;
+  experienceLevel: 'junior' | 'mid' | 'senior' | 'lead' | 'executive' | 'student';
+  experienceYears: string; // e.g. "3-5 años", "8+ años"
+  availabilityStatus: 'available' | 'employed' | 'consultant' | 'open_to_collaborations';
+  location: string; // e.g. "Madrid, España"
+  skills: string[]; // ['React', 'TypeScript', 'Node.js', 'Python', 'Machine Learning', 'Docker']
+  socialLinks: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+    twitter?: string;
+  };
+  certifications?: CertificationItem[];
+  customAiPersona?: boolean; // When true, Chepe IA adapts its technical depth and persona
+  verifiedBadge?: boolean;
+  lastUpdated?: string;
 }
 
 export interface UserProfile {
@@ -319,7 +375,11 @@ export interface UserProfile {
   name: string;
   email: string;
   avatarUrl: string;
-  planType: 'Gratis' | 'Pro' | 'Premium';
+  avatarType?: 'upload' | 'url' | 'preset' | 'dicebear';
+  photoUploadedAt?: string;
+  phone?: string;
+  professionalProfile?: UserProfessionalProfile;
+  planType: SupportedPlan;
   planExpiresAt?: string;
   memberSince: string;
   dailyUsageCount: number;
@@ -330,8 +390,9 @@ export interface UserProfile {
 }
 
 export interface PlanTier {
-  id: 'gratis' | 'pro' | 'premium';
+  id: string;
   name: string;
+  planType: SupportedPlan;
   price: string;
   period: string;
   badge: string;
@@ -346,7 +407,7 @@ export interface AdminUserItem {
   id: string;
   name: string;
   email: string;
-  plan: 'Gratis' | 'Pro' | 'Premium';
+  plan: SupportedPlan;
   planExpiresAt?: string;
   usage: number;
   status: 'activo' | 'suspendido';

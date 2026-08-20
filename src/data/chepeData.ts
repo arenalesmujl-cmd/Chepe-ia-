@@ -88,6 +88,7 @@ export const PLAN_TIERS: PlanTier[] = [
   {
     id: 'gratis',
     name: 'Plan Gratuito / Invitado',
+    planType: 'Gratis',
     price: '$0',
     period: 'para siempre',
     badge: 'BÁSICO',
@@ -107,8 +108,26 @@ export const PLAN_TIERS: PlanTier[] = [
     ]
   },
   {
+    id: 'estudiante',
+    name: 'Plan Estudiante / Académico',
+    planType: 'Estudiante',
+    price: '$4.99',
+    period: '/ mes',
+    badge: 'EDUCATIVO',
+    description: 'Diseñado especialmente para estudiantes e investigadores con tarifa accesible.',
+    maxDailyMessages: 500,
+    features: [
+      '500 mensajes diarios',
+      'Acceso a solucionadores matemáticos y de ciencias',
+      'Análisis de papers y PDFs de estudio',
+      'Generador de resúmenes y flashcards',
+      'Exportación en LaTeX y Markdown'
+    ]
+  },
+  {
     id: 'pro',
-    name: 'Plan Pro',
+    name: 'Plan Pro Mensual',
+    planType: 'Pro',
     price: '$9.99',
     period: '/ mes',
     badge: 'MÁS POPULAR',
@@ -126,20 +145,90 @@ export const PLAN_TIERS: PlanTier[] = [
     ]
   },
   {
+    id: 'pro_anual',
+    name: 'Plan Pro Anual',
+    planType: 'Pro Anual',
+    price: '$79.99',
+    period: '/ año (Ahorra 35%)',
+    badge: 'MEJOR VALOR',
+    description: 'Suscripción anual Pro con mensajes ampliados y prioridad en servidores.',
+    maxDailyMessages: 2500,
+    features: [
+      '2,500 mensajes diarios',
+      'Ahorro del 35% frente al pago mensual',
+      'Generación de imágenes ultrarrápida',
+      'Acceso prioritario en horas punta',
+      'Soporte técnico preferente'
+    ]
+  },
+  {
     id: 'premium',
-    name: 'Plan Premium',
+    name: 'Plan Premium Mensual',
+    planType: 'Premium',
     price: '$19.99',
     period: '/ mes',
     badge: 'MÁXIMA POTENCIA',
     description: 'Para equipos de desarrollo, creadores y empresas que exigen máxima precisión.',
     maxDailyMessages: 10000,
     features: [
-      'Mensajes y tokens ilimitados',
+      '10,000 mensajes diarios',
       'Acceso a Gemini 4.0 Ultra y Claude Proxy Engine',
       'Análisis avanzado de archivos y documentos extensos',
       'Soporte prioritario 24/7',
       'Panel de control de API personalizada',
       'Respuestas ultrarrápidas sin cola de espera'
+    ]
+  },
+  {
+    id: 'premium_anual',
+    name: 'Plan Premium Anual',
+    planType: 'Premium Anual',
+    price: '$199.99',
+    period: '/ año (Ahorra $40)',
+    badge: 'POTENCIA TOTAL',
+    description: 'Plan Premium completo durante 12 meses con capacidad masiva de tokens.',
+    maxDailyMessages: 25000,
+    features: [
+      '25,000 mensajes diarios',
+      'Acceso full a Claude 3.7 Sonnet y GPT-4.5',
+      'Análisis de videos y audios largos',
+      'Sandbox sin límite de memoria',
+      'Soporte VIP telefónico y por chat'
+    ]
+  },
+  {
+    id: 'enterprise',
+    name: 'Plan Enterprise / Vitalicio',
+    planType: 'Enterprise',
+    price: '$99.99',
+    period: 'pago único vitalicio',
+    badge: 'ACCESO TOTAL',
+    description: 'Solución definitiva sin límites para organizaciones, agencias y desarrolladores avanzados.',
+    maxDailyMessages: 999999,
+    features: [
+      'Mensajes y tokens 100% ilimitados',
+      'Acceso total a todos los 140+ modelos de IA',
+      'Generación de videos Sora y Veo 2 en 4K',
+      'Llamadas a API personalizadas y Webhooks',
+      'Licencia vitalicia sin fecha de expiración',
+      'Soporte técnico VIP dedicado'
+    ]
+  },
+  {
+    id: 'dev_vip',
+    name: 'Plan Desarrollador / API VIP',
+    planType: 'Developer VIP',
+    price: '$149.99',
+    period: 'pago único / semestral',
+    badge: 'EXCLUSIVO DEV',
+    description: 'Para desarrolladores de software, integraciones backend y llamadas masivas.',
+    maxDailyMessages: 999999,
+    features: [
+      'Acceso a endpoints REST y WebSockets directos',
+      'Generación de tokens API ilimitados',
+      'Uso de agentes autónomos y Deep Research',
+      'Consola de depuración y telemetría avanzada',
+      'SLA del 99.9% de disponibilidad'
     ]
   }
 ];
@@ -160,10 +249,22 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
 
 export const MOCK_ADMIN_USERS: AdminUserItem[] = [
   {
+    id: 'usr-admin-real',
+    name: 'Jose Arenales (Tú)',
+    email: 'arenalesjose802@gmail.com',
+    plan: 'Enterprise',
+    planExpiresAt: 'Vitalicio (Sin Expiración)',
+    usage: 412,
+    status: 'activo',
+    registeredDate: '01/01/2026',
+    lastActive: 'En línea ahora'
+  },
+  {
     id: 'usr-1',
     name: 'Carlos Rodríguez',
-    email: 'carlos.dev@gmail.com',
+    email: 'carlos.rodriguez.dev@gmail.com',
     plan: 'Pro',
+    planExpiresAt: '31/12/2026 23:59',
     usage: 342,
     status: 'activo',
     registeredDate: '10/01/2026',
@@ -172,18 +273,20 @@ export const MOCK_ADMIN_USERS: AdminUserItem[] = [
   {
     id: 'usr-2',
     name: 'María Fernández',
-    email: 'maria.estudiante@outlook.com',
-    plan: 'Gratis',
-    usage: 45,
+    email: 'maria.fernandez.est@outlook.com',
+    plan: 'Estudiante',
+    planExpiresAt: '15/06/2026 23:59',
+    usage: 88,
     status: 'activo',
     registeredDate: '15/01/2026',
-    lastActive: 'Hace 1 hora'
+    lastActive: 'Hace 45 minutos'
   },
   {
     id: 'usr-3',
     name: 'Alejandro Gómez',
-    email: 'agomez.code@yahoo.es',
+    email: 'agomez.software@yahoo.es',
     plan: 'Premium',
+    planExpiresAt: '31/12/2026 23:59',
     usage: 1280,
     status: 'activo',
     registeredDate: '02/02/2026',
@@ -191,13 +294,36 @@ export const MOCK_ADMIN_USERS: AdminUserItem[] = [
   },
   {
     id: 'usr-4',
-    name: 'Spam Bot User',
-    email: 'bot99@tempmail.org',
-    plan: 'Gratis',
-    usage: 999,
-    status: 'suspendido',
-    registeredDate: '08/02/2026',
-    lastActive: 'Hace 2 días'
+    name: 'Sofía Morales',
+    email: 'sofia.morales.arq@gmail.com',
+    plan: 'Pro Anual',
+    planExpiresAt: '15/02/2027 23:59',
+    usage: 620,
+    status: 'activo',
+    registeredDate: '12/02/2026',
+    lastActive: 'Hace 2 horas'
+  },
+  {
+    id: 'usr-5',
+    name: 'Dr. Fernando Castillo',
+    email: 'fcastillo.med@hotmail.com',
+    plan: 'Premium Anual',
+    planExpiresAt: '20/02/2027 23:59',
+    usage: 2150,
+    status: 'activo',
+    registeredDate: '18/02/2026',
+    lastActive: 'Hace 3 horas'
+  },
+  {
+    id: 'usr-6',
+    name: 'Lucía Benítez',
+    email: 'lucia.benitez.design@icloud.com',
+    plan: 'Developer VIP',
+    planExpiresAt: 'Vitalicio (Sin Expiración)',
+    usage: 940,
+    status: 'activo',
+    registeredDate: '20/02/2026',
+    lastActive: 'Hace 15 minutos'
   }
 ];
 

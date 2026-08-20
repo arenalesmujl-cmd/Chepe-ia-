@@ -12,10 +12,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Modelo insignia multimodal de OpenAI con alta capacidad analítica, visión y código.',
     speed: 'Ultra rápido (0.25s)',
     provider: 'OpenAI',
-    photoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-emerald-600 to-teal-900',
     accentColor: '#10A37F',
     tags: ['Vision', 'Audio', 'Código', 'Multimodal']
+  },
+  {
+    id: 'gpt-4.5',
+    name: 'GPT-4.5 Orion Turbo',
+    badge: 'FRONTIER FLAGSHIP',
+    icon: '🌟',
+    description: 'El modelo más expresivo y holístico de OpenAI, optimizado para empatía profunda y precisión contextual.',
+    speed: 'Rápido (0.28s)',
+    provider: 'OpenAI',
+    photoUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-amber-600 to-rose-950',
+    accentColor: '#F59E0B',
+    tags: ['Orion', 'Creatividad', 'Empatía', 'Frontier']
   },
   {
     id: 'gpt-4o-mini',
@@ -25,10 +38,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Compacto, ultra rápido e inteligente para consultas cotidianas y respuestas concisas.',
     speed: 'Instantáneo (0.12s)',
     provider: 'OpenAI',
-    photoUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-teal-500 to-emerald-800',
     accentColor: '#00E5FF',
     tags: ['Veloz', 'Economía', 'Chat']
+  },
+  {
+    id: 'o3',
+    name: 'OpenAI o3 Deep Reasoning',
+    badge: 'PHD STEM REASONING',
+    icon: '💎',
+    description: 'La máxima frontera del razonamiento lógico deductivo para resolución de pruebas a nivel doctorado.',
+    speed: 'Pensamiento Máximo',
+    provider: 'OpenAI',
+    photoUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-indigo-600 to-purple-950',
+    accentColor: '#6366F1',
+    tags: ['PhD', 'Lógica Máxima', 'Frontera']
   },
   {
     id: 'o3-mini',
@@ -38,7 +64,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Razonamiento profundo optimizado en ciencias, matemáticas y algoritmos complejos.',
     speed: 'Pensamiento Profundo',
     provider: 'OpenAI',
-    photoUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-sky-600 to-indigo-950',
     accentColor: '#38BDF8',
     tags: ['Razonamiento', 'Matemáticas', 'Algoritmos']
@@ -47,14 +73,14 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     id: 'o3-preview',
     name: 'o3 High Tier Frontier',
     badge: 'ULTRA REASONING',
-    icon: '💎',
-    description: 'La cima del razonamiento lógico deductivo para resolución de pruebas a nivel PhD.',
+    icon: '🧩',
+    description: 'Capacidad de deducción de hipótesis y auditoría de teoremas matemáticos avanzados.',
     speed: 'Máxima Deducción',
     provider: 'OpenAI',
-    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=120&h=120&q=80',
-    avatarBg: 'from-indigo-600 to-purple-950',
-    accentColor: '#6366F1',
-    tags: ['PhD', 'Lógica Máxima', 'Frontera']
+    photoUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-indigo-700 to-purple-950',
+    accentColor: '#818CF8',
+    tags: ['PhD', 'Lógica Pura']
   },
   {
     id: 'o1',
@@ -155,10 +181,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Generación de videos cinemáticos 8K, animaciones 60FPS y storyboards visuales.',
     speed: 'Render Cinemático',
     provider: 'OpenAI',
-    photoUrl: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-rose-600 to-purple-950',
     accentColor: '#F43F5E',
     tags: ['Cine', 'Animación', 'Video']
+  },
+  {
+    id: 'sora-turbo',
+    name: 'OpenAI Sora Turbo HD',
+    badge: 'CINE 4K GENERATIVO',
+    icon: '🎥',
+    description: 'Motor ultrarrápido de video hiperrealista de OpenAI con control físico dinámico de tomas.',
+    speed: 'Render Rápido (1.2s)',
+    provider: 'OpenAI',
+    photoUrl: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-red-600 to-pink-950',
+    accentColor: '#E11D48',
+    tags: ['4K Cinema', 'Sora Turbo', 'Físicas']
   },
   {
     id: 'whisper-voice',
@@ -168,10 +207,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Transcripción precisa en 100+ idiomas y síntesis de voz con acentos naturales.',
     speed: 'Tiempo Real',
     provider: 'OpenAI',
-    photoUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-violet-600 to-slate-900',
     accentColor: '#8B5CF6',
     tags: ['Voz', 'Transcripción', 'Audio']
+  },
+  {
+    id: 'chatgpt-voice-advanced',
+    name: 'ChatGPT Advanced Voice Mode',
+    badge: 'VOZ BIDIRECCIONAL',
+    icon: '🗣️',
+    description: 'Conversación de voz natural sin latencia con inflexiones emotivas e interrupciones en tiempo real.',
+    speed: 'Conversación Humana',
+    provider: 'OpenAI',
+    photoUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-emerald-600 to-blue-950',
+    accentColor: '#10B981',
+    tags: ['Live Voice', 'Emocional', 'Sin Latencia']
   },
 
   // ==========================================
@@ -185,23 +237,49 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Razonamiento híbrido de última generación, arquitectura de software e interfaces completas.',
     speed: 'Ultra fluido (0.22s)',
     provider: 'Anthropic',
-    photoUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-amber-700 to-orange-950',
     accentColor: '#D97706',
     tags: ['Híbrido', 'Artefactos', 'Razonamiento']
   },
   {
+    id: 'claude-3-7-sonnet-thinking',
+    name: 'Claude 3.7 Sonnet (128k Thinking)',
+    badge: 'DEEP THINKING 128K',
+    icon: '🧠',
+    description: 'Cadena de pensamiento extendida de hasta 128k tokens para auditorías exhaustivas de código y lógica matemática.',
+    speed: 'Razonamiento Extendido',
+    provider: 'Anthropic',
+    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-orange-800 to-stone-950',
+    accentColor: '#EA580C',
+    tags: ['128k Thinking', 'Auditoría', 'Pruebas']
+  },
+  {
     id: 'claude-3-7-thinking',
     name: 'Claude 3.7 Extended Thinking',
     badge: 'PENSAMIENTO EXTENDIDO',
-    icon: '🧠',
+    icon: '🔮',
     description: 'Modo de deliberación profunda y exhaustiva para algoritmos de alta complejidad.',
     speed: 'Reflexión Profunda',
     provider: 'Anthropic',
-    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=120&h=120&q=80',
-    avatarBg: 'from-orange-800 to-stone-950',
+    photoUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-orange-700 to-amber-950',
     accentColor: '#EA580C',
-    tags: ['Deep Thinking', 'Auditoría', 'Pruebas']
+    tags: ['Deep Thinking', 'Lógica']
+  },
+  {
+    id: 'claude-3-5-opus',
+    name: 'Claude 3.5 Opus Frontier',
+    badge: 'FRONTIER INTELLIGENCE',
+    icon: '👑',
+    description: 'La máxima cúspide de inteligencia literaria, filosófica, análisis corporativo y síntesis de Anthropic.',
+    speed: 'Profundo (0.32s)',
+    provider: 'Anthropic',
+    photoUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-yellow-600 to-stone-950',
+    accentColor: '#EAB308',
+    tags: ['Opus Frontier', 'Filosofía', 'Léxico Supremo']
   },
   {
     id: 'claude-3-5-sonnet',
@@ -211,7 +289,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Líder en generación de código frontend, redacción sofisticada y análisis de datos.',
     speed: 'Rápido (0.28s)',
     provider: 'Anthropic',
-    photoUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-orange-600 to-stone-900',
     accentColor: '#F97316',
     tags: ['Frontend', 'UI Design', 'Redacción']
@@ -293,7 +371,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Motor multimodal de Google con ventana de contexto de 1 millón de tokens.',
     speed: 'Instantáneo (0.18s)',
     provider: 'Google',
-    photoUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-blue-600 to-indigo-950',
     accentColor: '#3B82F6',
     tags: ['1M Tokens', 'Visión', 'Ultra Rápido']
@@ -306,10 +384,36 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Razonamiento avanzado, comprensión profunda de video, audio y repositorios enteros.',
     speed: 'Rápido (0.26s)',
     provider: 'Google',
-    photoUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-indigo-600 to-cyan-950',
     accentColor: '#6366F1',
     tags: ['Investigación', 'Multimodal Pro', 'Audio']
+  },
+  {
+    id: 'gemini-live-multimodal',
+    name: 'Gemini Live Multimodal Streaming',
+    badge: 'STREAMING TIEMPO REAL',
+    icon: '🌐',
+    description: 'Transmisión simultánea de audio bidireccional y video en tiempo real de Google DeepMind.',
+    speed: 'Sub-150ms Live',
+    provider: 'Google',
+    photoUrl: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-cyan-500 to-blue-950',
+    accentColor: '#00E5FF',
+    tags: ['Live API', 'Visión Continua', 'Voz Streaming']
+  },
+  {
+    id: 'veo-2',
+    name: 'Google Veo 2 Cinema 4K',
+    badge: 'VIDEO GENERATIVO 4K',
+    icon: '🎥',
+    description: 'Generador cinematográfico de video 4K a 60FPS con control de cámara profesional y físicas fotorealistas.',
+    speed: 'Render 4K (1.5s)',
+    provider: 'Google',
+    photoUrl: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-blue-600 to-purple-950',
+    accentColor: '#3B82F6',
+    tags: ['4K Video', 'DeepMind Veo', 'Cine Studio']
   },
   {
     id: 'gemini-2.0-flash-thinking',
@@ -479,10 +583,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Razonamiento abierto de nivel o1 con cadena de pensamiento transparente y matemática pura.',
     speed: 'Paso a paso (0.35s)',
     provider: 'DeepSeek',
-    photoUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-cyan-600 to-blue-950',
     accentColor: '#00E5FF',
     tags: ['Open Source', 'Think Chain', 'Math']
+  },
+  {
+    id: 'deepseek-r1-671b',
+    name: 'DeepSeek-R1 671B Full Scale',
+    badge: 'FULL SCALE 671B',
+    icon: '💎',
+    description: 'La versión completa de 671B parámetros sin cuantizar con el máximo poder de deducción y formulación de teoremas.',
+    speed: 'Deducción Completa',
+    provider: 'DeepSeek',
+    photoUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-blue-600 to-cyan-950',
+    accentColor: '#00E5FF',
+    tags: ['671B Full', 'Teoremas', 'Pure Logic']
   },
   {
     id: 'deepseek-r1-zero',
@@ -492,7 +609,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Entrenado exclusivamente con Reinforcement Learning puro sin supervisión humana.',
     speed: 'Reflexión Profunda',
     provider: 'DeepSeek',
-    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-blue-700 to-indigo-950',
     accentColor: '#38BDF8',
     tags: ['Pure RL', 'Zero Supervision']
@@ -505,10 +622,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Arquitectura colosal MoE (Mixture of Experts) con 37B activos por token y velocidad extrema.',
     speed: 'Ultra rápido (0.2s)',
     provider: 'DeepSeek',
-    photoUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-blue-600 to-slate-900',
     accentColor: '#2563EB',
     tags: ['671B MoE', 'Código', 'Lógica']
+  },
+  {
+    id: 'deepseek-v3-moe',
+    name: 'DeepSeek-V3 Turbo MoE',
+    badge: 'MOE TURBO HIGH-SPEED',
+    icon: '⚡',
+    description: 'Inferencia paralela optimizada para streaming instantáneo de código fuente y análisis multi-archivo.',
+    speed: 'Relámpago (0.14s)',
+    provider: 'DeepSeek',
+    photoUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-cyan-600 to-indigo-950',
+    accentColor: '#38BDF8',
+    tags: ['MoE Turbo', 'Streaming', 'Low Latency']
   },
   {
     id: 'deepseek-coder',
@@ -570,27 +700,66 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Comprensión y generación simultánea de imágenes y texto con desacoplamiento visual.',
     speed: 'Generativo Multimodal',
     provider: 'DeepSeek',
-    photoUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-indigo-700 to-slate-950',
     accentColor: '#6366F1',
     tags: ['Janus Dual', 'Visión + Arte']
+  },
+  {
+    id: 'deepseek-janus-pro-7b',
+    name: 'DeepSeek Janus Pro 7B Unified',
+    badge: 'VISION & ART UNIFIED',
+    icon: '👁️',
+    description: 'Representación visual unificada con codificador SigLIP para renderizar y entender bocetos.',
+    speed: 'Rápido (0.22s)',
+    provider: 'DeepSeek',
+    photoUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-cyan-700 to-slate-950',
+    accentColor: '#06B6D4',
+    tags: ['SigLIP', 'Bocetos', '7B Unified']
   },
 
   // ==========================================
   // --- META AI / LLAMA ---
   // ==========================================
   {
+    id: 'llama-4-preview',
+    name: 'Meta Llama 4 Next-Gen Preview',
+    badge: 'META LLAMA 4',
+    icon: '🦙',
+    description: 'La próxima generación de modelos de Meta con arquitectura MoE adaptativa y capacidades multimodales de frontera.',
+    speed: 'Ultra rápido (0.2s)',
+    provider: 'Meta',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-blue-600 to-indigo-950',
+    accentColor: '#2563EB',
+    tags: ['Llama 4', 'Next-Gen', 'MoE', 'Meta']
+  },
+  {
     id: 'llama-3.3-70b',
     name: 'Llama 3.3 70B Instruct',
     badge: 'META FLAGSHIP',
-    icon: '🦙',
+    icon: '🐎',
     description: 'Modelo insignia abierto de Meta con capacidades equivalentes a los grandes modelos propietarios.',
     speed: 'Rápido (0.25s)',
     provider: 'Meta',
-    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-blue-700 to-indigo-950',
     accentColor: '#1D4ED8',
     tags: ['Multilingüe', 'Open Source', 'Meta']
+  },
+  {
+    id: 'llama-3.3-70b-instruct',
+    name: 'Llama 3.3 70B Turbo Instruct',
+    badge: 'AGENT & REASONING',
+    icon: '⚡',
+    description: 'Alineación de instrucciones de ultra alta fidelidad para agentes de decisión y pipelines autónomos.',
+    speed: 'Ultra Veloz (0.18s)',
+    provider: 'Meta',
+    photoUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-indigo-600 to-blue-950',
+    accentColor: '#3B82F6',
+    tags: ['Agentes Autónomos', 'Alineado', 'Turbo']
   },
   {
     id: 'llama-3.2-90b',
@@ -721,10 +890,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Entrenado sobre el cluster Colossus de 100.000 GPUs: razonamiento profundo sin censura.',
     speed: 'Ultra rápido (0.22s)',
     provider: 'xAI',
-    photoUrl: 'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-neutral-800 to-black',
     accentColor: '#FFFFFF',
     tags: ['xAI', 'Sin Censura', 'Colossus Cluster']
+  },
+  {
+    id: 'grok-3-max',
+    name: 'xAI Grok 3 Max Colossus',
+    badge: 'COLOSSUS MONSTER',
+    icon: '🪐',
+    description: 'La versión colosal sin límites de xAI entrenada con supercomputación extrema y comprensión total en tiempo real.',
+    speed: 'Máxima Potencia',
+    provider: 'xAI',
+    photoUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-zinc-900 to-black',
+    accentColor: '#FFFFFF',
+    tags: ['Grok Max', 'Colossus', 'Frontera xAI']
   },
   {
     id: 'grok-3-deepsearch',
@@ -734,7 +916,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Búsqueda en tiempo real e indexación profunda en X (Twitter) y la web mundial.',
     speed: 'En vivo (0.25s)',
     provider: 'xAI',
-    photoUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-zinc-900 to-black',
     accentColor: '#FAFAFA',
     tags: ['Real-time X', 'DeepSearch']
@@ -773,10 +955,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Comprensión estética de memes, capturas espaciales y diseños arquitectónicos.',
     speed: 'Rápido (0.26s)',
     provider: 'xAI',
-    photoUrl: 'https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-neutral-900 to-slate-950',
     accentColor: '#FAFAFA',
     tags: ['Creatividad', 'Memes', 'Análisis']
+  },
+  {
+    id: 'grok-imagine',
+    name: 'xAI Grok Imagine Studio',
+    badge: 'IMAGINE VISUAL AI',
+    icon: '🎨',
+    description: 'Generación hiperrápida de imágenes estilizadas con estética audaz y renderizado de texto nítido.',
+    speed: 'Instantáneo (0.2s)',
+    provider: 'xAI',
+    photoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-zinc-800 to-black',
+    accentColor: '#FFFFFF',
+    tags: ['Imagine', 'Arte xAI', 'Hyper Speed']
   },
 
   // ==========================================
@@ -1222,10 +1417,36 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Composición fotográfica hiperrealista, texturas dérmicas perfectas y estética visual de vanguardia.',
     speed: 'Render Ultra HD (0.35s)',
     provider: 'Stability',
-    photoUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-fuchsia-600 to-rose-950',
     accentColor: '#D946EF',
     tags: ['Fotorrealismo', '8K', 'Estética']
+  },
+  {
+    id: 'midjourney-v6-1',
+    name: 'Midjourney v6.1 Cinema Master',
+    badge: 'CINEMA 8K RAW',
+    icon: '💎',
+    description: 'Lente de cámara cinematográfica, iluminación global volumétrica y micro-texturas orgánicas inigualables.',
+    speed: 'Render Cinemático',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-pink-600 to-purple-950',
+    accentColor: '#EC4899',
+    tags: ['8K Raw', 'Lentes de Cine', 'Fotorrealismo']
+  },
+  {
+    id: 'flux-1-pro',
+    name: 'FLUX.1 Pro Raw Studio',
+    badge: 'PRO BFL RAW',
+    icon: '🖼️',
+    description: 'La versión profesional de más alta resolución de Black Forest Labs con control estricto de prompts complejos.',
+    speed: 'Alta Fidelidad (0.3s)',
+    provider: 'Stability',
+    photoUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-indigo-600 to-slate-950',
+    accentColor: '#6366F1',
+    tags: ['FLUX Pro', 'BFL', 'Raw Studio']
   },
   {
     id: 'flux-1-schnell',
@@ -1304,10 +1525,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Cinematografía hiperrealista con control de cámara de director, iluminación de estudio y simulación física.',
     speed: 'Render Cinemático',
     provider: 'Runway',
-    photoUrl: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-pink-600 to-black',
     accentColor: '#EC4899',
     tags: ['Gen-3 Alpha', 'Hollywood FX']
+  },
+  {
+    id: 'runway-gen3-turbo',
+    name: 'Runway Gen-3 Alpha Turbo',
+    badge: 'TURBO VIDEO 60FPS',
+    icon: '⚡',
+    description: 'Generación acelerada 7x de cinemáticas 4K con preservación exacta de iluminación y movimiento de cámara.',
+    speed: 'Render Turbo (0.8s)',
+    provider: 'Runway',
+    photoUrl: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-rose-600 to-neutral-950',
+    accentColor: '#F43F5E',
+    tags: ['Turbo 60FPS', 'Hollywood FX', 'Fast']
   },
   {
     id: 'kling-1-5',
@@ -1317,10 +1551,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Excelente fidelidad en movimientos anatómicos complejos, efectos cinemáticos y tomas aéreas.',
     speed: 'Render 1080p 60FPS',
     provider: 'Runway',
-    photoUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-purple-700 to-black',
     accentColor: '#A855F7',
     tags: ['Kling HD', 'Física Fluida']
+  },
+  {
+    id: 'kling-1-5-pro',
+    name: 'Kling 1.5 Pro Motion Master',
+    badge: 'PRO MOTION MASTER',
+    icon: '📽️',
+    description: 'Control de cámara multidireccional con fidelidad extrema a leyes físicas, reflejos y dinámica de fluidos.',
+    speed: 'Render 4K Pro',
+    provider: 'Runway',
+    photoUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-violet-700 to-black',
+    accentColor: '#9333EA',
+    tags: ['Kling Pro', 'Dinámica de Fluidos', '4K Pro']
   },
   {
     id: 'pika-2-1',
@@ -1353,6 +1600,19 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
   // --- AUDIO, VOICE & MUSIC AI ---
   // ==========================================
   {
+    id: 'suno-v4',
+    name: 'Suno AI v4 Studio Master',
+    badge: 'AUDIO MASTER 48KHZ',
+    icon: '🎶',
+    description: 'Arreglos orquestales y de estudio con claridad cristalina de voces, polifonía y solos instrumentales virtuosos.',
+    speed: 'Mastering HD (0.2s)',
+    provider: 'AudioAI',
+    photoUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-amber-500 to-rose-950',
+    accentColor: '#F59E0B',
+    tags: ['Suno v4', 'Vocales Cristalinas', 'Stereo 48kHz']
+  },
+  {
     id: 'suno-v3-5',
     name: 'Suno AI v3.5 Music Studio',
     badge: 'COMPOSICIÓN MUSICAL',
@@ -1360,7 +1620,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Generación completa de canciones con arreglos de instrumentos acústicos, vocales y estilos variados.',
     speed: 'Render Acústico (0.2s)',
     provider: 'AudioAI',
-    photoUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-amber-600 to-rose-950',
     accentColor: '#F59E0B',
     tags: ['Canciones', 'Vocales', 'Hits']
@@ -1511,10 +1771,36 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Especialista en arquitecturas React, Node, Python, bases de datos y optimización de rendimiento.',
     speed: 'Ultra Veloz (0.18s)',
     provider: 'ChepeIA',
-    photoUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-teal-600 to-slate-950',
     accentColor: '#14B8A6',
     tags: ['FullStack', 'React', 'DevOps']
+  },
+  {
+    id: 'chepe-super-architect',
+    name: 'Chepe Cloud & Kubernetes Architect',
+    badge: 'CLOUD & DEVOPS ELITE',
+    icon: '☁️',
+    description: 'Diseño de microservicios, clústeres Kubernetes, infraestructura Terraform, CI/CD y alta concurrencia.',
+    speed: 'Arquitectura (0.2s)',
+    provider: 'ChepeIA',
+    photoUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-blue-600 to-slate-950',
+    accentColor: '#0284C7',
+    tags: ['Kubernetes', 'Cloud AWS/GCP', 'DevOps']
+  },
+  {
+    id: 'chepe-game-developer',
+    name: 'Chepe Game Dev Unity & Unreal',
+    badge: 'VIDEOJUEGOS & 3D',
+    icon: '🎮',
+    description: 'Desarrollo de shaders, físicas C#/C++, lógicas de juego, optimización de FPS y pipelines en Unreal Engine 5 y Godot.',
+    speed: 'Tiempo Real (0.22s)',
+    provider: 'ChepeIA',
+    photoUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-violet-600 to-slate-950',
+    accentColor: '#8B5CF6',
+    tags: ['Unreal Engine 5', 'Unity', 'Shaders 3D']
   },
   {
     id: 'chepe-lawyer',
@@ -1524,10 +1810,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Análisis de contratos, cláusulas legales, cumplimiento normativo y redacción jurídica.',
     speed: 'Fluido (0.28s)',
     provider: 'ChepeIA',
-    photoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-amber-700 to-stone-950',
     accentColor: '#D97706',
     tags: ['Contratos', 'Leyes', 'Auditoría']
+  },
+  {
+    id: 'chepe-legal-compliance',
+    name: 'Chepe Cumplimiento Internacional & GDPR',
+    badge: 'COMPLIANCE & GDPR',
+    icon: '📜',
+    description: 'Auditoría de privacidad global, protección de datos GDPR, HIPAA, SOC2 y marcos corporativos.',
+    speed: 'Auditoría (0.25s)',
+    provider: 'ChepeIA',
+    photoUrl: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-amber-800 to-stone-950',
+    accentColor: '#B45309',
+    tags: ['GDPR', 'SOC2', 'Compliance']
   },
   {
     id: 'chepe-medic',
@@ -1615,10 +1914,23 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     description: 'Análisis de vulnerabilidades, auditoría de código seguro, criptografía y mejores prácticas OWASP.',
     speed: 'Rápido (0.24s)',
     provider: 'ChepeIA',
-    photoUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=120&h=120&q=80',
+    photoUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=160&h=160&q=85',
     avatarBg: 'from-red-700 to-slate-950',
     accentColor: '#DC2626',
     tags: ['OWASP', 'Seguridad', 'Auditoría']
+  },
+  {
+    id: 'chepe-deep-researcher',
+    name: 'Chepe Deep Researcher Pro',
+    badge: 'INVESTIGACIÓN AUTÓNOMA',
+    icon: '🔬',
+    description: 'Agente autónomo que explora docenas de fuentes en la web en paralelo y compila informes bibliográficos de nivel ejecutivo.',
+    speed: 'Exhaustivo (0.3s)',
+    provider: 'ChepeIA',
+    photoUrl: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=160&h=160&q=85',
+    avatarBg: 'from-cyan-600 to-indigo-950',
+    accentColor: '#06B6D4',
+    tags: ['Deep Web Search', 'Reportes Ejecutivos', 'Citas']
   },
   {
     id: 'chepe-educator',

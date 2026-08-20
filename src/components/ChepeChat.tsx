@@ -1805,9 +1805,19 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                         <ModelAvatar model={msgModel} size="sm" showBadge />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold shadow-md bg-blue-600 text-white">
-                        <User className="w-4 h-4" />
-                      </div>
+                      userProfile?.avatarUrl ? (
+                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-cyan-400 shadow-md bg-[#081021]">
+                          <img
+                            src={userProfile.avatarUrl}
+                            alt={userProfile.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold shadow-md bg-blue-600 text-white">
+                          <User className="w-4 h-4" />
+                        </div>
+                      )
                     )}
 
                     <div className={`space-y-2 max-w-[88%] ${isAI ? 'w-full' : ''}`}>

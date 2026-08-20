@@ -10,6 +10,8 @@ interface NavbarProps {
   onSelectTab: (tab: string) => void;
   userRole?: string;
   isGuest?: boolean;
+  userAvatarUrl?: string;
+  userName?: string;
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
   onToggleSidebar?: () => void;
 }
@@ -23,6 +25,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
   userRole = 'admin',
   isGuest = false,
+  userAvatarUrl,
+  userName,
   onOpenAuthModal,
   onToggleSidebar
 }) => {
@@ -172,15 +176,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Perfil Button */}
           <button
             onClick={onOpenProfile}
-            className={`p-1.5 sm:p-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 border transition-all cursor-pointer shrink-0 ${
+            className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 border transition-all cursor-pointer shrink-0 ${
               activeTab === 'profile'
-                ? 'bg-[#002C3E] text-[#00E5FF] border-[#00E5FF]'
+                ? 'bg-[#002C3E] text-[#00E5FF] border-[#00E5FF] shadow-sm shadow-cyan-500/20'
                 : 'bg-[#0F1C36] text-cyan-200 border-cyan-800/80 hover:bg-[#162A50]'
             }`}
-            title="Mi Perfil"
+            title="Mi Perfil y Carnet Profesional"
           >
-            <User className="w-4 h-4 text-[#00E5FF]" />
-            <span className="hidden md:inline">Perfil</span>
+            {userAvatarUrl ? (
+              <img
+                src={userAvatarUrl}
+                alt={userName || 'Perfil'}
+                className="w-5 h-5 rounded-full object-cover border border-[#00E5FF] shrink-0"
+              />
+            ) : (
+              <User className="w-4 h-4 text-[#00E5FF]" />
+            )}
+            <span className="hidden md:inline font-bold">{userName?.split(' ')[0] || 'Perfil'}</span>
           </button>
 
           {/* Configuración Button */}

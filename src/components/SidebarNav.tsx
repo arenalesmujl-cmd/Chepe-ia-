@@ -16,6 +16,8 @@ interface SidebarNavProps {
   dailyLimit?: number;
   userName?: string;
   userRole?: string;
+  userAvatarUrl?: string;
+  userHeadline?: string;
   isGuest?: boolean;
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
   onLogout?: () => void;
@@ -31,6 +33,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   dailyLimit = 1000,
   userName = 'Usuario Chepe IA',
   userRole = 'user',
+  userAvatarUrl,
+  userHeadline,
   isGuest = false,
   onOpenAuthModal,
   onLogout
@@ -185,6 +189,38 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
         {/* Footer Usage & Account info */}
         <div className="p-3 border-t border-cyan-950 space-y-2 bg-[#060B17]">
+          {/* User Mini Profile Trigger */}
+          <button
+            onClick={() => {
+              onSelectTab('profile');
+              if (window.innerWidth < 768) onToggleOpen();
+            }}
+            className="w-full p-2 rounded-xl bg-[#091224] hover:bg-[#0F1C36] border border-cyan-900/70 hover:border-[#00E5FF] flex items-center gap-2.5 transition-all text-left group cursor-pointer"
+          >
+            {userAvatarUrl ? (
+              <img
+                src={userAvatarUrl}
+                alt={userName}
+                className="w-9 h-9 rounded-xl object-cover border border-[#00E5FF] shadow-sm shrink-0"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-[#0F1C36] border border-cyan-800 flex items-center justify-center text-[#00E5FF] font-black shrink-0">
+                <User className="w-5 h-5" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white truncate group-hover:text-[#00E5FF]">
+                  {userName}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-stone-500 group-hover:text-cyan-300 shrink-0" />
+              </div>
+              <p className="text-[10px] text-stone-400 truncate">
+                {userHeadline || (userRole === 'admin' ? 'Administrador' : 'Ver perfil & foto')}
+              </p>
+            </div>
+          </button>
+
           {isGuest && onOpenAuthModal && (
             <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-950/70 to-[#0F1C36] border border-amber-500/40 space-y-1.5">
               <div className="flex items-center gap-1.5 text-amber-300 text-[11px] font-black">
