@@ -281,6 +281,15 @@ export interface ChatMessage {
   imageUrl?: string;
   generatedImageUrl?: string;
   generatedImagePrompt?: string;
+  generatedImageMetadata?: {
+    prompt?: string;
+    style?: string;
+    aspectRatio?: string;
+    width?: number;
+    height?: number;
+    engine?: string;
+    seed?: number;
+  };
   fileData?: UploadedFileItem;
   modelUsed?: string;
   customGptUsed?: string;
@@ -621,5 +630,37 @@ export interface LiveWebSearchItem {
   category?: string;
   isVerified?: boolean;
 }
+
+export type AdminNotificationCategory = 'unusual_activity' | 'usage_milestone' | 'security' | 'system';
+export type AdminNotificationSeverity = 'critical' | 'warning' | 'milestone' | 'info';
+
+export interface AdminNotification {
+  id: string;
+  category: AdminNotificationCategory;
+  severity: AdminNotificationSeverity;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  userEmail?: string;
+  userName?: string;
+  metricValue?: string | number;
+  threshold?: string | number;
+  actionType?: 'inspect_user' | 'suspend_user' | 'upgrade_plan' | 'view_telemetry' | 'generate_license' | 'acknowledge';
+  actionTargetId?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface AdminAlertThresholds {
+  unusualBurstRequestsPerMin: number;
+  unusualDailyTokensThreshold: number;
+  failedAuthAttemptsAlert: number;
+  dailyActiveUsersMilestone: number;
+  dailyConversationsMilestone: number;
+  dailyTokensMilestone: number;
+  soundAlertsEnabled: boolean;
+  autoFlagSuspiciousUsers: boolean;
+}
+
 
 

@@ -1,0 +1,16 @@
+{
+  "name": "Chepe IA",
+  "short_name": "ChepeIA",
+  "description": "Plataforma de Inteligencia Artificial Avanzada",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050A14",
+  "theme_color": "#00E5FF",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

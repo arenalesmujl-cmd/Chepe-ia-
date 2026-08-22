@@ -6,7 +6,7 @@ export const getStoredApiKey = (): string => {
     const customConfigStr = localStorage.getItem('chepe_custom_config');
     if (customConfigStr) {
       const parsed = JSON.parse(customConfigStr);
-      if (parsed.apiKey && typeof parsed.apiKey === 'string' && parsed.apiKey.trim().length > 0) {
+      if (parsed.apiKey && typeof parsed.apiKey === 'string' && parsed.apiKey.trim().length > 10) {
         return parsed.apiKey.trim().replace(/^["']|["']$/g, '').trim();
       }
     }
@@ -15,16 +15,30 @@ export const getStoredApiKey = (): string => {
   }
   
   const viteKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
-  if (viteKey && typeof viteKey === 'string' && viteKey.trim().length > 0) {
+  if (viteKey && typeof viteKey === 'string' && viteKey.trim().length > 10) {
     return viteKey.trim().replace(/^["']|["']$/g, '').trim();
   }
 
   const directKey = localStorage.getItem('chepe_gemini_api_key');
-  if (directKey && directKey.trim().length > 0) {
+  if (directKey && directKey.trim().length > 10) {
     return directKey.trim().replace(/^["']|["']$/g, '').trim();
   }
 
   return '';
+};
+
+export const clearStoredApiKey = () => {
+  try {
+    localStorage.removeItem('chepe_gemini_api_key');
+    const existingConfig = localStorage.getItem('chepe_custom_config');
+    if (existingConfig) {
+      const parsed = JSON.parse(existingConfig);
+      delete parsed.apiKey;
+      localStorage.setItem('chepe_custom_config', JSON.stringify(parsed));
+    }
+  } catch (e) {
+    // Ignore error
+  }
 };
 
 export const saveStoredApiKey = (apiKey: string) => {
@@ -214,14 +228,16 @@ export async function callGeminiDirectlyFromClient(params: DirectGeminiChatParam
       let generatedImageUrl: string | undefined = undefined;
       let generatedImagePrompt: string | undefined = undefined;
 
-      if (isImageGen && (params.isImageMode || promptText.length < 300)) {
+      if (isImageGen && (params.isImageMode || promptText.length < 350)) {
         const cleanedPrompt = promptText
-          .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
+          .replace(/^(?:dalle|dall-e|midjourney|flux|imagen)\s*[:,-]?\s*/gi, '')
+          .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|una imagen de|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
           .trim();
-        const imagePrompt = cleanedPrompt.length > 3 ? cleanedPrompt : (promptText.length > 3 ? promptText : 'futuristic AI cyberpunk technology city HD');
-        const encodedPrompt = encodeURIComponent(imagePrompt);
+        const imagePrompt = cleanedPrompt.length > 2 ? cleanedPrompt : (promptText.length > 2 ? promptText : 'futuristic AI cyberpunk technology city 8k');
+        const enrichedPrompt = `${imagePrompt}, photorealistic 8k, award-winning photography, studio lighting, hyper detailed`;
+        const encodedPrompt = encodeURIComponent(enrichedPrompt);
         const seed = Math.floor(Math.random() * 999999);
-        generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+        generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&enhance=true`;
         generatedImagePrompt = imagePrompt;
       }
 

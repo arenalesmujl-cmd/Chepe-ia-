@@ -16,9 +16,10 @@ import { ProjectFoldersModal } from './ProjectFoldersModal';
 import { ExportChatModal } from './ExportChatModal';
 import { ReadAloudPlayer } from './ReadAloudPlayer';
 import { VideoPlayerCard } from './VideoPlayerCard';
+import { GeneratedImageCard } from './GeneratedImageCard';
 import { ModelAvatar } from './ModelAvatar';
 import { renderAndRecordVideo } from '../lib/videoGeneratorEngine';
-import { callGeminiDirectlyFromClient, getStoredApiKey } from '../services/geminiClient';
+import { callGeminiDirectlyFromClient, getStoredApiKey, clearStoredApiKey } from '../services/geminiClient';
 import {
   Bot, Send, Sparkles, User, Volume2, VolumeX, Plus, Image as ImageIcon,
   X, ChevronDown, Settings, Check, Copy, MessageSquare, PanelLeftClose,
@@ -729,6 +730,8 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
               isReasoningMode: isReasoningMode || isDeepResearchMode,
               isWebSearchMode: isWebSearchMode || isDeepResearchMode,
               isImageMode: isImageMode,
+              imageAspectRatio: imageAspectRatio,
+              imageStyle: imageStyle,
               customGptSystemPrompt: selectedCustomGpt?.systemPrompt
             })
           });
@@ -804,6 +807,7 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
         webScrapedData: data.webScrapedData,
         generatedImageUrl: data.generatedImageUrl,
         generatedImagePrompt: data.generatedImagePrompt,
+        generatedImageMetadata: data.generatedImageMetadata,
         versions: [aiMsgText],
         activeVersionIndex: 0
       };
@@ -826,16 +830,23 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
         };
         setMessages(prev => [...prev, promptMsg]);
       } else {
-        const errorMessage = err?.message && !err.message.includes('object') 
-          ? `⚠️ ${err.message}` 
-          : '⚠️ Ocurrió una interrupción al conectar con el motor de IA. Haz clic en "Clave API" arriba para configurar o verificar tu clave.';
+        const isKeyErr = String(err?.message || '').toLowerCase().includes('clave api') || String(err?.message || '').includes('API key');
+        const errorMessage = isKeyErr
+          ? '⚠️ La clave API de Gemini guardada en este navegador no es válida o está incompleta.\n\nPuedes borrarla para usar el servidor integrado o ingresar una clave gratuita válida desde Google AI Studio.'
+          : err?.message && !err.message.includes('object') 
+            ? `⚠️ ${err.message}` 
+            : '⚠️ Ocurrió una interrupción al conectar con el motor de IA. Haz clic en "Clave API" arriba para configurar o verificar tu clave.';
         
         const errorMsg: ChatMessage = {
           id: `err-${Date.now()}`,
           sender: 'chepe_ia',
           text: errorMessage,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          modelUsed: selectedModel
+          modelUsed: selectedModel,
+          suggestions: isKeyErr ? [
+            '🔑 Abrir configuración de Clave API',
+            '🔄 Usar conexión del Servidor por defecto'
+          ] : undefined
         };
         setMessages(prev => [...prev, errorMsg]);
       }
@@ -1398,7 +1409,13 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                           onClick={() => {
                             setSelectedModel(m.id as AIModelId);
                             setIsModelDropdownOpen(false);
-                            showToast(`Motor activo: ${m.name}`);
+                            const isImgModel = ['dall-e-3', 'imagen-3', 'midjourney-v6', 'midjourney-v6-1', 'flux-1-pro', 'flux-1-schnell', 'flux-1-dev', 'stable-diffusion-3-5', 'ideogram-2', 'grok-imagine'].includes(m.id);
+                            if (isImgModel) {
+                              setIsImageMode(true);
+                              showToast(`🎨 Modo Generación de Imágenes Activado (${m.name})`);
+                            } else {
+                              showToast(`Motor activo: ${m.name}`);
+                            }
                           }}
                           className={`w-full text-left p-2.5 rounded-xl text-xs flex gap-3 items-start transition-all cursor-pointer border ${
                             isSelected
@@ -1892,45 +1909,15 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                           </div>
                         )}
 
-                        {/* Generated AI Image Card (DALL-E 3 Style) */}
+                        {/* Generated AI Image Card (DALL-E 3 / FLUX Pro Style) */}
                         {msg.generatedImageUrl && (
-                          <div className="my-3 p-3 rounded-2xl bg-[#060C1B] border border-cyan-500/50 shadow-2xl space-y-2">
-                            <div className="flex items-center justify-between text-xs text-cyan-300 font-bold px-1">
-                              <span className="flex items-center gap-1.5">
-                                <Palette className="w-4 h-4 text-[#00E5FF]" />
-                                DALL-E 3 Image Artifact
-                              </span>
-                              <span className="text-[10px] text-stone-400 font-mono">1024x1024 HD</span>
-                            </div>
-
-                            <div className="relative rounded-xl overflow-hidden border border-cyan-900 group">
-                              <img
-                                src={msg.generatedImageUrl}
-                                alt={msg.generatedImagePrompt || 'Imagen generada'}
-                                referrerPolicy="no-referrer"
-                                className="w-full max-h-96 object-cover bg-black"
-                              />
-                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                <button
-                                  onClick={() => setLightboxImage(msg.generatedImageUrl!)}
-                                  className="p-2.5 rounded-full bg-[#00E5FF] text-stone-950 font-bold shadow-lg hover:scale-110 transition-transform cursor-pointer"
-                                  title="Pantalla Completa"
-                                >
-                                  <Maximize2 className="w-5 h-5" />
-                                </button>
-                                <a
-                                  href={msg.generatedImageUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  download="chepe_image.png"
-                                  className="p-2.5 rounded-full bg-stone-900 text-white border border-stone-700 shadow-lg hover:scale-110 transition-transform cursor-pointer"
-                                  title="Descargar Imagen"
-                                >
-                                  <Download className="w-5 h-5" />
-                                </a>
-                              </div>
-                            </div>
-                          </div>
+                          <GeneratedImageCard
+                            imageUrl={msg.generatedImageUrl}
+                            prompt={msg.generatedImagePrompt}
+                            metadata={msg.generatedImageMetadata}
+                            onOpenLightbox={(url) => setLightboxImage(url)}
+                            onRegenerate={(prompt) => handleSendMessage(`Genera una nueva versión en ultra HD de: ${prompt}`)}
+                          />
                         )}
 
                         {/* Interactive Data Analyst Chart */}
@@ -2173,7 +2160,16 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
                               {msg.suggestions.map((sug, idx) => (
                                 <button
                                   key={idx}
-                                  onClick={() => handleSendMessage(sug)}
+                                  onClick={() => {
+                                    if (sug.includes('Abrir configuración de Clave API')) {
+                                      setIsApiKeyModalOpen(true);
+                                    } else if (sug.includes('Usar conexión del Servidor')) {
+                                      clearStoredApiKey();
+                                      showToast('✅ Restablecido al servidor por defecto');
+                                    } else {
+                                      handleSendMessage(sug);
+                                    }
+                                  }}
                                   className="px-2.5 py-1 rounded-lg bg-[#081021] hover:bg-[#0F1C36] border border-cyan-900/80 text-[11px] text-cyan-300 hover:text-white transition-colors cursor-pointer"
                                 >
                                   ↳ {sug}
@@ -2527,46 +2523,75 @@ export const ChepeChat: React.FC<ChepeChatProps> = ({
               </button>
             </div>
 
-            {/* DALL-E 3 Style & Aspect Ratio Controls */}
+            {/* DALL-E 3 / FLUX Pro Style & Aspect Ratio Controls */}
             {isImageMode && (
-              <div className="mb-2 p-2 rounded-xl bg-[#081022] border border-pink-500/30 flex flex-wrap items-center justify-between gap-2 text-xs text-stone-300 animate-fadeIn">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-pink-400 uppercase tracking-wider">Aspect Ratio:</span>
-                  {(['1:1', '16:9', '9:16'] as const).map((ratio) => (
-                    <button
-                      key={ratio}
-                      type="button"
-                      onClick={() => setImageAspectRatio(ratio)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all cursor-pointer ${
-                        imageAspectRatio === ratio
-                          ? 'bg-pink-600 text-white shadow-sm'
-                          : 'bg-[#050A14] text-stone-400 hover:text-white border border-stone-800'
-                      }`}
-                    >
-                      {ratio}
-                    </button>
-                  ))}
+              <div className="mb-2 p-3 rounded-2xl bg-gradient-to-r from-[#0D0A1E] via-[#120D2A] to-[#0A152A] border border-pink-500/40 shadow-xl space-y-2.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-stone-300">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-pink-400">
+                      <Palette className="w-3.5 h-3.5 text-pink-400" />
+                      <span>Formato:</span>
+                    </div>
+                    {(['1:1', '16:9', '9:16', '4:3'] as const).map((ratio) => (
+                      <button
+                        key={ratio}
+                        type="button"
+                        onClick={() => setImageAspectRatio(ratio as any)}
+                        className={`px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                          imageAspectRatio === ratio
+                            ? 'bg-pink-600 text-white shadow-md shadow-pink-600/40 ring-1 ring-pink-400'
+                            : 'bg-[#050A14] text-stone-400 hover:text-white border border-stone-800'
+                        }`}
+                      >
+                        {ratio}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-bold text-pink-400">Estilo:</span>
+                    {[
+                      { id: 'fotorrealista', label: '📸 Fotorrealista 8K' },
+                      { id: 'cinematic', label: '🎬 Cine 35mm' },
+                      { id: 'cyberpunk', label: '🌆 Cyberpunk' },
+                      { id: 'anime', label: '🎨 Anime Ghibli' },
+                      { id: '3d-render', label: '🧸 3D Pixar' },
+                      { id: 'oleo', label: '🖼️ Óleo Clásico' }
+                    ].map((st) => (
+                      <button
+                        key={st.id}
+                        type="button"
+                        onClick={() => setImageStyle(st.id)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
+                          imageStyle === st.id
+                            ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-md font-bold'
+                            : 'bg-[#050A14] text-stone-400 hover:text-white border border-stone-800'
+                        }`}
+                      >
+                        {st.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-pink-400 uppercase tracking-wider">Estilo:</span>
+                {/* Quick Inspiration Prompt Chips for Image Mode */}
+                <div className="pt-1.5 border-t border-pink-950/60 flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+                  <span className="text-[10px] font-bold text-cyan-400 shrink-0 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-[#00E5FF]" /> Ideas:
+                  </span>
                   {[
-                    { id: 'fotorrealista', label: 'Fotográfico' },
-                    { id: 'cyberpunk', label: 'Cyberpunk' },
-                    { id: 'anime', label: 'Anime' },
-                    { id: '3d-render', label: '3D Render' }
-                  ].map((st) => (
+                    { label: '🦁 León cibernético 8K', prompt: 'Retrato cinematográfico de un león cibernético majestuoso con armadura dorada y neones en Tokio de noche' },
+                    { label: '🚀 Astronauta en Marte', prompt: 'Fotografía ultra detallada de un astronauta descubriendo un templo alienígena brillante en el cañón de Marte' },
+                    { label: '🏰 Castillo flotante Ghibli', prompt: 'Castillo medieval flotando entre nubes al atardecer, cascadas de agua cristalina, estilo Studio Ghibli' },
+                    { label: '🏎️ Superdeportivo en lluvia', prompt: 'Superdeportivo futurista de carreras acelerando sobre asfalto mojado reflejando rascacielos neón' }
+                  ].map((chip, idx) => (
                     <button
-                      key={st.id}
+                      key={idx}
                       type="button"
-                      onClick={() => setImageStyle(st.id)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
-                        imageStyle === st.id
-                          ? 'bg-pink-600 text-white'
-                          : 'bg-[#050A14] text-stone-400 hover:text-white border border-stone-800'
-                      }`}
+                      onClick={() => setInput(chip.prompt)}
+                      className="px-2.5 py-1 rounded-full bg-[#081024] hover:bg-cyan-950 text-cyan-300 hover:text-white border border-cyan-900/80 hover:border-[#00E5FF] text-[10px] font-medium whitespace-nowrap transition-all cursor-pointer shrink-0"
                     >
-                      {st.label}
+                      {chip.label}
                     </button>
                   ))}
                 </div>

@@ -17,6 +17,9 @@ import { SettingsView } from './components/SettingsView';
 import { AuthModal } from './components/AuthModal';
 import { VideoStudioModule } from './components/VideoStudioModule';
 import { WebToolsModule } from './components/WebToolsModule';
+import { NotificationCenter } from './components/NotificationCenter';
+import { networkService, NetworkStatus } from './services/networkStatusService';
+import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('chat');
@@ -24,6 +27,8 @@ export default function App() {
   const [chatPrompt, setChatPrompt] = useState<string>('');
   const [attachedFileForChat, setAttachedFileForChat] = useState<UploadedFileItem | null>(null);
   const [chatSessionKey, setChatSessionKey] = useState<number>(Date.now());
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() => networkService.getStatus());
+  const [networkToast, setNetworkToast] = useState<{ message: string; type: 'online' | 'offline' } | null>(null);
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -90,9 +95,49 @@ export default function App() {
     hostIp: 'https://generativelanguage.googleapis.com'
   });
 
-  // Load state on mount
+  // Load state on mount & handle notification URL params / SW messages & Network Status
   useEffect(() => {
+    // Network status listener
+    let previousOnlineState = networkService.getStatus().isOnline;
+    const unsubscribeNetwork = networkService.subscribe((status) => {
+      setNetworkStatus(status);
+      if (previousOnlineState !== status.isOnline) {
+        if (status.isOnline) {
+          setNetworkToast({
+            message: '🟢 ¡Conexión Online Restablecida! Servidor sincronizado.',
+            type: 'online'
+          });
+          setTimeout(() => setNetworkToast(null), 4000);
+        } else {
+          setNetworkToast({
+            message: '⚠️ Modo Offline: Tu conexión a internet se ha interrumpido. Guardando datos localmente.',
+            type: 'offline'
+          });
+        }
+        previousOnlineState = status.isOnline;
+      }
+    });
+
     try {
+      // Check for URL query param tab navigation from Service Worker notification click
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryTab = urlParams.get('tab');
+        if (queryTab && ['chat', 'video-studio', 'web-tools', 'admin', 'profile', 'settings'].includes(queryTab)) {
+          setActiveTab(queryTab);
+        }
+      }
+
+      // Listen for messages directly from Service Worker
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data && event.data.type === 'CHEPE_NOTIFICATION_CLICK' && event.data.tab) {
+            setActiveTab(event.data.tab);
+          }
+        };
+        navigator.serviceWorker.addEventListener('message', messageHandler);
+      }
+
       const storedUser = localStorage.getItem('chepe_auth_user');
       if (storedUser) {
         setUserProfile(JSON.parse(storedUser));
@@ -111,6 +156,10 @@ export default function App() {
     } catch (e) {
       console.error('Error loading stored app state:', e);
     }
+
+    return () => {
+      unsubscribeNetwork();
+    };
   }, []);
 
   const handleOpenAuthModal = (mode: 'login' | 'register' = 'register') => {
@@ -261,6 +310,30 @@ export default function App() {
         />
       )}
 
+      {/* Real-time Network Status Alert / Toast */}
+      {networkToast && (
+        <div
+          className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold transition-all animate-in fade-in duration-300 border ${
+            networkToast.type === 'online'
+              ? 'bg-emerald-950/95 border-emerald-500/70 text-emerald-200 shadow-emerald-950/50'
+              : 'bg-rose-950/95 border-rose-500/70 text-rose-200 shadow-rose-950/50'
+          }`}
+        >
+          {networkToast.type === 'online' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          ) : (
+            <WifiOff className="w-4 h-4 text-rose-400 shrink-0 animate-bounce" />
+          )}
+          <span>{networkToast.message}</span>
+          <button
+            onClick={() => setNetworkToast(null)}
+            className="ml-2 text-stone-400 hover:text-white font-bold cursor-pointer text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Top Main Navbar */}
       <Navbar
         onNewChat={handleNewChat}
@@ -405,6 +478,14 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Global Superimposed NotificationCenter (Floating Toasts & Interactive Hub) */}
+      <NotificationCenter
+        userProfile={userProfile}
+        activeTab={activeTab}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onOpenAuthModal={handleOpenAuthModal}
+      />
     </div>
   );
 }

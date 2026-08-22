@@ -1,14 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_ADMIN_USERS, PLAN_TIERS } from '../data/chepeData';
-import { AdminUserItem, AdminStats, LicenseCode, PlanTier, SupportedPlan } from '../types';
+import {
+  AdminUserItem,
+  AdminStats,
+  LicenseCode,
+  PlanTier,
+  SupportedPlan,
+  AdminNotification,
+  AdminAlertThresholds,
+  AdminNotificationCategory,
+  AdminNotificationSeverity
+} from '../types';
 import { AdminActivityPanel } from './AdminActivityPanel';
+import { AdminNotificationCenter } from './AdminNotificationCenter';
 import {
   ShieldCheck, Users, Activity, MessageSquare, Cpu, RefreshCw,
   Search, AlertTriangle, CheckCircle, Ban, Trash2, ShieldAlert, Sparkles, Server,
   Lock, Key, Copy, Check, Calendar, Clock, Plus, Award, Unlock, Zap, CreditCard,
   Layers, CheckCircle2, ChevronRight, Eye, Shield, KeyRound, Sparkle,
-  UserPlus, UserCheck, Mail, X, User, BarChart2
+  UserPlus, UserCheck, Mail, X, User, BarChart2, Bell, Flame, Filter, Volume2, CheckCheck
 } from 'lucide-react';
+
+const INITIAL_NOTIFICATIONS: AdminNotification[] = [
+  {
+    id: 'notif-1',
+    category: 'unusual_activity',
+    severity: 'critical',
+    title: '🚨 Ráfaga inusual de prompts detectada',
+    message: 'El usuario Carlos Rodríguez (carlos.r@gmail.com) ha emitido 62 peticiones de programación por minuto, superando el umbral de seguridad de 45 req/min.',
+    userEmail: 'carlos.r@gmail.com',
+    userName: 'Carlos Rodríguez',
+    metricValue: '62 req/min',
+    threshold: '45 req/min',
+    timestamp: 'Hace 5 min',
+    read: false
+  },
+  {
+    id: 'notif-2',
+    category: 'usage_milestone',
+    severity: 'milestone',
+    title: '🎯 Hito Diario Alcanzado: 3,800+ Usuarios Activos',
+    message: 'La plataforma ha superado los 3,840 usuarios activos concurrentes el día de hoy, marcando un nuevo récord de adopción e interacción continua.',
+    metricValue: '3,842 usuarios activos',
+    threshold: '3,500 usuarios',
+    timestamp: 'Hace 20 min',
+    read: false
+  },
+  {
+    id: 'notif-3',
+    category: 'usage_milestone',
+    severity: 'milestone',
+    title: '⚡ Hito de Cómputo: 4,000,000+ Tokens Diarios',
+    message: 'Se han procesado más de 4.28 millones de tokens entre Gemini 2.5 Pro y DeepSeek R1 manteniendo una latencia media óptima de 780ms.',
+    metricValue: '4,280,900 tokens',
+    threshold: '4,000,000 tokens',
+    timestamp: 'Hace 1 hora',
+    read: true
+  },
+  {
+    id: 'notif-4',
+    category: 'security',
+    severity: 'warning',
+    title: '🛡️ Intento de acceso bloqueado',
+    message: 'Se registró un intento no autorizado de acceso al panel de administración con contraseña errónea.',
+    metricValue: '1 intento fallido',
+    threshold: 'Máx 3 intentos',
+    timestamp: 'Hace 2 horas',
+    read: true
+  }
+];
+
+const DEFAULT_THRESHOLDS: AdminAlertThresholds = {
+  unusualBurstRequestsPerMin: 45,
+  unusualDailyTokensThreshold: 500000,
+  failedAuthAttemptsAlert: 3,
+  dailyActiveUsersMilestone: 3500,
+  dailyConversationsMilestone: 150000,
+  dailyTokensMilestone: 4000000,
+  soundAlertsEnabled: true,
+  autoFlagSuspiciousUsers: true
+};
 
 export const AdminDashboard: React.FC = () => {
   // Master Password state
@@ -18,7 +89,26 @@ export const AdminDashboard: React.FC = () => {
   const [failedAttempts, setFailedAttempts] = useState(0);
 
   // Active Admin Tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'all' | 'analytics' | 'licenses' | 'users' | 'security'>('all');
+  const [activeAdminTab, setActiveAdminTab] = useState<'all' | 'analytics' | 'notifications' | 'licenses' | 'users' | 'security'>('all');
+
+  // Notifications State & Dropdown
+  const [notifications, setNotifications] = useState<AdminNotification[]>(() => {
+    try {
+      const stored = localStorage.getItem('chepe_admin_notifications');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return INITIAL_NOTIFICATIONS;
+  });
+
+  const [thresholds, setThresholds] = useState<AdminAlertThresholds>(() => {
+    try {
+      const stored = localStorage.getItem('chepe_admin_alert_thresholds');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return DEFAULT_THRESHOLDS;
+  });
+
+  const [isQuickNotifOpen, setIsQuickNotifOpen] = useState(false);
 
   // Password change state
   const [currentPassForChange, setCurrentPassForChange] = useState('');
@@ -98,7 +188,7 @@ export const AdminDashboard: React.FC = () => {
   const [filterLicensePlan, setFilterLicensePlan] = useState<string>('all');
   const [filterLicenseStatus, setFilterLicenseStatus] = useState<string>('all');
 
-  // Load codes and users on mount
+  // Load codes, users, notifications and thresholds on mount
   useEffect(() => {
     try {
       const storedCodes = localStorage.getItem('chepe_license_codes');
@@ -108,6 +198,14 @@ export const AdminDashboard: React.FC = () => {
       const storedUsers = localStorage.getItem('chepe_admin_users');
       if (storedUsers) {
         setUsers(JSON.parse(storedUsers));
+      }
+      const storedNotifs = localStorage.getItem('chepe_admin_notifications');
+      if (storedNotifs) {
+        setNotifications(JSON.parse(storedNotifs));
+      }
+      const storedThresholds = localStorage.getItem('chepe_admin_alert_thresholds');
+      if (storedThresholds) {
+        setThresholds(JSON.parse(storedThresholds));
       }
     } catch (e) {}
   }, []);
@@ -124,6 +222,174 @@ export const AdminDashboard: React.FC = () => {
     try {
       localStorage.setItem('chepe_admin_users', JSON.stringify(updatedUsers));
     } catch (e) {}
+  };
+
+  const saveNotifications = (updated: AdminNotification[]) => {
+    setNotifications(updated);
+    try {
+      localStorage.setItem('chepe_admin_notifications', JSON.stringify(updated));
+    } catch (e) {}
+  };
+
+  const saveThresholds = (updated: AdminAlertThresholds) => {
+    setThresholds(updated);
+    try {
+      localStorage.setItem('chepe_admin_alert_thresholds', JSON.stringify(updated));
+    } catch (e) {}
+  };
+
+  // Sound Synthesizer helper for real-time alerts
+  const playAlertTone = (severity: AdminNotificationSeverity) => {
+    if (!thresholds.soundAlertsEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (severity === 'critical') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.28);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.28);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+      } else if (severity === 'milestone') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.38);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(620, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.22);
+      }
+    } catch (e) {}
+  };
+
+  // Notification Handlers
+  const handleMarkNotificationAsRead = (id: string) => {
+    const updated = notifications.map(n => n.id === id ? { ...n, read: !n.read } : n);
+    saveNotifications(updated);
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    saveNotifications(updated);
+  };
+
+  const handleDeleteNotification = (id: string) => {
+    const updated = notifications.filter(n => n.id !== id);
+    saveNotifications(updated);
+  };
+
+  const handleClearReadNotifications = () => {
+    const updated = notifications.filter(n => !n.read);
+    saveNotifications(updated);
+  };
+
+  const handleUpdateThresholds = (updated: AdminAlertThresholds) => {
+    saveThresholds(updated);
+  };
+
+  const handleTriggerSimulatedAlert = (
+    category: AdminNotificationCategory,
+    severity: AdminNotificationSeverity
+  ) => {
+    playAlertTone(severity);
+
+    let newAlert: AdminNotification;
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    if (category === 'unusual_activity') {
+      const sampleUsers = [
+        { name: 'Fernando Castillo', email: 'fernando.castillo@correo.com' },
+        { name: 'María Fernández', email: 'maria.f@hotmail.com' },
+        { name: 'Lucía Benítez', email: 'lucia.b@empresa.com' },
+        { name: 'Carlos Rodríguez', email: 'carlos.r@gmail.com' }
+      ];
+      const selected = sampleUsers[Math.floor(Math.random() * sampleUsers.length)];
+      const reqCount = Math.floor(48 + Math.random() * 35);
+
+      newAlert = {
+        id: `notif-${Date.now()}`,
+        category: 'unusual_activity',
+        severity: 'critical',
+        title: '🚨 Actividad Inusual: Ráfaga anómala de prompts',
+        message: `El usuario ${selected.name} (${selected.email}) ha generado ${reqCount} peticiones en menos de 60 segundos, excediendo el límite de seguridad de ${thresholds.unusualBurstRequestsPerMin} req/min.`,
+        userEmail: selected.email,
+        userName: selected.name,
+        metricValue: `${reqCount} req/min`,
+        threshold: `${thresholds.unusualBurstRequestsPerMin} req/min`,
+        timestamp: `Hoy a las ${nowTime}`,
+        read: false
+      };
+    } else if (category === 'usage_milestone') {
+      const isTokenMilestone = Math.random() > 0.5;
+      if (isTokenMilestone) {
+        const tokenVal = (thresholds.dailyTokensMilestone + Math.floor(Math.random() * 800000)).toLocaleString();
+        newAlert = {
+          id: `notif-${Date.now()}`,
+          category: 'usage_milestone',
+          severity: 'milestone',
+          title: '⚡ Hito Diario de Cómputo Alcanzado',
+          message: `El servidor ha procesado más de ${tokenVal} tokens en las últimas 24 horas a través de la infraestructura neuronal de Chepe IA.`,
+          metricValue: `${tokenVal} tokens`,
+          threshold: `${thresholds.dailyTokensMilestone.toLocaleString()} tokens`,
+          timestamp: `Hoy a las ${nowTime}`,
+          read: false
+        };
+      } else {
+        const userCount = thresholds.dailyActiveUsersMilestone + Math.floor(Math.random() * 400);
+        newAlert = {
+          id: `notif-${Date.now()}`,
+          category: 'usage_milestone',
+          severity: 'milestone',
+          title: '🎯 Hito Diario: Récord de Usuarios Activos',
+          message: `¡Se ha alcanzado la meta diaria de ${userCount} usuarios concurrentes interactuando simultáneamente!`,
+          metricValue: `${userCount} activos`,
+          threshold: `${thresholds.dailyActiveUsersMilestone} usuarios`,
+          timestamp: `Hoy a las ${nowTime}`,
+          read: false
+        };
+      }
+    } else {
+      newAlert = {
+        id: `notif-${Date.now()}`,
+        category: 'security',
+        severity: 'warning',
+        title: '🛡️ Alerta de Seguridad: Acceso Bloqueado',
+        message: `Intento de ingreso al panel de administración denegado tras múltiples claves incorrectas. Se ha bloqueado la sesión temporalmente.`,
+        metricValue: `${thresholds.failedAuthAttemptsAlert} intentos fallidos`,
+        threshold: `Límite: ${thresholds.failedAuthAttemptsAlert}`,
+        timestamp: `Hoy a las ${nowTime}`,
+        read: false
+      };
+    }
+
+    const updated = [newAlert, ...notifications];
+    saveNotifications(updated);
+  };
+
+  const handleNavigateFromNotification = (
+    tab: 'all' | 'analytics' | 'licenses' | 'users' | 'security' | 'notifications',
+    searchParam?: string
+  ) => {
+    setActiveAdminTab(tab as any);
+    if (tab === 'users' && searchParam) {
+      setSearchUser(searchParam);
+    }
   };
 
   // Master hardcoded key
@@ -150,6 +416,24 @@ export const AdminDashboard: React.FC = () => {
     } else {
       const newAttempts = failedAttempts + 1;
       setFailedAttempts(newAttempts);
+
+      if (newAttempts >= thresholds.failedAuthAttemptsAlert) {
+        // Emit automatic security notification
+        const secAlert: AdminNotification = {
+          id: `sec-${Date.now()}`,
+          category: 'security',
+          severity: 'critical',
+          title: '🚨 Alerta Crítica: Múltiples Intentos Fallidos de Clave Maestra',
+          message: `Se han detectado ${newAttempts} intentos fallidos consecutivos de ingreso con contraseña maestra. Acceso temporalmente retenido.`,
+          metricValue: `${newAttempts} intentos`,
+          threshold: `Máx ${thresholds.failedAuthAttemptsAlert}`,
+          timestamp: 'Hace un instante',
+          read: false
+        };
+        saveNotifications([secAlert, ...notifications]);
+        playAlertTone('critical');
+      }
+
       if (newAttempts >= 3) {
         setAuthError(`🚫 ALERTA DE SEGURIDAD [Intento ${newAttempts}]: Contraseña incorrecta. Se han registrado múltiples intentos fallidos. Acceso denegado.`);
       } else {
@@ -452,10 +736,13 @@ export const AdminDashboard: React.FC = () => {
     );
   }
 
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
+  const criticalUnreadAlerts = notifications.filter(n => !n.read && n.severity === 'critical');
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-8 font-sans">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#1E1202] via-[#0B132B] to-[#050A14] border border-amber-500/40 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#1E1202] via-[#0B132B] to-[#050A14] border border-amber-500/40 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/80 border border-amber-500/50 text-amber-300 text-xs font-bold uppercase">
             <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
@@ -470,6 +757,98 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Quick Notification Bell Dropdown Button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsQuickNotifOpen(!isQuickNotifOpen)}
+              className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                unreadNotifCount > 0
+                  ? 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border-rose-700 shadow-md shadow-rose-950/30'
+                  : 'bg-[#081021] hover:bg-[#0D1830] text-stone-300 border-cyan-900'
+              }`}
+              title="Notificaciones y Alertas"
+            >
+              <div className="relative">
+                <Bell className={`w-4 h-4 ${unreadNotifCount > 0 ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-extrabold flex items-center justify-center">
+                    {unreadNotifCount}
+                  </span>
+                )}
+              </div>
+              <span className="hidden sm:inline font-bold">
+                {unreadNotifCount > 0 ? `${unreadNotifCount} Alertas` : 'Notificaciones'}
+              </span>
+            </button>
+
+            {/* Quick Notification Popover Drawer */}
+            {isQuickNotifOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#081021] border border-cyan-500/50 shadow-2xl p-4 space-y-3 z-50 font-sans">
+                <div className="flex items-center justify-between pb-2 border-b border-cyan-950">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-extrabold text-white uppercase tracking-wider">
+                      Notificaciones Recientes
+                    </span>
+                  </div>
+                  {unreadNotifCount > 0 && (
+                    <button
+                      onClick={handleMarkAllNotificationsAsRead}
+                      className="text-[10px] text-[#00E5FF] hover:underline font-bold"
+                    >
+                      Marcar leídas
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {notifications.slice(0, 4).map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => {
+                        handleMarkNotificationAsRead(n.id);
+                        setActiveAdminTab('notifications');
+                        setIsQuickNotifOpen(false);
+                      }}
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer text-xs space-y-1 ${
+                        !n.read
+                          ? n.severity === 'critical'
+                            ? 'bg-rose-950/40 border-rose-800 hover:bg-rose-950/60'
+                            : 'bg-amber-950/40 border-amber-800 hover:bg-amber-950/60'
+                          : 'bg-[#050A14] border-cyan-950 hover:bg-[#09152B]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-extrabold text-white truncate">{n.title}</span>
+                        {!n.read && (
+                          <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[11px] text-stone-300 line-clamp-2">{n.message}</p>
+                      <div className="text-[9px] text-stone-400 font-mono flex items-center justify-between pt-0.5">
+                        <span>{n.timestamp}</span>
+                        <span className="text-cyan-400 font-sans font-bold">Ver detalle &rarr;</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-cyan-950 flex items-center justify-between">
+                  <button
+                    onClick={() => {
+                      setActiveAdminTab('notifications');
+                      setIsQuickNotifOpen(false);
+                    }}
+                    className="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-stone-950 font-black text-xs text-center flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+                  >
+                    <span>Abrir Centro Completo de Alertas ({notifications.length})</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={fetchAdminStats}
             disabled={isLoadingStats}
@@ -490,6 +869,43 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Critical Alert Banner if there are unread critical notifications */}
+      {criticalUnreadAlerts.length > 0 && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-950 via-[#1A0810] to-[#081021] border border-rose-500 text-rose-200 shadow-xl shadow-rose-950/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2 rounded-xl bg-rose-900/60 border border-rose-700 shrink-0 animate-bounce">
+              <AlertTriangle className="w-5 h-5 text-rose-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 font-black text-white text-sm">
+                <span>Alerta de Seguridad & Actividad Inusual Activa</span>
+                <span className="px-2 py-0.2 rounded-full text-[10px] bg-rose-900 text-rose-300 font-mono">
+                  {criticalUnreadAlerts.length} Eventos Críticos
+                </span>
+              </div>
+              <p className="text-xs text-rose-300 mt-0.5">
+                {criticalUnreadAlerts[0].title}: {criticalUnreadAlerts[0].message}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <button
+              onClick={() => setActiveAdminTab('notifications')}
+              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md shadow-rose-900/50 transition-all cursor-pointer"
+            >
+              Revisar Alerta
+            </button>
+            <button
+              onClick={() => handleMarkNotificationAsRead(criticalUnreadAlerts[0].id)}
+              className="px-3 py-1.5 rounded-xl bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 text-xs font-bold transition-colors cursor-pointer"
+            >
+              Descartar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Navigation Tabs Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-cyan-950">
         <button
@@ -502,6 +918,25 @@ export const AdminDashboard: React.FC = () => {
         >
           <Layers className="w-4 h-4" />
           <span>Vista General Completa</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('notifications')}
+          className={`px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeAdminTab === 'notifications'
+              ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20 font-black'
+              : 'bg-[#081021] text-stone-400 hover:text-white border border-cyan-900/60'
+          }`}
+        >
+          <Bell className="w-4 h-4" />
+          <span>Notificaciones & Alertas</span>
+          {unreadNotifCount > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeAdminTab === 'notifications' ? 'bg-stone-950 text-amber-300' : 'bg-rose-600 text-white'
+            }`}>
+              {unreadNotifCount}
+            </span>
+          )}
         </button>
 
         <button
@@ -602,6 +1037,24 @@ export const AdminDashboard: React.FC = () => {
           <div className="text-[10px] text-stone-400">Latencia: 95ms</div>
         </div>
       </div>
+
+      {/* SECTION: NOTIFICACIONES & ALERTAS INTELIGENTES */}
+      {(activeAdminTab === 'all' || activeAdminTab === 'notifications') && (
+        <AdminNotificationCenter
+          notifications={notifications}
+          thresholds={thresholds}
+          users={users}
+          onMarkAsRead={handleMarkNotificationAsRead}
+          onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+          onDeleteNotification={handleDeleteNotification}
+          onClearReadNotifications={handleClearReadNotifications}
+          onUpdateThresholds={handleUpdateThresholds}
+          onTriggerSimulatedAlert={handleTriggerSimulatedAlert}
+          onNavigateToTab={handleNavigateFromNotification}
+          onToggleUserStatus={handleToggleUserStatus}
+        />
+      )}
+
 
       {/* SECTION: REAL-TIME ACTIVITY & TRAFFIC ANALYTICS (IA VS HUMANOS) */}
       {(activeAdminTab === 'all' || activeAdminTab === 'analytics') && (

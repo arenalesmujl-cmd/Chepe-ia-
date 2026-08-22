@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, ShieldCheck, ExternalLink, Sparkles, Check, AlertCircle, RefreshCw } from 'lucide-react';
-import { getStoredApiKey, saveStoredApiKey } from '../services/geminiClient';
+import { X, Key, ShieldCheck, ExternalLink, Sparkles, Check, AlertCircle, RefreshCw, Trash2, CheckCircle2 } from 'lucide-react';
+import { getStoredApiKey, saveStoredApiKey, clearStoredApiKey } from '../services/geminiClient';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
   const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [clearedSuccess, setClearedSuccess] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,16 +22,35 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
       setTestStatus('idle');
       setErrorMessage('');
       setSavedSuccess(false);
+      setClearedSuccess(false);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const handleClearKey = () => {
+    clearStoredApiKey();
+    setApiKey('');
+    setTestStatus('idle');
+    setErrorMessage('');
+    setClearedSuccess(true);
+    if (onKeySaved) onKeySaved('');
+    setTimeout(() => {
+      setClearedSuccess(false);
+      onClose();
+    }, 1200);
+  };
+
   const handleTestAndSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    let cleanKey = apiKey.trim().replace(/^["']|["']$/g, '').trim();
+    const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '').trim();
     if (!cleanKey) {
-      setErrorMessage('Por favor escribe o pega tu clave de API.');
+      handleClearKey();
+      return;
+    }
+
+    if (cleanKey.length < 15) {
+      setErrorMessage('La clave parece incompleta o demasiado corta. Debe ser una clave válida de Google AI Studio (empieza con AIzaSy...).');
       setTestStatus('error');
       return;
     }
@@ -41,7 +61,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
 
     try {
       // Test ping against available Gemini models with properly formatted payload
-      const testModels = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+      const testModels = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
       let verified = false;
       let lastErrText = '';
 
@@ -62,24 +82,22 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
           } else {
             const data = await res.json().catch(() => ({}));
             lastErrText = data.error?.message || `HTTP ${res.status}`;
-            if (res.status === 400 && lastErrText.includes('API key not valid')) {
+            if (res.status === 400 && (lastErrText.includes('API key not valid') || lastErrText.includes('INVALID_ARGUMENT'))) {
               break;
             }
           }
-        } catch {
-          // try next model
+        } catch (e: any) {
+          lastErrText = e.message || 'Error de red';
         }
       }
 
       if (!verified) {
-        // Save anyway so the user can use their custom key/token
-        saveStoredApiKey(cleanKey);
-        setTestStatus('success');
-        setSavedSuccess(true);
-        if (onKeySaved) onKeySaved(cleanKey);
-        setTimeout(() => {
-          onClose();
-        }, 1000);
+        setErrorMessage(
+          lastErrText.includes('API key not valid')
+            ? '⚠️ La clave de API ingresada no es válida en Google AI Studio. Verifica que esté copiada completa (comienza con AIzaSy...).'
+            : `⚠️ No se pudo verificar la clave: ${lastErrText}. Si prefieres, puedes usar la conexión del servidor por defecto.`
+        );
+        setTestStatus('error');
         return;
       }
 
@@ -92,14 +110,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
         onClose();
       }, 1000);
     } catch (err: any) {
-      // If error, still save the key to localStorage
-      saveStoredApiKey(cleanKey);
-      setTestStatus('success');
-      setSavedSuccess(true);
-      if (onKeySaved) onKeySaved(cleanKey);
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      setErrorMessage('Ocurrió un error al contactar el servicio de verificación.');
+      setTestStatus('error');
     } finally {
       setIsTesting(false);
     }
@@ -110,7 +122,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
       <div className="w-full max-w-lg rounded-3xl bg-[#081021] border border-cyan-500/50 shadow-2xl p-6 relative text-stone-200 animate-in fade-in zoom-in-95">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-stone-400 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -121,12 +133,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
           </div>
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              Clave de API de Chepe IA
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/40">
-                100% Gratis
+              Clave de API Personalizada
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">
+                Opcional
               </span>
             </h2>
-            <p className="text-xs text-stone-400">Activa respuestas ultra rápidas en tu web o en Vercel</p>
+            <p className="text-xs text-stone-400">
+              Chepe IA funciona con el servidor en la nube. Puedes configurar tu clave propia aquí si lo deseas.
+            </p>
           </div>
         </div>
 
@@ -147,72 +161,104 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
             <input
               type="password"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={(e) => {
+                setApiKey(e.target.value);
+                setTestStatus('idle');
+                setErrorMessage('');
+              }}
               placeholder="AIzaSy..."
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#050A14] border border-cyan-900/80 focus:border-[#00E5FF] text-white text-xs placeholder-stone-600 focus:outline-none transition-all"
             />
             <p className="text-[11px] text-stone-500 leading-tight">
-              Tu clave se guarda únicamente en tu propio navegador de forma segura.
+              Se almacena localmente en tu navegador. Si dejas el campo vacío, se usará el servidor integrado.
             </p>
           </div>
 
           {testStatus === 'error' && (
-            <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/60 text-rose-200 text-xs flex items-start gap-2 animate-in fade-in">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
-              <span>{errorMessage}</span>
+              <div className="space-y-1">
+                <p className="font-semibold">{errorMessage}</p>
+                <button
+                  type="button"
+                  onClick={handleClearKey}
+                  className="text-[11px] text-cyan-300 underline hover:text-white font-bold cursor-pointer block mt-1"
+                >
+                  👉 Toca aquí para borrarla y usar la conexión del Servidor
+                </button>
+              </div>
             </div>
           )}
 
           {testStatus === 'success' && (
-            <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400" />
-              <span>¡Clave verificada y guardada exitosamente! Activando chat...</span>
+            <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-200 text-xs flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-bold">¡Clave verificada con éxito en Google AI Studio! Conectando...</span>
+            </div>
+          )}
+
+          {clearedSuccess && (
+            <div className="p-3 rounded-xl bg-cyan-950/80 border border-cyan-500/60 text-cyan-200 text-xs flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 text-[#00E5FF] shrink-0" />
+              <span className="font-bold">¡Clave personalizada eliminada! Usando servidor integrado.</span>
             </div>
           )}
 
           <div className="p-3.5 rounded-2xl bg-[#050A14] border border-cyan-950 text-xs space-y-2 text-stone-400">
             <div className="font-semibold text-stone-300 flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-[#00E5FF]" />
-              ¿Cómo obtener la clave en 30 segundos?
+              ¿Cómo obtener tu clave gratis si la necesitas?
             </div>
             <ol className="list-decimal list-inside space-y-1 text-[11px] text-stone-400">
-              <li>Entra a <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-[#00E5FF] underline">Google AI Studio</a> con tu cuenta de Google.</li>
-              <li>Haz clic en <strong>"Create API key"</strong>.</li>
-              <li>Copia el código que te da (empieza con <code>AIzaSy</code>) y pégalo arriba.</li>
+              <li>Entra a <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-[#00E5FF] underline">Google AI Studio (aistudio.google.com)</a>.</li>
+              <li>Inicia sesión con tu cuenta de Google y haz clic en <strong>"Create API key"</strong>.</li>
+              <li>Copia tu clave (empieza con <code>AIzaSy...</code>) y pégala en el campo de arriba.</li>
             </ol>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-[#0F1C36] hover:bg-[#162B54] text-xs font-semibold text-stone-300 transition-colors"
+              onClick={handleClearKey}
+              className="px-3 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-rose-300 hover:text-rose-200 border border-stone-800 hover:border-rose-900 transition-colors flex items-center gap-1.5 cursor-pointer"
+              title="Borrar clave personalizada y usar servidor"
             >
-              Cancelar
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <span>Usar Servidor Integrado</span>
             </button>
 
-            <button
-              type="submit"
-              disabled={isTesting || savedSuccess}
-              className="px-5 py-2 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all cursor-pointer"
-            >
-              {isTesting ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Verificando...</span>
-                </>
-              ) : savedSuccess ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>¡Listo!</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Guardar y Activar</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl bg-[#0F1C36] hover:bg-[#162B54] text-xs font-semibold text-stone-300 transition-colors cursor-pointer"
+              >
+                Cerrar
+              </button>
+
+              <button
+                type="submit"
+                disabled={isTesting || savedSuccess}
+                className="px-5 py-2 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-stone-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all cursor-pointer"
+              >
+                {isTesting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Verificando en Google...</span>
+                  </>
+                ) : savedSuccess ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>¡Listo!</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Guardar y Activar</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

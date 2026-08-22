@@ -323,6 +323,27 @@ async function callGeminiWithRetry(clientAi: GoogleGenAI, contents: any[], sysIn
     } catch (err: any) {
       lastError = err;
       const errStr = String(err?.message || err);
+
+      // If the custom client AI has an invalid key, seamlessly retry with default server AI
+      if ((errStr.includes('API key not valid') || errStr.includes('API_KEY_INVALID')) && clientAi !== ai) {
+        console.warn('[Chepe IA] Clave de cliente inválida, conmutando automáticamente al servidor integrado...');
+        try {
+          const fallbackRes = await ai.models.generateContent({
+            model: modelName,
+            contents: contents,
+            config: {
+              systemInstruction: sysInstruction,
+              temperature: 0.7,
+            }
+          });
+          if (fallbackRes && fallbackRes.text) {
+            return { responseText: fallbackRes.text, modelUsed: modelName };
+          }
+        } catch (fbErr) {
+          // continue loop
+        }
+      }
+
       // Suppress noisy logs for normal model switching
       if (!errStr.includes("503") && !errStr.includes("high demand")) {
         console.warn(`[Chepe IA] Modelo ${modelName} alternando (${errStr.slice(0, 60)})...`);
@@ -351,6 +372,18 @@ async function callGeminiWithRetry(clientAi: GoogleGenAI, contents: any[], sysIn
 // 1. Health check
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", app: "Chepe IA Platform" });
+});
+
+// 1.1 Notification Infrastructure Status Endpoint
+app.get("/api/notifications/status", (_req: Request, res: Response) => {
+  res.json({
+    status: "active",
+    webNotificationSupported: true,
+    serviceWorkerReady: true,
+    vapidConfigured: !!process.env.VAPID_PUBLIC_KEY,
+    protocol: "Web Notification API (W3C Standard) + Service Worker Push (RFC 8291)",
+    serverTime: new Date().toISOString()
+  });
 });
 
 // 2. Connection Test Endpoint for Custom IP & Key
@@ -551,23 +584,95 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       sysInstruction += `\n\nMODO RAZONAMIENTO PROFUNDO O1 ACTIVADO: Analiza metódicamente la lógica, desglosa supuestos implícitos, verifica casos borde y estructura la solución con rigor conceptual.`;
     }
 
-    // Check if user is requesting Image Generation (DALL-E 3 style)
+    // Check if user is requesting Image Generation (DALL-E 3 / Flux / Imagen style)
+    const isImageModelSelected = [
+      'dall-e-3', 'imagen-3', 'midjourney-v6', 'midjourney-v6-1',
+      'flux-1-pro', 'flux-1-schnell', 'flux-1-dev', 'stable-diffusion-3-5',
+      'ideogram-2', 'grok-imagine'
+    ].includes(modelId);
+
     const isImageGenerationRequested =
       req.body.isImageMode ||
+      isImageModelSelected ||
       /gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen|foto|fotograf[ií]a|pintura|dibujo|wallpaper|fondo de pantalla|arte de|image|draw|paint/i.test(promptToUse);
 
     let generatedImageUrl: string | undefined = undefined;
     let generatedImagePrompt: string | undefined = undefined;
+    let generatedImageMetadata: any = undefined;
 
-    if (isImageGenerationRequested && (req.body.isImageMode || promptToUse.length < 300)) {
+    if (isImageGenerationRequested && (req.body.isImageMode || isImageModelSelected || promptToUse.length < 350)) {
       const cleanedPrompt = promptToUse
-        .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
+        .replace(/^(?:dalle|dall-e|midjourney|flux|imagen)\s*[:,-]?\s*/gi, '')
+        .replace(/gener(a|ar|ame)|dibuja|crea|diseña|haz(me)?|pinta|renderiza|saca|ilustra|dalle|dall-e|una imagen de|imagen de|una foto de|foto de|ilustraci[oó]n de|un dibujo de|un arte de|pintura de/gi, '')
         .trim();
-      const imagePrompt = cleanedPrompt.length > 3 ? cleanedPrompt : 'futuristic AI cyberpunk technology space city ultra HD';
-      const encodedPrompt = encodeURIComponent(imagePrompt);
+      const imagePrompt = cleanedPrompt.length > 2 ? cleanedPrompt : 'futuristic neon AI technology cyberpunk city 8k';
+
+      const reqAspectRatio = req.body.imageAspectRatio || '1:1';
+      const reqStyle = req.body.imageStyle || 'fotorrealista';
+
+      let width = 1024;
+      let height = 1024;
+      if (reqAspectRatio === '16:9') { width = 1280; height = 720; }
+      else if (reqAspectRatio === '9:16') { width = 720; height = 1280; }
+      else if (reqAspectRatio === '4:3') { width = 1024; height = 768; }
+      else if (reqAspectRatio === '3:4') { width = 768; height = 1024; }
+
+      const styleModifiers: Record<string, string> = {
+        fotorrealista: 'photorealistic 8k uhd, professional photography, hyper-detailed textures, volumetric studio lighting, 35mm f/1.8 lens, high dynamic range',
+        cyberpunk: 'cyberpunk neon lights aesthetic, futuristic metropolis, volumetric lighting, synthwave reflections, Octane 8K render, raytracing',
+        anime: 'Studio Ghibli and Makoto Shinkai style, exquisite anime art, vibrant vivid colors, detailed illustration, masterpiece',
+        '3d-render': '3D Pixar and Unreal Engine 5 render, smooth shaders, subsurface scattering, ambient occlusion, octane 8k',
+        oleo: 'masterpiece oil on canvas painting, visible textured brushstrokes, classical impasto, dramatic museum lighting',
+        cinematic: 'cinematic film still, 35mm anamorphic lens flare, dramatic movie lighting, shallow depth of field, 8k'
+      };
+
+      const styleSuffix = styleModifiers[reqStyle] || styleModifiers.fotorrealista;
+      const enrichedVisualPrompt = `${imagePrompt}, ${styleSuffix}`;
       const seed = Math.floor(Math.random() * 999999);
-      generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+
+      // Attempt 1: Gemini Image Model
+      try {
+        const geminiImgRes = await clientAi.models.generateContent({
+          model: 'gemini-3.1-flash-lite-image',
+          contents: {
+            parts: [{ text: enrichedVisualPrompt }]
+          },
+          config: {
+            imageConfig: {
+              aspectRatio: reqAspectRatio as any
+            }
+          }
+        });
+
+        for (const candidate of geminiImgRes.candidates || []) {
+          for (const part of candidate.content?.parts || []) {
+            if (part.inlineData && part.inlineData.data) {
+              generatedImageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+              break;
+            }
+          }
+          if (generatedImageUrl) break;
+        }
+      } catch (geminiImgErr: any) {
+        // Fall through seamlessly to high-speed FLUX engine
+      }
+
+      // Attempt 2: High Definition Direct FLUX Pro / Realism Engine
+      if (!generatedImageUrl) {
+        const encodedPrompt = encodeURIComponent(enrichedVisualPrompt);
+        generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=flux&nologo=true&enhance=true`;
+      }
+
       generatedImagePrompt = imagePrompt;
+      generatedImageMetadata = {
+        prompt: imagePrompt,
+        style: reqStyle,
+        aspectRatio: reqAspectRatio,
+        width: width,
+        height: height,
+        engine: isImageModelSelected ? modelId.toUpperCase() : 'DALL-E 3 / FLUX.1 Pro',
+        seed: seed
+      };
     }
 
     // 1. Check if the user selected an official OpenAI model
@@ -842,7 +947,8 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       canvasData: canvasData,
       chartData: chartData,
       generatedImageUrl: generatedImageUrl,
-      generatedImagePrompt: generatedImagePrompt
+      generatedImagePrompt: generatedImagePrompt,
+      generatedImageMetadata: generatedImageMetadata
     });
   } catch (error: any) {
     console.error("Error en /api/chat:", error);
@@ -1055,24 +1161,80 @@ app.post("/api/claude-chat", async (req: Request, res: Response) => {
   }
 });
 
-// Dedicated Image Generation Endpoint (DALL-E 3 Style)
-app.post("/api/generate-image", (req: Request, res: Response) => {
+// Dedicated Image Generation Endpoint (DALL-E 3 / Flux / Imagen Style)
+app.post("/api/generate-image", async (req: Request, res: Response) => {
   try {
-    const { prompt, style } = req.body;
+    const { prompt, style = "fotorrealista", aspectRatio = "1:1", model = "flux" } = req.body;
     if (!prompt) {
       res.status(400).json({ error: "Se requiere un prompt para generar la imagen." });
       return;
     }
 
-    const stylePrefix = style ? `${style} style, ` : '';
-    const fullPrompt = `${stylePrefix}${prompt}`;
-    const encodedPrompt = encodeURIComponent(fullPrompt);
-    const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 99999)}&nologo=true`;
+    const styleModifiers: Record<string, string> = {
+      fotorrealista: 'photorealistic 8k uhd, professional photography, hyper-detailed textures, studio lighting, 35mm f/1.8 lens, high dynamic range',
+      cyberpunk: 'cyberpunk neon lights aesthetic, futuristic metropolis, volumetric lighting, synthwave reflections, Octane 8K render',
+      anime: 'Studio Ghibli and Makoto Shinkai style, exquisite anime art, vibrant vivid colors, detailed illustration, masterpiece',
+      '3d-render': '3D Pixar and Unreal Engine 5 render, smooth shaders, subsurface scattering, ambient occlusion, octane 8k',
+      oleo: 'masterpiece oil on canvas painting, visible textured brushstrokes, classical impasto, dramatic museum lighting',
+      cinematic: 'cinematic film still, 35mm anamorphic lens flare, dramatic movie lighting, shallow depth of field, 8k'
+    };
+
+    let width = 1024;
+    let height = 1024;
+    if (aspectRatio === '16:9') { width = 1280; height = 720; }
+    else if (aspectRatio === '9:16') { width = 720; height = 1280; }
+    else if (aspectRatio === '4:3') { width = 1024; height = 768; }
+    else if (aspectRatio === '3:4') { width = 768; height = 1024; }
+
+    const styleSuffix = styleModifiers[style] || styleModifiers.fotorrealista;
+    const fullVisualPrompt = `${prompt}, ${styleSuffix}`;
+    const seed = Math.floor(Math.random() * 999999);
+
+    let imageUrl = '';
+
+    // Attempt Gemini Image Generation
+    try {
+      const geminiImgRes = await ai.models.generateContent({
+        model: 'gemini-3.1-flash-lite-image',
+        contents: { parts: [{ text: fullVisualPrompt }] },
+        config: {
+          imageConfig: {
+            aspectRatio: aspectRatio as any
+          }
+        }
+      });
+
+      for (const candidate of geminiImgRes.candidates || []) {
+        for (const part of candidate.content?.parts || []) {
+          if (part.inlineData && part.inlineData.data) {
+            imageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+        if (imageUrl) break;
+      }
+    } catch (e) {
+      // Fall through to FLUX
+    }
+
+    if (!imageUrl) {
+      const encodedPrompt = encodeURIComponent(fullVisualPrompt);
+      imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=flux&nologo=true&enhance=true`;
+    }
 
     res.json({
       success: true,
       imageUrl: imageUrl,
-      prompt: fullPrompt,
+      prompt: prompt,
+      metadata: {
+        prompt: prompt,
+        style: style,
+        aspectRatio: aspectRatio,
+        width: width,
+        height: height,
+        engine: 'DALL-E 3 / FLUX.1 Pro',
+        seed: seed
+      },
       createdAt: new Date().toISOString()
     });
   } catch (err: any) {

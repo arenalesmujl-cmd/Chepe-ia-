@@ -1,5 +1,6 @@
-import React from 'react';
-import { Bot, Plus, User, Settings, ShieldAlert, Sparkles, Activity, Menu, PanelLeft, UserPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, Plus, User, Settings, ShieldAlert, Sparkles, Activity, Menu, PanelLeft, UserPlus, Wifi, WifiOff } from 'lucide-react';
+import { networkService, NetworkStatus } from '../services/networkStatusService';
 
 interface NavbarProps {
   onNewChat: () => void;
@@ -30,6 +31,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
   onToggleSidebar
 }) => {
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() => networkService.getStatus());
+
+  useEffect(() => {
+    const unsubscribe = networkService.subscribe((status) => {
+      setNetworkStatus(status);
+    });
+    return () => unsubscribe();
+  }, []);
   return (
     <header className="bg-[#080E1C] border-b border-cyan-900/50 sticky top-0 z-40 px-2 sm:px-4 py-2 shadow-xl w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
@@ -45,27 +54,54 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <button
-            onClick={() => onSelectTab('chat')}
-            className="flex items-center gap-2 group cursor-pointer text-left min-w-0"
-          >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#00E5FF] to-blue-600 flex items-center justify-center text-stone-950 font-black shadow-lg shadow-cyan-500/30 group-hover:scale-105 transition-transform shrink-0">
+          <div className="flex items-center gap-2 text-left min-w-0">
+            <button
+              onClick={() => onSelectTab('chat')}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#00E5FF] to-blue-600 flex items-center justify-center text-stone-950 font-black shadow-lg shadow-cyan-500/30 hover:scale-105 transition-transform shrink-0 cursor-pointer"
+              title="Ir al Chat principal"
+            >
               <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
+            </button>
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-sm sm:text-lg text-white tracking-tight truncate">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => onSelectTab('chat')}
+                  className="font-extrabold text-sm sm:text-lg text-white tracking-tight truncate hover:text-[#00E5FF] transition-colors cursor-pointer"
+                >
                   Chepe <span className="text-[#00E5FF]">IA</span>
-                </span>
-                {isGuest ? (
+                </button>
+                {networkStatus.isOnline ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      networkService.pingServer();
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-[10px] font-bold shrink-0 hover:bg-emerald-900/90 transition-all cursor-pointer shadow-sm shadow-emerald-500/20"
+                    title={`Conexión Online Activa • Ping: ${networkStatus.latencyMs || 20}ms (${networkStatus.effectiveType.toUpperCase()}). Toca para verificar servidor.`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>ONLINE</span>
+                    <span className="font-mono text-[9px] text-emerald-300/80 hidden sm:inline">
+                      {networkStatus.latencyMs ? `${networkStatus.latencyMs}ms` : ''}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      networkService.pingServer();
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-950/90 border border-rose-500/60 text-rose-400 text-[10px] font-black shrink-0 hover:bg-rose-900 transition-all cursor-pointer"
+                    title="Sin conexión a internet. Toca para reintentar."
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                    <span>OFFLINE</span>
+                  </button>
+                )}
+                {isGuest && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-950/90 border border-amber-500/50 text-amber-400 text-[9px] sm:text-[10px] font-extrabold shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                     <span className="hidden xs:inline">Invitado</span>
-                  </span>
-                ) : (
-                  <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                    IA en línea
                   </span>
                 )}
               </div>
@@ -73,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Plataforma Multimodal de Inteligencia Artificial
               </span>
             </div>
-          </button>
+          </div>
         </div>
 
         {/* Action Buttons Header */}

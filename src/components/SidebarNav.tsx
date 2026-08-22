@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus, MessageSquare, History, Bookmark, BookOpen, Code,
   Calculator, PenTool, Folder, CreditCard, User, Settings,
   ShieldCheck, PanelLeftClose, PanelLeft, Bot, Sparkles, ChevronRight, UserPlus,
-  Video, Globe, Clapperboard, Compass
+  Video, Globe, Clapperboard, Compass, Wifi, WifiOff, RefreshCw, Zap
 } from 'lucide-react';
+import { networkService, NetworkStatus } from '../services/networkStatusService';
 
 interface SidebarNavProps {
   activeTab: string;
@@ -39,6 +40,21 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onOpenAuthModal,
   onLogout
 }) => {
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() => networkService.getStatus());
+  const [isPinging, setIsPinging] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = networkService.subscribe((status) => {
+      setNetworkStatus(status);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleManualPing = async () => {
+    setIsPinging(true);
+    await networkService.pingServer();
+    setTimeout(() => setIsPinging(false), 600);
+  };
   const navItems = [
     { id: 'chat', label: 'Chat IA', icon: MessageSquare, badge: 'Principal' },
     { id: 'video', label: 'Estudio Video IA', icon: Clapperboard, badge: 'Ultra Pro' },
@@ -240,6 +256,43 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               </button>
             </div>
           )}
+
+          {/* Live Online Connectivity & Sync Status Card */}
+          <div className={`p-2.5 rounded-xl border transition-all ${
+            networkStatus.isOnline
+              ? 'bg-emerald-950/40 border-emerald-500/30'
+              : 'bg-rose-950/40 border-rose-500/40'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                {networkStatus.isOnline ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-xs font-bold text-emerald-300">Conexión Online</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span className="text-xs font-bold text-rose-300">Modo Offline</span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={handleManualPing}
+                disabled={isPinging}
+                className="p-1 rounded-md text-cyan-300 hover:text-white hover:bg-cyan-900/40 transition cursor-pointer"
+                title="Comprobar latencia y conexión con el servidor"
+              >
+                <RefreshCw className={`w-3 h-3 ${isPinging ? 'animate-spin text-cyan-400' : ''}`} />
+              </button>
+            </div>
+            <div className="flex items-center justify-between mt-1 text-[10px] text-stone-400">
+              <span>{networkStatus.isOnline ? `Red ${networkStatus.effectiveType.toUpperCase()}` : 'Sin internet'}</span>
+              <span className="font-mono text-cyan-300 font-bold">
+                {networkStatus.isOnline && networkStatus.latencyMs ? `${networkStatus.latencyMs}ms ping` : 'Desconectado'}
+              </span>
+            </div>
+          </div>
 
           <div className="bg-[#091224] p-2.5 rounded-xl border border-cyan-900/60 space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-semibold">
